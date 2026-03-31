@@ -1,0 +1,476 @@
+#root {
+  min-height: 100vh;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced Focus States */
+*:focus-visible {
+  outline: 2px solid hsl(var(--chilli));
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  outline-offset: 4px;
+}
+
+/* Link Styling */
+a {
+  transition: color 0.3s ease;
+}
+
+/* Selection Color */
+::selection {
+  background-color: hsl(var(--chilli));
+  color: hsl(var(--ivory));
+}
+
+::-moz-selection {
+  background-color: hsl(var(--chilli));
+  color: hsl(var(--ivory));
+}
+
+/* Smooth Page Transitions */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    scroll-behavior: smooth;
+  }
+
+  html {
+    scroll-padding-top: 100px;
+  }
+}
+
+/* Loading State Animation */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #e0e0e0 25%,
+    #f0f0f0 50%,
+    #e0e0e0 75%
+  );
+  background-size: 1000px 100%;
+  animation: skeleton-loading 2s infinite;
+}
+
+/* Premium Hero Ambient Animations */
+@keyframes hero-ambient-glow {
+  0%, 100% {
+    background: radial-gradient(circle at 20% 50%, rgba(139, 0, 0, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(230, 168, 23, 0.06) 0%, transparent 50%);
+  }
+  50% {
+    background: radial-gradient(circle at 30% 40%, rgba(139, 0, 0, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 70% 90%, rgba(230, 168, 23, 0.08) 0%, transparent 50%);
+  }
+}
+
+.hero-ambient {
+  animation: hero-ambient-glow 8s ease-in-out infinite;
+}
+
+/* Smooth Gradient Shift */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.gradient-animated {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease-in-out infinite;
+}
+
+/* Subtle Pulse for CTAs */
+@keyframes subtle-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.02);
+  }
+}
+
+.pulse-subtle {
+  animation: subtle-pulse 3s ease-in-out infinite;
+}
+
+/* Premium Text Glow */
+@keyframes text-glow {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(139, 0, 0, 0), 0 0 40px rgba(230, 168, 23, 0);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(139, 0, 0, 0.2), 0 0 40px rgba(230, 168, 23, 0.1);
+  }
+}
+
+.text-glow {
+  animation: text-glow 3s ease-in-out infinite;
+}
+
+/* Floating Animation for Images */
+@keyframes float-elegant {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+  75% {
+    transform: translateY(-12px) rotate(-1deg);
+  }
+}
+
+.float-elegant {
+  animation: float-elegant 4s ease-in-out infinite;
+}
+
+/* Shimmer Effect for Images on Hover */
+@keyframes shimmer-effect {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer-on-hover:hover {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer-effect 0.6s ease-in-out;
+}
+
+/* Border Glow Animation */
+@keyframes border-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(139, 0, 0, 0.2), inset 0 0 10px rgba(139, 0, 0, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(139, 0, 0, 0.4), inset 0 0 20px rgba(139, 0, 0, 0.1);
+  }
+}
+
+.border-glow {
+  animation: border-glow 2.5s ease-in-out infinite;
+}
+
+/* Stagger Animation Helper */
+@keyframes stagger-in {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-item {
+  animation: stagger-in 0.5s ease-out forwards;
+}
+
+/* Smooth Scale and Fade */
+@keyframes scale-fade-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.scale-fade-in {
+  animation: scale-fade-in 0.6s ease-out;
+}
+
+/* Button Ripple Effect */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Smooth Color Transition for Links */
+a {
+  position: relative;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Premium Input Focus Animation */
+input:focus,
+textarea:focus,
+select:focus {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Card Hover Lift Effect */
+@keyframes card-lift {
+  0% {
+    transform: translateY(0px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+  100% {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.card-hover-lift:hover {
+  animation: card-lift 0.3s ease-out forwards;
+}
+
+/* Smooth Rotation for Loading Spinners */
+@keyframes smooth-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-smooth {
+  animation: smooth-spin 2s linear infinite;
+}
+
+/* ========================
+   GLOBAL BACKGROUND & LAYOUT
+   ======================== */
+
+/* Cream background globally */
+html,
+body,
+#root {
+  background-color: #fffaf4;
+}
+
+/* Subtle banana leaf pattern */
+@keyframes subtle-leaf-shift {
+  0%, 100% {
+    opacity: 0.04;
+  }
+  50% {
+    opacity: 0.06;
+  }
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: 
+    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(139, 0, 0, 0.02) 35px, rgba(139, 0, 0, 0.02) 70px),
+    repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(230, 168, 23, 0.01) 35px, rgba(230, 168, 23, 0.01) 70px),
+    radial-gradient(circle at 20% 50%, rgba(139, 0, 0, 0.03) 0%, transparent 50%);
+  background-size: 100% 100%, 100% 100%, 200% 200%;
+  pointer-events: none;
+  z-index: -1;
+  animation: subtle-leaf-shift 12s ease-in-out infinite;
+}
+
+/* Main content padding consistency */
+main {
+  background-color: transparent;
+}
+
+/* ========================
+   CARD & CONTAINER STYLING
+   ======================== */
+
+/* Premium card styling */
+.premium-card {
+  background: white;
+  border: 1px solid #eadfce;
+  border-radius: 1.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: #dfd2bb;
+}
+
+/* Container base */
+.layout-container {
+  max-width: 6rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .layout-container {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .layout-container {
+    padding: 0 2rem;
+  }
+}
+
+/* Section typography improvements */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+}
+
+/* Improved input styling */
+input,
+textarea,
+select {
+  background-color: #fffaf4;
+  border-color: #eadfce;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  background-color: white;
+  border-color: #8B0000;
+  box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
+}
+
+/* Button consistency */
+button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* ========================
+   PREMIUM ANIMATIONS
+   ======================== */
+
+/* Hero Image Float Animation */
+@keyframes hero-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.hero-float {
+  animation: hero-float 6s ease-in-out infinite;
+}
+
+/* Product Card Hover & Load */
+@keyframes product-stagger {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.product-stagger {
+  animation: product-stagger 0.6s ease-out backwards;
+}
+
+/* Section Fade-Up on Scroll */
+@keyframes section-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-reveal {
+  animation: section-reveal 0.8s ease-out;
+}
+
+/* Slow Pulse for CTA Button */
+@keyframes cta-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(139, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(139, 0, 0, 0);
+  }
+}
+
+.cta-pulse {
+  animation: cta-pulse 3s ease-in-out infinite;
+}
+
+/* Subtle Gradient Shift Background */
+@keyframes gradient-breathing {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.gradient-breathing {
+  background-size: 200% 200%;
+  animation: gradient-breathing 8s ease-in-out infinite;
+}
+
+/* Scrolling Text Animation */
+@keyframes scroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 12s linear infinite;
+}
