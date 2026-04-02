@@ -2,7 +2,37 @@ import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypt
 import jwt from "jsonwebtoken";
 import { sendError } from "./http.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "sp-pickles-dev-secret";
+const DEFAULT_DEV_JWT_SECRET = "sp-pickles-dev-secret";
+let hasWarnedAboutJwtSecret = false;
+
+const getJwtSecret = () => {
+  const configuredSecret = String(process.env.JWT_SECRET ?? "").trim();
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (!configuredSecret) {
+    if (isProduction) {
+      throw new Error("JWT_SECRET must be set in production.");
+    }
+
+    if (!hasWarnedAboutJwtSecret) {
+      console.warn("[auth] JWT_SECRET is not set. Using an insecure development fallback.");
+      hasWarnedAboutJwtSecret = true;
+    }
+
+    return DEFAULT_DEV_JWT_SECRET;
+  }
+
+  if (isProduction && configuredSecret.length < 32) {
+    throw new Error("JWT_SECRET must be at least 32 characters long in production.");
+  }
+
+  if (!isProduction && configuredSecret.length < 32 && !hasWarnedAboutJwtSecret) {
+    console.warn("[auth] JWT_SECRET is shorter than recommended. Use at least 32 characters.");
+    hasWarnedAboutJwtSecret = true;
+  }
+
+  return configuredSecret;
+};
 
 const safeCompare = (left, right) => {
   const leftBuffer = Buffer.from(left);
@@ -57,7 +87,7 @@ export const signAdminToken = (adminUser) =>
       email: adminUser.email,
       role: "admin",
     },
-    JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: "8h" },
   );
 
@@ -72,7 +102,7 @@ export const requireAdmin = (req, res) => {
   const token = authorization.slice("Bearer ".length).trim();
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET);
+    const payload = jwt.verify(token, getJwtSecret());
 
     if (payload.role !== "admin") {
       sendError(res, 403, "Admin access required.");

@@ -18,18 +18,15 @@
     "noUnusedParameters": false,
     "paths": {
       "@/*": [
-        "./src/*"
+        "./frontend/src/*"
       ]
     },
     "skipLibCheck": true,
     "strict": false,
     "target": "ES2020",
-    "types": [
-      "vitest/globals"
-    ],
     "useDefineForClassFields": true
   },
   "include": [
-    "src"
+    "frontend/src"
   ]
 }
