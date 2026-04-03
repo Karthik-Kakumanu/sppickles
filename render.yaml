@@ -19,8 +19,8 @@ services:
     name: sp-pickles-frontend
     env: node
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm run start:frontend
+    buildCommand: npm install && npm run build:frontend
+    startCommand: npm run preview
     envVars:
       - key: NODE_ENV
         value: production
