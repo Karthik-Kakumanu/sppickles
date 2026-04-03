@@ -19,8 +19,10 @@ const ENABLE_LOGGING = process.env.ENABLE_REQUEST_LOGGING !== "false";
 const API_PREFIX = "/api";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FRONTEND_DIST_DIR = path.resolve(__dirname, "../frontend/dist");
-const FRONTEND_INDEX_FILE = path.join(FRONTEND_DIST_DIR, "index.html");
+const FRONTEND_DIST_DIRS = [
+  path.resolve(__dirname, "../dist"),
+  path.resolve(__dirname, "../frontend/dist"),
+];
 const VALID_WEIGHTS = new Set(["250g", "500g", "1kg"]);
 const PHONE_PATTERN = /^\d{10}$/;
 const PINCODE_PATTERN = /^\d{6}$/;
@@ -79,6 +81,23 @@ const getContentType = (filePath) => {
   return MIME_TYPES[extension] || "application/octet-stream";
 };
 
+const resolveFrontendDistDir = async () => {
+  for (const candidateDir of FRONTEND_DIST_DIRS) {
+    try {
+      const indexFile = path.join(candidateDir, "index.html");
+      const indexStats = await stat(indexFile);
+
+      if (indexStats.isFile()) {
+        return candidateDir;
+      }
+    } catch {
+      // Try the next candidate.
+    }
+  }
+
+  return null;
+};
+
 const sendStaticFile = async (res, filePath, method) => {
   const body = await readFile(filePath);
   const isHtml = filePath.endsWith(".html");
@@ -101,13 +120,19 @@ const serveFrontendApp = async (res, pathname, method) => {
     return false;
   }
 
+  const frontendDistDir = await resolveFrontendDistDir();
+
+  if (!frontendDistDir) {
+    return false;
+  }
+
   const normalizedPath = decodeURIComponent(pathname).replace(/^\/+/, "");
-  let targetFilePath = FRONTEND_INDEX_FILE;
+  let targetFilePath = path.join(frontendDistDir, "index.html");
 
   if (normalizedPath) {
-    const candidatePath = path.resolve(FRONTEND_DIST_DIR, normalizedPath);
+    const candidatePath = path.resolve(frontendDistDir, normalizedPath);
 
-    if (candidatePath.startsWith(FRONTEND_DIST_DIR)) {
+    if (candidatePath.startsWith(frontendDistDir)) {
       try {
         const candidateStats = await stat(candidatePath);
 
