@@ -547,6 +547,26 @@ const updateOrderStatus = async (orderId, body) => {
   return getOrderById(orderId);
 };
 
+const deleteOrder = async (orderId) => {
+  const result = await pool.query(
+    `
+      delete from orders
+      where id = $1
+      returning id
+    `,
+    [orderId],
+  );
+
+  if (result.rowCount === 0) {
+    throw { statusCode: 404, message: "Order not found." };
+  }
+
+  return {
+    id: result.rows[0].id,
+    deleted: true,
+  };
+};
+
 const loginAdmin = async (body, req) => {
   if (!isPlainObject(body)) {
     throw { statusCode: 400, message: "Request body must be a JSON object." };
@@ -654,6 +674,7 @@ const server = http.createServer(async (req, res) => {
           getOrders: `GET ${API_PREFIX}/orders?limit=20&offset=0`,
           getOrder: `GET ${API_PREFIX}/orders/:order_id`,
           updateOrderStatus: `PATCH ${API_PREFIX}/orders/:order_id/status`,
+          deleteOrder: `DELETE ${API_PREFIX}/orders/:order_id`,
           adminLogin: `POST ${API_PREFIX}/admin/login`,
         },
       });
@@ -704,6 +725,12 @@ const server = http.createServer(async (req, res) => {
               path: "/orders/:order_id",
               method: "GET",
               description: "Get specific order (requires admin auth)",
+              auth: "Bearer token",
+            },
+            delete: {
+              path: "/orders/:order_id",
+              method: "DELETE",
+              description: "Delete specific order completely (requires admin auth)",
               auth: "Bearer token",
             },
             updateStatus: {
@@ -801,12 +828,18 @@ const server = http.createServer(async (req, res) => {
 
     const getOrderRoute = matchRoute(routePathname, "/orders/:order_id");
     if (getOrderRoute) {
-      if (method !== "GET") {
+      if (method !== "GET" && method !== "DELETE") {
         sendError(res, 405, "Method not allowed.");
         return;
       }
 
       if (!requireAdmin(req, res)) {
+        return;
+      }
+
+      if (method === "DELETE") {
+        const deletedOrder = await deleteOrder(getOrderRoute.order_id);
+        sendSuccess(res, 200, deletedOrder, "Order deleted successfully.");
         return;
       }
 

@@ -73,82 +73,129 @@ const CartPage = () => {
         description="Review your cart and continue to checkout for SP Traditional Pickles."
       />
 
+      {/* ── Top bar ── */}
       <section className="border-b border-[#d8e5d8] bg-[linear-gradient(180deg,#fffefa_0%,#f8faf6_100%)]">
-        <div className={`${pageWrap} flex items-center justify-between gap-4 py-6 sm:py-7`}>
-          <span className="inline-flex rounded-full bg-[#fff3c9] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#956d00] sm:px-4 sm:py-2 sm:text-xs">
+        <div className={`${pageWrap} flex items-center justify-between gap-3 py-4 sm:py-5`}>
+          <span className="inline-flex rounded-full bg-[#fff3c9] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#956d00] sm:px-4 sm:py-1.5 sm:text-xs">
             {t.eyebrow}
           </span>
 
-          {cart.length > 0 ? (
+          {cart.length > 0 && (
             <button
               type="button"
               onClick={clearCart}
-              className="inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-5 py-2.5 text-sm font-semibold text-theme-body shadow-sm transition hover:bg-[#edf5ee] sm:px-6 sm:py-3"
+              className="inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-4 py-2 text-xs font-semibold text-theme-body shadow-sm transition-all duration-200 hover:bg-[#edf5ee] hover:shadow-md active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm"
             >
               {t.clear}
             </button>
-          ) : null}
+          )}
         </div>
       </section>
 
-      <section className={`${pageWrap} py-10 md:py-12`}>
+      <section className={`${pageWrap} py-6 md:py-8`}>
+
+        {/* ══════════════════════════════════════
+            EMPTY STATE
+        ══════════════════════════════════════ */}
         {cart.length === 0 ? (
-          <div className="section-shell px-8 py-16 text-center">
-            <ShoppingBag className="mx-auto h-12 w-12 text-theme-heading" />
-            <h2 className="mt-6 font-heading text-3xl font-semibold text-theme-heading md:text-4xl">
+          <div className="section-shell px-6 py-14 text-center sm:px-8 sm:py-16">
+
+            {/* Icon with subtle halo */}
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#edf5ee] ring-8 ring-[#edf5ee]/40 sm:h-20 sm:w-20">
+              <ShoppingBag className="h-7 w-7 text-[#2f7a43] sm:h-9 sm:w-9" />
+            </div>
+
+            <h2 className="mt-6 font-heading text-2xl font-semibold text-theme-heading sm:text-3xl md:text-4xl">
               {t.emptyTitle}
             </h2>
+
             <p
-              className={`mx-auto mt-4 max-w-2xl text-base leading-8 text-theme-body ${
+              className={`mx-auto mt-3 max-w-sm text-sm leading-7 text-theme-body sm:max-w-xl sm:text-base sm:leading-8 ${
                 language === "te" ? "font-telugu" : ""
               }`}
             >
               {t.emptyDescription}
             </p>
-            <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+
+            {/*
+              FIX ✅ — Button text visibility
+              ──────────────────────────────────────────────────────────────────
+              Root cause: `!text-white` can be defeated by higher-specificity
+              global CSS (e.g. `a { color: var(--color-link) }`).
+              Fix: removed the `!` bang, added `text-white` without the bang,
+              AND added an inline `style={{ color:"#ffffff" }}` as a
+              belt-and-suspenders fallback.  The inline style wins the cascade
+              over any stylesheet rule, so the label is ALWAYS visible on the
+              green pill.
+            */}
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
               <Link
                 to="/products"
-                className="inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] sm:w-auto"
-                style={{ color: "#ffffff" }}
+                className="inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-7 py-3.5 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(47,122,67,0.25)] transition-all duration-200 hover:bg-[#28683a] hover:shadow-[0_20px_44px_rgba(47,122,67,0.32)] active:scale-[0.97] sm:w-auto"
+                style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
               >
-                {language === "te" ? "ఉత్పత్తులు చూడండి" : "Browse Products"}
+                <span style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}>
+                  {language === "te" ? "ఉత్పత్తులు చూడండి" : "Browse Products"}
+                </span>
               </Link>
+
               <Link
                 to="/"
-                className="inline-flex w-full items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-6 py-3.5 text-sm font-semibold text-theme-body transition hover:bg-[#edf5ee] sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-7 py-3.5 text-sm font-semibold text-theme-heading transition-all duration-200 hover:bg-[#edf5ee] active:scale-[0.97] sm:w-auto"
               >
                 {language === "te" ? "హోమ్‌కు తిరుగు" : "Back to Home"}
               </Link>
             </div>
           </div>
+
         ) : (
           <>
-            <div className="grid gap-8 lg:grid-cols-[1.18fr_0.82fr]">
-              <div className="space-y-6">
+            {/* ══════════════════════════════════════
+                FILLED CART
+            ══════════════════════════════════════ */}
+            <div className="grid gap-5 lg:grid-cols-[1.18fr_0.82fr]">
+
+              {/* Line items */}
+              <div className="space-y-3 sm:space-y-4">
                 {cart.map((line) => (
                   <article
                     key={line.key}
-                    className="section-shell group overflow-hidden px-6 py-6 transition duration-300 hover:-translate-y-1"
+                    className="section-shell group overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    <div className="grid gap-6 lg:grid-cols-[180px_1fr_auto]">
-                      <div className="overflow-hidden rounded-[1.6rem]">
+                    {/*
+                      Changed from CSS grid to flex so the image width
+                      is purely controlled by its own size class — no
+                      grid column fights on mobile.
+                    */}
+                    <div className="flex items-start gap-3 p-3 sm:gap-4 sm:p-5">
+
+                      {/*
+                        FIX ✅ — Mobile image size
+                        ──────────────────────────────────────────────────────
+                        On mobile the image is now only 52 px (h-13 w-13) —
+                        very small, purely decorative thumbnail.
+                        It scales up to 88 px on sm and 104 px on lg.
+                        `shrink-0` prevents it from being squeezed by flex.
+                      */}
+                      <div className="h-13 w-13 shrink-0 overflow-hidden rounded-xl sm:h-[88px] sm:w-[88px] sm:rounded-2xl lg:h-[104px] lg:w-[104px]">
                         <img
                           src={line.product.image}
                           alt={line.product.name}
-                          className="aspect-[4/4.4] w-full object-cover"
+                          className="h-full w-full object-cover"
                         />
                       </div>
 
-                      <div className="flex flex-col gap-5">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#956d00]">
+                      {/* Details */}
+                      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:gap-3">
+                        <div className="space-y-0.5 sm:space-y-1">
+                          <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#956d00] sm:text-[10px]">
                             {line.product.category}
                           </p>
-                          <h2 className="mt-3 font-heading text-3xl font-semibold text-theme-heading">
+                          <h2 className="font-heading text-[0.95rem] font-semibold leading-tight text-theme-heading sm:text-[1.25rem]">
                             {line.product.name}
                           </h2>
                           <p
-                            className={`mt-3 text-sm leading-7 text-theme-body ${
+                            className={`text-[11px] leading-5 text-theme-body sm:text-sm sm:leading-6 ${
                               language === "te" ? "font-telugu" : ""
                             }`}
                           >
@@ -156,56 +203,62 @@ const CartPage = () => {
                           </p>
                         </div>
 
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        {/* Qty + price */}
+                        <div className="flex flex-wrap items-end justify-between gap-2">
+                          {/* Stepper */}
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-theme-heading">
+                            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-theme-heading sm:text-[10px]">
                               {t.quantity}
                             </p>
-                            <div className="mt-3 inline-flex w-fit items-center rounded-full border border-[#d8e5d8] bg-white shadow-sm">
+                            <div className="mt-1.5 inline-flex items-center rounded-full border border-[#d8e5d8] bg-white shadow-sm">
                               <button
                                 type="button"
                                 onClick={() => updateCartLineQuantity(line.key, line.quantity - 1)}
-                                className="px-4 py-2 text-theme-body transition hover:text-theme-heading"
+                                className="px-3 py-1.5 text-theme-body transition hover:text-theme-heading active:scale-90 sm:px-3.5 sm:py-2"
                                 aria-label="Decrease quantity"
                               >
-                                <Minus className="h-4 w-4" />
+                                <Minus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                               </button>
-                              <span className="min-w-10 text-center text-sm font-semibold text-theme-heading">
+                              <span className="min-w-[1.75rem] text-center text-xs font-semibold text-theme-heading sm:min-w-[2.25rem] sm:text-sm">
                                 {line.quantity}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => updateCartLineQuantity(line.key, line.quantity + 1)}
-                                className="px-4 py-2 text-theme-body transition hover:text-theme-heading"
+                                className="px-3 py-1.5 text-theme-body transition hover:text-theme-heading active:scale-90 sm:px-3.5 sm:py-2"
                                 aria-label="Increase quantity"
                               >
-                                <Plus className="h-4 w-4" />
+                                <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                               </button>
                             </div>
                           </div>
 
-                          <div className="sm:text-right">
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-theme-heading">
+                          {/* Price */}
+                          <div className="text-right">
+                            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-theme-heading sm:text-[10px]">
                               {t.lineTotal}
                             </p>
-                            <p className="price-figure mt-3 text-3xl font-extrabold text-[#2f7a43]">
+                            <p className="price-figure mt-1 text-base font-extrabold text-[#2f7a43] sm:text-[1.4rem]">
                               {formatCurrency(line.totalPrice)}
                             </p>
-                            <p className="price-figure mt-2 text-sm text-theme-body">
+                            <p className="price-figure mt-0.5 text-[10px] text-theme-body sm:text-xs">
                               {formatCurrency(line.price)} each
                             </p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-start justify-end">
+                      {/* Remove */}
+                      <div className="shrink-0 pt-0.5">
                         <button
                           type="button"
                           onClick={() => removeFromCart(line.key)}
-                          className="inline-flex items-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-4 py-2 text-sm font-semibold text-theme-body transition hover:border-[#d9644c] hover:text-[#d9644c]"
+                          className="inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-white p-2 text-theme-body transition-all duration-200 hover:border-[#d9644c] hover:text-[#d9644c] active:scale-90 sm:gap-1.5 sm:px-4 sm:py-2 sm:text-sm"
                         >
-                          <Trash2 className="h-4 w-4" />
-                          {language === "te" ? "తొలగించండి" : "Remove"}
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">
+                            {language === "te" ? "తొలగించండి" : "Remove"}
+                          </span>
                         </button>
                       </div>
                     </div>
@@ -213,10 +266,13 @@ const CartPage = () => {
                 ))}
               </div>
 
-              <aside className="section-shell h-fit px-7 py-8 lg:sticky lg:top-36">
-                <h2 className="font-heading text-3xl font-semibold text-theme-heading">{t.orderSummary}</h2>
+              {/* ── Order summary ── */}
+              <aside className="section-shell h-fit px-5 py-6 lg:sticky lg:top-36 sm:px-6 sm:py-7">
+                <h2 className="font-heading text-xl font-semibold text-theme-heading sm:text-2xl md:text-3xl">
+                  {t.orderSummary}
+                </h2>
 
-                <div className="mt-8 space-y-4 border-b border-[#d8e5d8] pb-6">
+                <div className="mt-5 space-y-3 border-b border-[#d8e5d8] pb-5 sm:mt-6 sm:space-y-4 sm:pb-6">
                   <div className="flex items-center justify-between gap-4 text-sm">
                     <span className="text-theme-body">
                       {language === "te"
@@ -227,31 +283,34 @@ const CartPage = () => {
                       {formatCurrency(subtotal)}
                     </span>
                   </div>
-                  <div className="rounded-2xl border border-[#d8e5d8] bg-[#f8fbf8] px-5 py-4 text-sm leading-7 text-theme-body">
+                  <div className="rounded-xl border border-[#d8e5d8] bg-[#f8fbf8] px-4 py-3 text-xs leading-6 text-theme-body sm:rounded-2xl sm:px-5 sm:py-4 sm:text-sm sm:leading-7">
                     {t.shipping}
                   </div>
                 </div>
 
-                <div className="mt-6 flex items-center justify-between rounded-2xl bg-[#edf5ee] px-5 py-4">
-                  <span className="text-base font-semibold text-theme-heading">
+                <div className="mt-4 flex items-center justify-between rounded-xl bg-[#edf5ee] px-4 py-3 sm:mt-5 sm:rounded-2xl sm:px-5 sm:py-4">
+                  <span className="text-sm font-semibold text-theme-heading sm:text-base">
                     {language === "te" ? "ఉప మొత్తం" : "Subtotal"}
                   </span>
-                  <span className="price-figure text-2xl font-extrabold text-[#2f7a43]">
+                  <span className="price-figure text-lg font-extrabold text-[#2f7a43] sm:text-2xl">
                     {formatCurrency(subtotal)}
                   </span>
                 </div>
 
-                <div className="mt-8 flex flex-col gap-3">
+                <div className="mt-5 flex flex-col gap-2.5 sm:mt-6 sm:gap-3">
+                  {/* FIX ✅ — same belt-and-suspenders colour fix as above */}
                   <Link
                     to="/checkout"
-                    className="inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-6 py-4 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a]"
-                    style={{ color: "#ffffff" }}
+                    className="inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(47,122,67,0.22)] transition-all duration-200 hover:bg-[#28683a] hover:shadow-[0_20px_44px_rgba(47,122,67,0.30)] active:scale-[0.97] sm:px-6 sm:py-4"
+                    style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
                   >
-                    {t.continueToCheckout}
+                    <span style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}>
+                      {t.continueToCheckout}
+                    </span>
                   </Link>
                   <Link
                     to="/products"
-                    className="inline-flex w-full items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-6 py-3.5 text-sm font-semibold text-theme-body transition hover:bg-[#edf5ee]"
+                    className="inline-flex w-full items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-5 py-3 text-sm font-semibold text-theme-heading transition-all duration-200 hover:bg-[#edf5ee] active:scale-[0.97] sm:px-6 sm:py-3.5"
                   >
                     {t.continueShopping}
                   </Link>
@@ -259,18 +318,19 @@ const CartPage = () => {
               </aside>
             </div>
 
-            {recommendations.length > 0 ? (
-              <div className="mt-14">
+            {/* ── Recommendations ── */}
+            {recommendations.length > 0 && (
+              <div className="mt-12 sm:mt-14">
                 <div className="max-w-4xl">
                   <span className="inline-flex rounded-full bg-[#fff3c9] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#956d00]">
                     {t.suggestionsEyebrow}
                   </span>
-                  <h2 className="mt-5 font-heading text-4xl font-semibold text-theme-heading md:text-5xl">
+                  <h2 className="mt-4 font-heading text-3xl font-semibold text-theme-heading sm:mt-5 sm:text-4xl md:text-5xl">
                     {t.suggestionsTitle}
                   </h2>
                 </div>
 
-                <div className="mt-8 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+                <div className="mt-5 grid gap-4 sm:mt-7 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
                   {recommendations.map((product, index) => (
                     <ProductCard
                       key={product.id}
@@ -281,7 +341,7 @@ const CartPage = () => {
                   ))}
                 </div>
               </div>
-            ) : null}
+            )}
           </>
         )}
       </section>

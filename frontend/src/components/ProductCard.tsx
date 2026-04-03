@@ -1,12 +1,13 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Minus, Plus, ShoppingCart, TrendingUp } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { type ProductRecord, type WeightOption, weightOptions } from "@/data/site";
 import { content, getWeightLabel } from "@/content/translations";
 import { calculateWeightPrice, formatCurrency } from "@/lib/pricing";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
+import { useNavigate } from "react-router-dom";
 import { ProgressiveImage } from "@/components/LazyImage";
 
 type ProductCardProps = {
@@ -17,7 +18,7 @@ type ProductCardProps = {
 };
 
 const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }: ProductCardProps) => {
-  const { toast } = useToast();
+  const navigate = useNavigate();
   const { addToCart } = useStore();
   const { language } = useLanguage();
 
@@ -63,24 +64,68 @@ const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }
 
   const handleAddToCart = () => {
     if (!isAvailable) {
-      toast({
-        title: productCardCopy.outOfStock,
+      toast.error(productCardCopy.outOfStock, {
         description: language === "te"
           ? `${displayName} ప్రస్తుతం స్టాక్‌లో లేదు.`
           : `${displayName} is currently out of stock.`,
-        variant: "destructive",
       });
       return;
     }
     addToCart(product, weight, quantity);
-    toast({
-      title: productCardCopy.addedToCartTitle,
-      description: productCardCopy.addedToCartDescription(
-        displayName,
-        getWeightLabel(language, weight),
-        quantity,
-      ),
-    });
+    toast.custom((id) => (
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 14, scale: 0.96 }}
+        transition={{ type: "spring", stiffness: 280, damping: 24 }}
+        className="pointer-events-auto w-[calc(100vw-1rem)] max-w-sm overflow-hidden rounded-[1.5rem] border border-[#ddc67c] bg-[linear-gradient(135deg,#fffdf4_0%,#f6fbf6_46%,#fff1c8_100%)] p-3.5 shadow-[0_24px_60px_rgba(26,92,42,0.22)] sm:w-[22rem] sm:p-4"
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,#1a5c2a_0%,#0f3d1c_100%)] text-[1.4rem] shadow-[0_10px_24px_rgba(26,92,42,0.28)]">
+            🛒
+          </div>
+          <div className="min-w-0 flex-1 pt-0.5">
+            <p className="text-[0.62rem] font-black uppercase tracking-[0.3em] text-[#8b6511]">
+              {language === "te" ? "కార్ట్‌లో చేరింది" : "Added to cart"}
+            </p>
+            <p className={`mt-1 truncate text-sm font-bold text-theme-heading ${language === "te" ? "font-telugu" : ""}`}>
+              {displayName}
+            </p>
+            <p className="mt-0.5 text-[0.78rem] text-theme-body/70">
+              {quantity} × {getWeightLabel(language, weight)} · {formatCurrency(livePrice * quantity)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => toast.dismiss(id)}
+            className="rounded-full border border-[#eadbb2] bg-white/85 px-2.5 py-1 text-[0.72rem] font-black text-[#6f5414] shadow-sm transition-transform hover:scale-105"
+            aria-label="Close cart popup"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              toast.dismiss(id);
+              navigate("/cart");
+            }}
+            className="flex-1 rounded-xl bg-[linear-gradient(180deg,#1a5c2a_0%,#0f3d1c_100%)] px-3 py-2 text-[0.78rem] font-bold text-white shadow-[0_10px_20px_rgba(26,92,42,0.24)] transition-transform hover:-translate-y-0.5"
+          >
+            {language === "te" ? "కార్ట్‌కి వెళ్ళండి" : "Go to cart"}
+          </button>
+          <button
+            type="button"
+            onClick={() => toast.dismiss(id)}
+            className="rounded-xl border border-[#e5d8ab] bg-white/80 px-3 py-2 text-[0.78rem] font-bold text-[#6f5414] transition-colors hover:bg-[#fff7dd]"
+          >
+            {language === "te" ? "కొనసాగించండి" : "Keep shopping"}
+          </button>
+        </div>
+      </motion.div>
+    ));
   };
 
   const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {

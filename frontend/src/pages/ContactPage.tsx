@@ -1,10 +1,12 @@
 import { useMemo, useState, type FormEvent } from "react";
-import { Globe2, Mail, MapPin, MessageCircle, Phone, SendHorizonal } from "lucide-react";
+import { Globe2, Mail, MapPin, Phone, SendHorizonal } from "lucide-react";
 import Seo from "@/components/Seo";
 import { useLanguage } from "@/components/LanguageProvider";
 import { brand } from "@/data/site";
+import WhatsAppLogo from "@/components/WhatsAppLogo";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
+const contactMapQuery = "23-30-24,, kanakaraju street, satyanarayana puram, Vijayawada -11";
 
 const contactCopy = {
   en: {
@@ -152,7 +154,9 @@ const ContactPage = () => {
                 rel="noreferrer"
                 className="flex items-start gap-3 rounded-2xl border border-[#d8e5d8] bg-white px-5 py-4 transition hover:bg-[#edf5ee]"
               >
-                <MessageCircle className="mt-1 h-4 w-4 text-[#2f7a43]" />
+                <span className="mt-0.5 inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#2f7a43] text-white shadow-[0_0_0_1px_rgba(47,122,67,0.14)]">
+                  <WhatsAppLogo className="h-[18px] w-[18px]" />
+                </span>
                 <div>
                   <p className="font-semibold text-theme-heading">WhatsApp</p>
                   <p className="mt-1">{brand.whatsappDisplay}</p>
@@ -224,7 +228,7 @@ const ContactPage = () => {
           <div className="section-shell overflow-hidden">
             <iframe
               title="SP Traditional Pickles location"
-              src={brand.mapEmbedUrl}
+              src={`https://www.google.com/maps?q=${encodeURIComponent(contactMapQuery)}&output=embed`}
               className="h-[320px] w-full"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"

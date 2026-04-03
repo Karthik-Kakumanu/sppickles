@@ -1,6 +1,6 @@
-import { MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { brand } from "@/data/site";
+import WhatsAppLogo from "@/components/WhatsAppLogo";
 
 const FloatingWhatsappButton = () => {
   return (
@@ -18,7 +18,7 @@ const FloatingWhatsappButton = () => {
     >
       <div className="animate-whatsapp-pulse inline-flex items-center gap-3 rounded-full border border-[#cfe0cf] bg-white px-4 py-3 shadow-[0_20px_46px_rgba(30,79,46,0.18)]">
         <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#2f7a43] text-white shadow-[0_14px_28px_rgba(47,122,67,0.24)]">
-          <MessageCircle className="h-5 w-5" />
+          <WhatsAppLogo className="h-[22px] w-[22px]" />
         </div>
         <div className="hidden text-left md:block">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2f7a43]">

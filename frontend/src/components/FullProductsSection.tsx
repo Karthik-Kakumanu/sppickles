@@ -76,15 +76,15 @@ const productCategories: ProductCategory[] = [
       { teName: "దోస ఆవకాయ", enName: "Dosavakaya", price: "₹600" },
       { teName: "మాగాయ", enName: "Magaya", price: "₹650" },
       { teName: "వెలగకాయ నిల్వ", enName: "Velakkaya", price: "₹850" },
-      { teName: "వంకాయ నిల్వ పచ్చడి", enName: "Vankaya Nilava Pachadi", price: "₹850" },
-      { teName: "అల్లం పచ్చడి", enName: "Allam Pachadi", price: "₹650" },
-      { teName: "మామిడి అల్లం పచ్చడి", enName: "Mamidi Allam Pachadi", price: "₹650" },
+      { teName: "వంకాయ నిల్వ", enName: "Vankaya Nilava", price: "₹850" },
+      { teName: "అల్లం", enName: "Allam", price: "₹650" },
+      { teName: "మామిడి అల్లం", enName: "Mamidi Allam", price: "₹650" },
       { teName: "మామిడి అల్లం ఆవకాయ", enName: "Mamidi Allam Avakaya", price: "₹850" },
-      { teName: "టమాటో పచ్చడి", enName: "Tomato Pachadi", price: "₹650" },
+      { teName: "టమాటో", enName: "Tomato", price: "₹650" },
       { teName: "మునక్కాయ టమాటో", enName: "Munakkaya Tomato", price: "₹650" },
       { teName: "పచ్చిమిర్చి ఆవకాయ", enName: "Pachimirchi Avakaya", price: "₹600" },
-      { teName: "మామిడి తురుము పచ్చడి", enName: "Mamidi Turumu Pachadi", price: "₹600" },
-      { teName: "మామిడి ముక్కల పచ్చడి", enName: "Mamidi Mukkala Pachadi", price: "₹600" },
+      { teName: "మామిడి తురుము", enName: "Mamidi Turumu", price: "₹600" },
+      { teName: "మామిడి ముక్కలు", enName: "Mamidi Mukkalu", price: "₹600" },
       { teName: "కాయ ఆవకాయ", enName: "Kaya Avakaya", price: "₹750" },
       { teName: "తీపి కాయ ఆవకాయ", enName: "Theepi Kaya Avakaya", price: "₹850" },
       { teName: "తీపి దబ్బకాయ", enName: "Theepi Dabbakaya", price: "₹650" },
@@ -240,7 +240,7 @@ const FullProductsSection = () => {
                 </div>
 
                 <div className="p-4 md:p-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {displayItems.map((item, idx) => (
                       <div
                         key={`${item.enName}-${idx}`}

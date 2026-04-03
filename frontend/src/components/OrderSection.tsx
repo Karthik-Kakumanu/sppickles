@@ -175,7 +175,7 @@ const OrderSection = () => {
                 teluguClassName="font-heading text-xs font-semibold"
                 englishClassName="font-heading text-sm font-semibold"
               />
-              <p className="font-body text-xs text-ivory/60">+91 79813 70664</p>
+              <p className="font-body text-xs text-ivory/60">7981370664</p>
             </div>
           </motion.div>
 

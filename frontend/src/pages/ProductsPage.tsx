@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Filter } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import ProductCard from "@/components/ProductCard";
 import Seo from "@/components/Seo";
 import SkeletonCard from "@/components/SkeletonCard";
-import { FilterPanel, type FilterOptions } from "@/components/FilterPanel";
+import { type FilterOptions } from "@/components/FilterPanel";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { content } from "@/content/translations";
@@ -21,6 +20,12 @@ type ProductsPageProps = {
 };
 
 const pageWrap = "w-full px-5 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 max-w-[1920px] mx-auto";
+const DEFAULT_FILTERS: FilterOptions = {
+  categories: [],
+  priceRange: [0, Infinity] as [number, number],
+  subcategories: [],
+  sortBy: "newest" as const,
+};
 
 const filterRoutes: Record<StoreFilter, string> = {
   all: "/products",
@@ -42,22 +47,22 @@ const StatCard = ({
   variant?: "gold" | "neutral";
 }) => (
   <div
-    className={`group relative overflow-hidden rounded-2xl border p-5 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-[0_8px_24px_rgba(30,79,46,0.08)] ${
+    className={`group relative overflow-hidden rounded-2xl border p-3.5 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-[0_8px_24px_rgba(30,79,46,0.08)] ${
       variant === "gold"
         ? "border-[#e4dac0]/60 bg-white/60"
         : "border-[#d8e5d8]/60 bg-white/60"
     }`}
   >
     {/* Ambient glow on hover */}
-    <div className="pointer-events-none absolute -right-3 -top-3 h-10 w-10 rounded-full bg-[#f6c443]/10 blur-xl transition-all duration-500 group-hover:bg-[#f6c443]/20" />
+    <div className="pointer-events-none absolute -right-3 -top-3 h-8 w-8 rounded-full bg-[#f6c443]/10 blur-xl transition-all duration-500 group-hover:bg-[#f6c443]/20" />
     <p
-      className={`text-[10px] font-black uppercase tracking-[0.2em] ${
+      className={`text-[9px] font-black uppercase tracking-[0.18em] ${
         variant === "gold" ? "text-[#896318]" : "text-theme-body/60"
       }`}
     >
       {label}
     </p>
-    <p className="mt-2 text-[2rem] font-extrabold leading-none tracking-tight text-theme-heading tabular-nums">
+    <p className="mt-1.5 text-[1.7rem] font-extrabold leading-none tracking-tight text-theme-heading tabular-nums sm:text-[1.8rem] lg:text-[1.9rem]">
       {value}
     </p>
   </div>
@@ -112,13 +117,6 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
 
   const [selectedFilter, setSelectedFilter] = useState<StoreFilter>(initialFilter);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(!isMobile);
-  const [filters, setFilters] = useState<FilterOptions>({
-    categories: [],
-    priceRange: [0, Infinity],
-    subcategories: [],
-    sortBy: "newest",
-  });
   const [heroIndex, setHeroIndex] = useState(0);
   const gridRef = useRef<HTMLDivElement | null>(null);
 
@@ -162,7 +160,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
   );
 
   // Apply search and filter to category-filtered products
-  const visibleProducts = useSearchFilter(categoryFilteredProducts, searchQuery, filters);
+  const visibleProducts = useSearchFilter(categoryFilteredProducts, searchQuery, DEFAULT_FILTERS);
 
   const tabs: Array<{ key: StoreFilter; label: string; count: number }> = [
     { key: "all", label: t.products.allProducts, count: productCounts.all },
@@ -256,14 +254,14 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
         <div className="pointer-events-none absolute -left-24 top-12 h-72 w-72 rounded-full bg-[#f0d288]/18 blur-[90px]" />
         <div className="pointer-events-none absolute -right-16 top-20 h-64 w-64 rounded-full bg-[#2e7f4c]/8 blur-[90px]" />
 
-        <div className={`${pageWrap} relative pb-0 pt-10 md:pt-14`}>
-          <div className="grid gap-10 pb-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16 lg:pb-14">
+        <div className={`${pageWrap} relative pb-0 pt-8 md:pt-10`}>
+          <div className="grid gap-8 pb-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-10 lg:pb-10">
 
             {/* ── Left: copy + stats ── */}
-            <div className="space-y-8">
-              <div className="space-y-4">
+            <div className="space-y-6">
+              <div className="space-y-3">
                 {/* Gold eyebrow badge */}
-                <span className="inline-flex items-center rounded-full border border-[#ebd590]/50 bg-[#fff7df]/80 px-3.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-[#8b6511] shadow-sm backdrop-blur-md">
+                <span className="inline-flex items-center rounded-full border border-[#ebd590]/50 bg-[#fff7df]/80 px-3 py-0.5 text-[9px] font-black uppercase tracking-[0.2em] text-[#8b6511] shadow-sm backdrop-blur-md">
                   {pageCopy.collectionTag}
                 </span>
 
@@ -275,7 +273,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className={`text-balance font-heading text-4xl font-extrabold tracking-[-0.02em] text-theme-heading md:text-5xl xl:text-[3.4rem] xl:leading-[1.06] ${
+                    className={`text-balance font-heading text-[2.6rem] font-extrabold tracking-[-0.02em] text-theme-heading md:text-[3.2rem] xl:text-[3.4rem] xl:leading-[1.06] ${
                       isTe ? "font-telugu leading-[1.25]" : "leading-tight"
                     }`}
                   >
@@ -290,7 +288,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.25, delay: 0.05 }}
-                    className={`max-w-xl text-lg leading-relaxed text-theme-body/80 md:text-[1.1rem] ${isTe ? "font-telugu" : ""}`}
+                    className={`max-w-xl text-[0.96rem] leading-relaxed text-theme-body/80 md:text-[1rem] lg:text-[1.02rem] ${isTe ? "font-telugu" : ""}`}
                   >
                     {filterMeta[selectedFilter].description}
                   </motion.p>
@@ -298,7 +296,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
               </div>
 
               {/* Stat cards */}
-              <div className="grid grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                 <StatCard label={pageCopy.totalItems} value={productCounts.all} variant="gold" />
                 <StatCard label={pageCopy.bestSellers} value={bestSellerCount} />
                 <StatCard label={pageCopy.inStock} value={inStockCount} />
@@ -326,9 +324,9 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
               />
 
               {activeHeroProduct ? (
-                <div className="relative z-10 overflow-hidden rounded-[2rem] border border-white/80 bg-white/60 p-4 shadow-[0_16px_56px_rgba(25,62,41,0.11)] backdrop-blur-xl sm:p-5">
+                <div className="relative z-10 overflow-hidden rounded-[1.6rem] border border-white/80 bg-white/60 p-3 shadow-[0_16px_56px_rgba(25,62,41,0.11)] backdrop-blur-xl sm:p-4">
                   {/* Main hero image */}
-                  <div className="relative overflow-hidden rounded-[1.5rem] bg-[#f2f7f2]">
+                  <div className="relative overflow-hidden rounded-[1.25rem] bg-[#f2f7f2]">
                     <AnimatePresence mode="wait">
                       <motion.img
                         key={activeHeroProduct.id}
@@ -354,12 +352,12 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -6 }}
                         transition={{ duration: 0.4, delay: 0.1 }}
-                        className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-6"
+                        className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5"
                       >
                         <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#ffe6ab] drop-shadow-sm">
                           {pageCopy.featuredPick}
                         </p>
-                        <p className={`mt-1 text-xl font-bold leading-snug drop-shadow-md sm:text-2xl ${isTe ? "font-telugu" : "font-heading"}`}>
+                        <p className={`mt-1 text-[1.05rem] font-bold leading-snug drop-shadow-md sm:text-[1.25rem] ${isTe ? "font-telugu" : "font-heading"}`}>
                           {isTe ? (activeHeroProduct.name_te ?? activeHeroProduct.name) : activeHeroProduct.name}
                         </p>
                       </motion.div>
@@ -367,7 +365,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
                   </div>
 
                   {/* Thumbnail strip — Apple picker style */}
-                  <div className="mt-3.5 grid grid-cols-3 gap-2.5">
+                  <div className="mt-3 grid grid-cols-3 gap-2">
                     {heroGallery.map((product, index) => (
                       <button
                         key={product.id}
@@ -393,13 +391,13 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-[2rem] border border-[#d8e5d8]/60 bg-white/80 p-12 text-center text-sm font-medium text-theme-body shadow-sm backdrop-blur-md">
+                <div className="rounded-[1.6rem] border border-[#d8e5d8]/60 bg-white/80 p-8 text-center text-sm font-medium text-theme-body shadow-sm backdrop-blur-md">
                   {pageCopy.visualsLoading}
                 </div>
               )}
 
               {/* Pagination dots — pill style */}
-              <div className="mt-5 flex justify-center gap-2">
+              <div className="mt-3.5 flex justify-center gap-1.5">
                 {heroGallery.map((product, index) => (
                   <button
                     key={`${product.id}-dot`}
@@ -416,26 +414,34 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
           </div>
 
           {/* ── Filter tabs — horizontally scrollable, pill style ── */}
-          <div className="rounded-t-[1.75rem] border border-b-0 border-[#d9e6d9]/60 bg-white/65 px-2.5 pt-2.5 shadow-[0_-4px_20px_rgba(30,79,46,0.03)] backdrop-blur-xl sm:px-3 sm:pt-3">
+          <div className="rounded-t-[1.5rem] border border-b-0 border-[#d9e6d9]/60 bg-gradient-to-b from-white/85 to-[#f6fbf6]/90 px-2 pt-2.5 shadow-[0_-4px_20px_rgba(30,79,46,0.04)] backdrop-blur-xl sm:px-3 sm:pt-3">
+            <div className="mb-2 flex items-center justify-between px-0.5 sm:px-1">
+              <span className="text-[0.63rem] font-black uppercase tracking-[0.28em] text-theme-body/45">
+                {isTe ? "వర్గాలు" : "Filters"}
+              </span>
+              <span className="rounded-full border border-[#e3ebdf] bg-white/80 px-2 py-0.5 text-[0.62rem] font-bold tracking-[0.18em] text-theme-body/45 shadow-sm">
+                {tabs.length}
+              </span>
+            </div>
             <div className="flex gap-1.5 overflow-x-auto pb-2.5 sm:gap-2 sm:pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
                   type="button"
                   onClick={() => handleSelectFilter(tab.key)}
-                  className={`group relative shrink-0 whitespace-nowrap rounded-[1.25rem] border px-4 py-2.5 text-[0.8rem] font-bold transition-all duration-250 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-south-green ${
+                  className={`group relative shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[0.72rem] font-extrabold tracking-[0.02em] transition-all duration-250 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-south-green sm:px-4 sm:py-2.5 sm:text-[0.8rem] ${
                     selectedFilter === tab.key
-                      ? "border-[#ddc67c] bg-gradient-to-br from-[#fff3c9] to-[#f8e8b0] text-[#5c430a] shadow-sm"
-                      : "border-transparent text-theme-body/75 hover:bg-[#f4faf5] hover:text-theme-heading"
+                      ? "border-[#ddc67c] bg-gradient-to-br from-[#fff6d6] via-[#f8ebba] to-[#f2de93] text-[#5c430a] shadow-[0_8px_18px_rgba(140,110,18,0.14)]"
+                      : "border-[#dce7d9] bg-white/95 text-theme-body/72 shadow-[0_2px_10px_rgba(32,66,38,0.04)] hover:border-[#c8dcbe] hover:bg-[#f7fbf6] hover:text-theme-heading"
                   } ${isTe ? "font-telugu" : ""}`}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 sm:gap-2">
                     {tab.label}
                     {/* Count badge */}
                     <span
-                      className={`inline-flex h-[1.15rem] min-w-[1.15rem] items-center justify-center rounded-full px-1.5 text-[9px] font-black transition-colors duration-200 ${
+                      className={`inline-flex h-[1rem] min-w-[1rem] items-center justify-center rounded-full px-1.5 text-[8.5px] font-black transition-colors duration-200 sm:h-[1.15rem] sm:min-w-[1.15rem] sm:text-[9px] ${
                         selectedFilter === tab.key
-                          ? "bg-white/75 text-[#5c430a]"
+                          ? "bg-white/75 text-[#5c430a] shadow-sm"
                           : "bg-zinc-100 text-zinc-500 group-hover:bg-zinc-200"
                       }`}
                     >
@@ -457,9 +463,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
           /* Skeleton state */
           <div
             ref={gridRef}
-            className={`grid gap-5 ${
-              isMobile ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-4 lg:gap-6"
-            }`}
+            className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6"
           >
             {Array.from({ length: 8 }).map((_, i) => (
               <SkeletonCard key={i} />
@@ -477,58 +481,10 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
                 />
               </div>
 
-              {/* Filter Button - mobile only */}
-              {isMobile && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2 rounded-xl bg-south-green text-white px-4 py-3 font-semibold self-end"
-                >
-                  <Filter className="h-5 w-5" />
-                  {isTe ? "ఫిల్టర్‌లు" : "Filters"}
-                </motion.button>
-              )}
-            </div>
-
-            {/* Filters Panel - desktop: always visible; mobile: toggle */}
-            {showFilters && (
-              <FilterPanel 
-                filters={filters}
-                onFiltersChange={setFilters}
-                onClose={isMobile ? () => setShowFilters(false) : undefined}
-              />
-            )}
-
-            {/* Toolbar bar — product count + live indicator */}
-            <div className="flex flex-col gap-3 rounded-2xl border border-[#d8e5d8]/60 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-[0.8rem] font-black uppercase tracking-[0.18em] text-theme-heading">
-                  {isTe ? `${visibleProducts.length} ఉత్పత్తులు చూపిస్తున్నాం` : `Showing ${visibleProducts.length} products`}
-                </p>
-                <p className={`mt-0.5 text-xs text-theme-body/60 ${isTe ? "font-telugu" : ""}`}>
-                  {isTe
-                    ? "స్టాక్‌లో లేని ఉత్పత్తులూ కూడా కనిపిస్తాయి."
-                    : "Out-of-stock products stay visible so you can see the full range."}
-                </p>
-              </div>
-
-              {/* Live stock pill */}
-              <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#d8e5d8]/80 bg-zinc-50 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-theme-body shadow-sm">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                </span>
-                {t.products.liveStock}
-              </span>
             </div>
 
             {/* Grid */}
-            <div
-              className={`grid gap-5 ${
-                isMobile ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-4 lg:gap-6"
-              }`}
-            >
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
               {visibleProducts.map((product, index) => {
                 const dbProductId = getDbProductId(product.id, product.name);
                 const isAvailable = stockData.get(dbProductId) ?? true;

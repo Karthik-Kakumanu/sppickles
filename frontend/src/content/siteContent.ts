@@ -14,14 +14,14 @@ import catSpecial from "@/assets/cat-special.jpg";
 import storyKitchen from "@/assets/story-kitchen.jpg";
 import { pickleAvakaya, pickleGongura, pickleLemon } from "@/lib/pickleImages";
 
-export const whatsappNumber = "917981370664";
+export const whatsappNumber = "7981370664";
 export const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
   "Hello, I would like to place an order with Sampradyani Pachachalu with Brahmin Taste.",
 )}`;
 
-export const contactNumbers = ["+91 79813 70664", "0866 460 2255", "+91 73826 65848"];
+export const contactNumbers = ["7981370664", "08664602255", "7382665848"];
 export const address =
-  "Puchcha Pallavi, Kanakaraju Veedhi, near Maruti Vyayama Shala, Muthyalampadu, Vijayawada";
+  "23-30-24, opp sri sai residency, kanakaraju street, satyanarayana puram, Vijayawada -11";
 
 export const navItems = [
   { label: "Home", to: "/" },

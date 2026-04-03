@@ -76,22 +76,22 @@ export const defaultProducts: ProductRecord[] = productCatalog.map((product) => 
 export const products = defaultProducts;
 
 const mapQuery =
-  "Puchcha Pallavi, Kanakaraju Veedhi, Muthyalampadu, Vijayawada, Andhra Pradesh";
+  "23-30-24, opp sri sai residency, kanakaraju street, satyanarayana puram, Vijayawada -11";
 
 export const brand = {
-  name: "Sapradayani Pickles",
+  name: "Sampradaya Pickles",
   logo: spPicklesLogo,
   tagline: "Handpicked tradition from Vijayawada",
   subtitle:
     "Pure vegetarian homemade pickles, podulu, and fryums prepared in a Brahmin-style kitchen.",
   teluguSubtitle:
     "విజయవాడలో బ్రాహ్మణ ఇంటివంట పద్ధతిలో తయారయ్యే శుద్ధ శాకాహార పచ్చళ్ళు, పొడులు, ఫ్రైయమ్స్.",
-  whatsappNumber: "917981370664",
-  whatsappDisplay: "+91 79813 70664",
+  whatsappNumber: "7981370664",
+  whatsappDisplay: "7981370664",
   whatsappUrl: "https://wa.me/917981370664",
-  phoneNumbers: ["+91 79813 70664", "+91 73826 65848"],
+  phoneNumbers: ["+91 79813 70664", "08664602255", "7382665848"],
   address: mapQuery,
-  supportEmail: "orders@sppickles.in",
+  supportEmail: "jalasutram.pragathi.b@gmail.com",
   mapQuery,
   mapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`,
   mapEmbedUrl: `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`,
@@ -102,6 +102,18 @@ export const brand = {
     "No Preservatives",
     "Handpicked Ingredients",
   ],
+  businessHours: {
+    weekdays: "9:00 AM - 6:00 PM",
+    saturday: "10:00 AM - 4:00 PM",
+    sunday: "Closed",
+  },
+  socialMedia: {
+    instagram: "https://instagram.com/sppickles",
+    facebook: "https://facebook.com/sppickles",
+    youtube: "https://youtube.com/@sppickles",
+  },
+  currencySymbol: "₹",
+  yearEstablished: 2016,
 };
 
 export const navigation = [

@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
-import { Globe2, Mail, MapPin, MessageCircle, Phone, ShoppingBag } from "lucide-react";
+import { Globe2, Mail, MapPin, Phone, ShoppingBag } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import ProductCard from "@/components/ProductCard";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { brand, homeCategoryCards } from "@/data/site";
+import WhatsAppLogo from "@/components/WhatsAppLogo";
 
 const pageWrap = "w-full px-5 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 max-w-[1920px] mx-auto";
 
@@ -14,7 +15,7 @@ const homeCopy = {
     heroEyebrow: "Premium Andhra Pantry",
     heroTitle: "Pure Veg Brahmin-Style Pickles, Podulu, and Fryums",
     heroDescription:
-      "Sapradayani Pickles makes pure-veg Brahmin-style pickles, podis, and fryums that add clean flavour, homestyle comfort, and everyday meal support without feeling heavy.",
+      "Sampradaya Pickles makes pure-veg Brahmin-style pickles, podis, and fryums that add clean flavour, homestyle comfort, and everyday meal support without feeling heavy.",
     heroDetails: [
       "Pure Veg Pickles: naturally matured jars that lift simple meals with balanced tang, spice, and appetite-friendly taste.",
       "Podis and Fryums: light, traditional side items that bring quick flavour, crunch, and a homestyle Brahmin feel to daily food.",
@@ -192,8 +193,12 @@ const HomePage = () => {
   })();
 
   const contactLinks = [
-    { icon: MessageCircle, text: brand.whatsappDisplay, href: brand.whatsappUrl, blank: true },
-    { icon: Phone, text: brand.phoneNumbers.join(" / "), href: `tel:${brand.phoneNumbers[0].replace(/[^+\d]/g, "")}` },
+    { icon: WhatsAppLogo, text: brand.whatsappDisplay, href: brand.whatsappUrl, blank: true },
+    ...brand.phoneNumbers.map((number) => ({
+      icon: Phone,
+      text: number,
+      href: `tel:${number.replace(/[^+\d]/g, "")}`,
+    })),
     { icon: Mail, text: brand.supportEmail, href: `mailto:${brand.supportEmail}` },
     { icon: MapPin, text: brand.address, href: brand.mapUrl, blank: true },
   ];

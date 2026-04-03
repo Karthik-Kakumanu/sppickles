@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   BadgePercent,
@@ -26,68 +26,68 @@ import {
 
 const promoItems = [
   {
-    te: "శుద్ధ శాకాహార వంటగది",
+    te: "????? ??????? ??????",
     en: "Pure vegetarian kitchen",
   },
   {
-    te: "ఉల్లిపాయ లేని ఎంపికలు",
+    te: "???????? ???? ???????",
     en: "No onion options",
   },
   {
-    te: "వెల్లుల్లి లేని ఎంపికలు",
+    te: "?????????? ???? ???????",
     en: "No garlic options",
   },
   {
-    te: "ప్రిజర్వేటివ్‌లు లేవు",
+    te: "???????????????? ????",
     en: "No preservatives",
   },
   {
-    te: "ఎంచుకున్న పదార్థాలు మాత్రమే",
+    te: "????????? ????????? ???????",
     en: "Handpicked ingredients",
   },
   {
-    te: "భారతదేశం, USA మరియు విదేశాలకు బల్క్ ఆర్డర్లు",
+    te: "????????, USA ????? ????????? ????? ????????",
     en: "Bulk orders for India, USA, and overseas",
   },
 ];
 
 const categories = [
-  { te: "à°†à°«à°°à±à°²à±", en: "Offers" },
-  { te: "à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°³à±à°³à±", en: "Salt Pickles" },
-  { te: "à°‡à°‚à°—à±à°µ à°ªà°šà±à°šà°³à±à°³à±", en: "Tempered Pickles" },
-  { te: "à°ªà±Šà°¡à±à°²à±", en: "Podi" },
-  { te: "à°µà°¡à°¿à°¯à°¾à°²à±", en: "Vadiyalu" },
-  { te: "à°ªà±à°°à°¤à±à°¯à±‡à°• à°ªà°¦à°¾à°°à±à°¥à°¾à°²à±", en: "Special Items" },
+  { te: "ఆఫర్లు", en: "Offers" },
+  { te: "ఉప్పు పచ్చళ్ళు", en: "Salt Pickles" },
+  { te: "ఇంగువ పచ్చళ్ళు", en: "Tempered Pickles" },
+  { te: "పొడులు", en: "Podi" },
+  { te: "వడియాలు", en: "Vadiyalu" },
+  { te: "ప్రత్యేక పదార్థాలు", en: "Special Items" },
 ];
 
 const imageFilters = [
   {
     key: "all",
-    te: "à°…à°¨à±à°¨à±€",
+    te: "అన్నీ",
     en: "All",
     image: catSpecial,
   },
   {
     key: "pickles",
-    te: "à°ªà°šà±à°šà°³à±à°³à±",
+    te: "పచ్చళ్ళు",
     en: "Pickles",
     image: pickleAvakaya,
   },
   {
     key: "powders",
-    te: "à°ªà±Šà°¡à±à°²à±",
+    te: "పొడులు",
     en: "Podi",
     image: categoryPowders,
   },
   {
     key: "fryums",
-    te: "à°«à±à°°à±ˆà°®à±à°¸à± & à°µà°¡à°¿à°¯à°¾à°²à±",
+    te: "ఫ్రైమ్స్ & వడియాలు",
     en: "Fryums & Vadiyalu",
     image: categoryVadiyalu,
   },
   {
     key: "combos",
-    te: "à°•à°¾à°‚à°¬à±‹à°²à±",
+    te: "కాంబోలు",
     en: "Combos",
     image: catSpecial,
   },
@@ -95,25 +95,25 @@ const imageFilters = [
 
 const heroCards = [
   {
-    teTitle: "à°‡à°‚à°Ÿà°¿à°µà°‚à°Ÿ à°°à±à°šà±à°² à°¬à°¾à°•à±à°¸à±",
+    teTitle: "ఇంటివంట రుచుల బాక్స్",
     enTitle: "Homemade Pickles",
-    teSubtitle: "à°’à°•à±‡ à°šà±‹à°Ÿ à°Žà°•à±à°•à±à°µà°—à°¾ à°•à±Šà°¨à°¬à°¡à±‡ à°ªà°¦à°¾à°°à±à°¥à°¾à°²à±",
+    teSubtitle: "ఒకే చోట ఎక్కువగా కొనబడే పదార్థాలు",
     enSubtitle: "Traditional Andhra jars made fresh in small batches",
     image: pickleAvakaya,
     className: "md:col-span-2",
   },
   {
-    teTitle: "à°¤à°¾à°œà°¾ à°®à°¾à°µà°¡à±à°²à± à°…à°‚à°¦à±à°¬à°¾à°Ÿà±à°²à±‹",
+    teTitle: "తాజా మావడ్లు అందుబాటులో",
     enTitle: "Fresh Maavadu",
-    teSubtitle: "à°¸à±€à°œà°¨à°²à± à°¸à±à°ªà±†à°·à°²à± à°šà°¿à°¨à±à°¨ à°®à°¾à°®à°¿à°¡à°¿à°•à°¾à°¯ à°ªà°šà±à°šà°¡à°¿",
+    teSubtitle: "సీజనల్ స్పెషల్ చిన్న మామిడికాయ",
     enSubtitle: "Seasonal baby mango pickle prepared in a fresh batch",
     image: catSaltPickles,
     className: "",
   },
   {
-    teTitle: "à°¸à±‚à°°à±à°¯à°¶à±‹à°·à°¿à°¤ à°µà°¡à°¿à°¯à°¾à°²à±",
+    teTitle: "సూర్యశోషిత వడియాలు",
     enTitle: "Odiyalu & Appadalu",
-    teSubtitle: "à°¸à°¾à°‚à°ªà±à°°à°¦à°¾à°¯à°‚à°—à°¾ à°Žà°‚à°¡à°¬à±†à°Ÿà±à°Ÿà°¿à°¨ à°•à°°à°•à°°à°²à°¾à°¡à±‡ à°µà°‚à°Ÿà°•à°¾à°²à±",
+    teText: "తాజా టమోటాతో చేసిన ఉప్పు పచ్చళ్ళు",
     enSubtitle: "Traditional sun-dried favourites for every Andhra meal",
     image: categoryVadiyalu,
     className: "",
@@ -122,43 +122,43 @@ const heroCards = [
 
 const trustCards = [
   {
-    visual: "customers",
+    teText: "సహజ పదార్థాలతో చేసిన ఉప్పు పచ్చళ్ళు",
     teTitle: "50,000+",
     enTitle: "50,000+",
-    teLineOne: "à°¸à°‚à°¤à±‹à°·à°®à±ˆà°¨",
+    teLineOne: "సంతోషమైన",
     enLineOne: "Happy",
-    teLineTwo: "à°•à°¸à±à°Ÿà°®à°°à±à°²à±",
+    teLineTwo: "కస్టమర్లు",
     enLineTwo: "Customers",
   },
   {
-    visual: "origin",
-    teTitle: "à°µà°¿à°œà°¯à°µà°¾à°¡à°²à±‹",
+    teText: "మసాలా ఘాటు రుచితో ప్రత్యేకమైన ఉప్పు పచ్చళ్ళు",
+    teTitle: "విజయవాడలో",
     enTitle: "Made in",
-    teLineOne: "à°¤à°¯à°¾à°°à±€",
+    teLineOne: "తయారీ",
     enLineOne: "VIJAYAWADA",
     teLineTwo: "",
     enLineTwo: "",
   },
   {
-    visual: "review",
+    teText: "ఇంగువ పోపుతో తయారు చేసిన ప్రత్యేక పచ్చళ్ళు",
     teTitle: "4.8",
     enTitle: "Review",
-    teLineOne: "à°•à°¸à±à°Ÿà°®à°°à±",
+    teLineOne: "కస్టమర్",
     enLineOne: "4.8",
-    teLineTwo: "à°°à±‡à°Ÿà°¿à°‚à°—à±",
+    teLineTwo: "రేటింగ్",
     enLineTwo: "Rating",
   },
   {
-    visual: "shipping",
-    teTitle: "à°­à°¾à°°à°¤à°¦à±‡à°¶à°‚",
+    teText: "ఇంగువ పోపు రుచితో తయారుచేసిన పచ్చళ్ళు",
+    teTitle: "భారతదేశం",
     enTitle: "Ships",
-    teLineOne: "à°…à°‚à°¤à°Ÿà°¾",
+    teLineOne: "అంతటా",
     enLineOne: "Across",
-    teLineTwo: "à°¡à±†à°²à°¿à°µà°°à±€",
+    teLineTwo: "డెలివరీ",
     enLineTwo: "INDIA",
   },
 ];
-
+    teText: "మామిడి అల్లం కలిసిన ప్రత్యేక పచ్చళ్ళు",
 const quickCategories = [
   { key: "pickles", te: "Pachallu", en: "Pickles" },
   { key: "powders", te: "Podulu", en: "Podi" },
@@ -167,570 +167,570 @@ const quickCategories = [
 
 const categoryCards = [
   {
-    filterKey: "pickles",
+    teText: "మామిడి ముక్కలతో చేసిన ప్రత్యేక పచ్చళ్ళు",
     pickleTypeKey: "salt",
-    teTitle: "à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°³à±à°³à±",
+    teTitle: "ఉప్పు పచ్చళ్ళు",
     enTitle: "Salt Pickles",
-    teText: "à°šà°¿à°‚à°¤à°•à°¾à°¯ à°¤à±Šà°•à±à°•à± à°¨à±à°‚à°šà°¿ à°µà±‡à°²à°•à±à°•à°¾à°¯ à°µà°°à°•à± 1kg à°•à°¿ â‚¹550 à°¨à±à°‚à°šà°¿ à°ªà±à°°à°¾à°°à°‚à°­à°‚",
+    teText: "చింతకాయ తొక్కు నుంచి వేలక్కాయ వరకు 1kg కి ₹550 నుంచి ప్రారంభం",
     enText: "Traditional salt pickles from Chintakaya Thokku to Velakkaya starting at Rs.550 per kg",
     image: catSaltPickles,
   },
   {
-    teTitle: "à°‡à°‚à°—à±à°µ à°ªà±‹à°ªà± à°ªà°šà±à°šà°³à±à°³à±",
+    teText: "ప్రీమియం రేంజ్ ప్రత్యేక పచ్చళ్ళు",
     filterKey: "pickles",
     pickleTypeKey: "tempered",
     enTitle: "Tempered Pickles",
-    teText: "à°†à°µà°•à°¾à°¯, à°—à±‹à°‚à°—à±‚à°°, à°®à°¾à°—à°¾à°¯, à°ªà±à°²à°¿à°¹à±‹à°° à°°à°•à°¾à°²à°¤à±‹ à°ªà±†à°¦à±à°¦ à°•à°²à±†à°•à±à°·à°¨à±",
+    teText: "ఆవకాయ, గోంగూర, మాగాయ, పులిహోర రకాలతో పెద్ద కలెక్షన్",
     enText: "Large collection of avakaya, gongura, magaya, and pulihora style pickles",
     image: catTemperedPickles,
   },
   {
-    teTitle: "à°ªà±Šà°¡à±à°²à±, à°µà°¡à°¿à°¯à°¾à°²à± & à°…à°ªà±à°ªà°¡à°¾à°²à±",
+    teText: "తురిమిన మామిడితో చేసిన పచ్చళ్ళు",
     filterKey: "powders",
     enTitle: "Podi, Vadiyalu & Appadalu",
-    teText: "à°•à°‚à°¦à°¿ à°ªà±Šà°¡à°¿ à°¨à±à°‚à°šà°¿ à°¸à°—à±à°—à±à°¬à°¿à°¯à±à°¯à°‚ à°µà°¡à°¿à°¯à°¾à°²à±, à°®à°¿à°¨à°ª à°…à°ªà±à°ªà°¡à°¾à°²à± à°µà°°à°•à±",
+    teText: "కంది పొడి నుంచి సగ్గుబియ్యం వడియాలు, మినప అప్పడాలు వరకు",
     enText: "From kandi podi to saggubiyyam vadiyalu and minapa appadalu",
     image: categoryPowders,
   },
 ];
 
-const productCards = [
+    teText: "మామిడి ముక్కలతో చేసిన ప్రత్యేక పచ్చళ్ళు",
   {
     category: "pickles",
-    teTitle: "à°šà°¿à°‚à°¤à°•à°¾à°¯ à°¤à±Šà°•à±à°•à±",
+    teTitle: "చింతకాయ తొక్కు",
     enTitle: "Chintakaya Thokku",
-    teText: "à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°³à±à°³à°²à±‹ à°¬à±à°°à°¾à°¹à±à°®à°£ à°¸à°‚à°ªà±à°°à°¦à°¾à°¯ à°°à±à°šà°¿",
+    teText: "ఉప్పు పచ్చళ్ళలో బ్రాహ్మణ సంప్రదాయ రుచి",
     enText: "Traditional salt pickle made in Brahmin homestyle",
-    price: "â‚¹550 / 1kg",
+    price: "₹550 / 1kg",
     image: catSaltPickles,
-  },
+    teText: "సాంప్రదాయ మామిడికాయ పచ్చళ్ళు",
   {
     category: "pickles",
-    teTitle: "à°‰à°¸à°¿à°°à°¿ à°¤à±Šà°•à±à°•à±",
+    teTitle: "ఉసిరి తొక్కు",
     enTitle: "Usiri Thokku",
-    teText: "à°¸à°¹à°œ à°ªà°¦à°¾à°°à±à°¥à°¾à°²à°¤à±‹ à°šà±‡à°¸à°¿à°¨ à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°¡à°¿",
+    teText: "సహజ పదార్థాలతో చేసిన ఉప్పు పచ్చళ్ళు",
     enText: "Gooseberry salt pickle made with quality ingredients",
-    price: "â‚¹550 / 1kg",
+    price: "₹550 / 1kg",
     image: catSaltPickles,
-  },
+    teText: "ప్రత్యేక నిల్వ పచ్చళ్ళు",
   {
     category: "pickles",
-    teTitle: "à°‰à°ªà±à°ªà± à°—à±‹à°‚à°—à±‚à°°",
+    teTitle: "ఉప్పు గోంగూర",
     enTitle: "Uppu Gongura",
-    teText: "à°ªà±à°²à±à°²à°Ÿà°¿ à°°à±à°šà°¿à°¤à±‹ à°µà±‡à°¡à°¿ à°…à°¨à±à°¨à°¾à°¨à°¿à°•à°¿ à°¬à°¾à°—à°¾ à°¸à°°à°¿à°ªà±‹à°¤à±à°‚à°¦à°¿",
+    teText: "పుల్లటి రుచితో వేడి అన్నానికి బాగా సరిపోతుంది",
     enText: "Tangy salt gongura that pairs well with hot rice",
-    price: "â‚¹550 / 1kg",
+    price: "₹550 / 1kg",
     image: pickleGongura,
   },
   {
     category: "pickles",
-    teTitle: "à°ªà°‚à°¡à±à°®à°¿à°°à±à°šà°¿ à°—à±‹à°‚à°—à±‚à°°",
+    teTitle: "పండుమిర్చి గోంగూర",
     enTitle: "Pandu Mirchi Gongura",
-    teText: "à°®à°¸à°¾à°²à°¾ à°˜à°¾à°Ÿà± à°°à±à°šà°¿à°¤à±‹ à°ªà±à°°à°¤à±à°¯à±‡à°•à°®à±ˆà°¨ à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°¡à°¿",
+    teText: "మసాలా ఘాటు రుచితో ప్రత్యేకమైన ఉప్పు పచ్చళ్ళు",
     enText: "Spicy salt pickle with red chilli and gongura",
-    price: "â‚¹550 / 1kg",
+    price: "₹550 / 1kg",
     image: pickleGongura,
   },
   {
     category: "pickles",
-    teTitle: "à°¨à°¿à°®à±à°®à°•à°¾à°¯",
+    teTitle: "నిమ్మకాయ",
     enTitle: "Nimakaya",
-    teText: "à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°³à±à°³à°²à±‹ à°Žà°ªà±à°ªà±à°¡à±‚ à°•à±Šà°¨à°¬à°¡à±‡ à°•à±à°²à°¾à°¸à°¿à°•à± à°°à°•à°‚",
+    teText: "ఉప్పు పచ్చళ్ళలో ఎప్పుడూ కొనబడే క్లాసిక్ రకం",
     enText: "Classic lemon salt pickle loved in every home",
-    price: "â‚¹550 / 1kg",
+    price: "₹550 / 1kg",
     image: pickleLemon,
   },
   {
     category: "pickles",
-    teTitle: "à°Ÿà°®à±‹à°Ÿà°¾",
+    teTitle: "టమోటా",
     enTitle: "Tomato",
-    teText: "à°¤à°¾à°œà°¾ à°Ÿà°®à±‹à°Ÿà°¾à°¤à±‹ à°šà±‡à°¸à°¿à°¨ à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°¡à°¿",
+    teText: "తాజా టమోటాతో చేసిన ఉప్పు పచ్చళ్ళు",
     enText: "Fresh tomato salt pickle",
-    price: "â‚¹550 / 1kg",
+    price: "₹550 / 1kg",
     image: catSaltPickles,
   },
   {
     category: "pickles",
-    teTitle: "à°µà±‡à°²à°•à±à°•à°¾à°¯",
+    teTitle: "వేలక్కాయ",
     enTitle: "Velakkaya",
-    teText: "à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°³à±à°³à°²à±‹ à°ªà±à°°à°¤à±à°¯à±‡à°• à°°à±à°šà°¿",
+    teText: "ఉప్పు పచ్చళ్ళలో ప్రత్యేక రుచి",
     enText: "Special salt pickle variety",
-    price: "â‚¹600 / 1kg",
+    price: "₹600 / 1kg",
     image: catSaltPickles,
   },
   {
     category: "pickles",
-    teTitle: "à°šà°¿à°‚à°¤à°•à°¾à°¯",
+    teTitle: "చింతకాయ",
     enTitle: "Chintakaya",
-    teText: "à°‡à°‚à°—à±à°µ à°ªà±‹à°ªà±à°¤à±‹ à°¤à°¯à°¾à°°à± à°šà±‡à°¸à°¿à°¨ à°ªà±à°°à°¤à±à°¯à±‡à°• à°ªà°šà±à°šà°¡à°¿",
+    teText: "ఇంగువ పోపుతో తయారు చేసిన ప్రత్యేక పచ్చళ్ళు",
     enText: "Tempered tamarind pickle with hing seasoning",
-    price: "â‚¹650 / 1kg",
+    price: "₹650 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°‰à°¸à°¿à°°à°¿à°•à°¾à°¯",
+    teTitle: "ఉసిరికాయ",
     enTitle: "Usirikaya",
-    teText: "à°‡à°‚à°—à±à°µ à°ªà±‹à°ªà± à°°à±à°šà°¿à°¤à±‹ à°¤à°¯à°¾à°°à±à°šà±‡à°¸à°¿à°¨ à°ªà°šà±à°šà°¡à°¿",
+    teText: "ఇంగువ పోపు రుచితో తయారుచేసిన పచ్చళ్ళు",
     enText: "Tempered gooseberry pickle",
-    price: "â‚¹650 / 1kg",
+    price: "₹650 / 1kg",
     image: pickleLemon,
   },
   {
     category: "pickles",
-    teTitle: "à°†à°µà°•à°¾à°¯",
+    teTitle: "ఆవకాయ",
     enTitle: "Avakaya",
-    teText: "à°¬à±à°°à°¾à°¹à±à°®à°£ à°®à°¹à°¿à°³à°² à°šà±‡à°¤ à°¤à°¯à°¾à°°à± à°šà±‡à°¸à°¿à°¨ à°…à°¸à°²à±ˆà°¨ à°†à°‚à°§à±à°° à°†à°µà°•à°¾à°¯",
+    teText: "బ్రాహ్మణ మహిళల చేత తయారు చేసిన అసలైన ఆంధ్ర ఆవకాయ",
     enText: "Authentic Andhra avakaya made by Brahmin women",
-    price: "â‚¹600 / 1kg",
+    price: "₹600 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°µà±†à°²à±à°²à±à°²à°¿ à°†à°µà°•à°¾à°¯",
+    teTitle: "వెల్లులి ఆవకాయ",
     enTitle: "Vellulli Avakaya",
-    teText: "à°µà±†à°²à±à°²à±à°²à°¿ à°°à±à°šà°¿à°¤à±‹ à°˜à°¾à°Ÿà± à°†à°µà°•à°¾à°¯",
+    teText: "వెల్లులి రుచితో ఘాటు ఆవకాయ",
     enText: "Garlic avakaya with bold flavour",
-    price: "â‚¹700 / 1kg",
+    price: "₹700 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°¬à±†à°²à±à°²à°‚ à°†à°µà°•à°¾à°¯",
+    teTitle: "బెల్లం ఆవకాయ",
     enTitle: "Bellam Avakaya",
-    teText: "à°¤à±€à°ªà°¿ à°®à°°à°¿à°¯à± à°˜à°¾à°Ÿà± à°•à°²à°¿à°¸à°¿à°¨ à°ªà±à°°à°¤à±à°¯à±‡à°• à°†à°µà°•à°¾à°¯",
+    teText: "తీపి మరియు ఘాటు కలిసిన ప్రత్యేక ఆవకాయ",
     enText: "Jaggery avakaya with sweet-spicy balance",
-    price: "â‚¹700 / 1kg",
+    price: "₹700 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°Žà°‚à°¡à± à°†à°µà°•à°¾à°¯",
+    teTitle: "ఎండు ఆవకాయ",
     enTitle: "Endu Avakaya",
-    teText: "à°Žà°‚à°¡à°¬à±†à°Ÿà±à°Ÿà°¿à°¨ à°®à°¾à°®à°¿à°¡à°¿ à°°à±à°šà°¿à°¤à±‹",
+    teText: "ఎండబెట్టిన మామిడి రుచితో",
     enText: "Dried-style avakaya with deeper flavour",
-    price: "â‚¹700 / 1kg",
+    price: "₹700 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°¤à±€à°ªà°¿ à°®à±†à°‚à°¤à°¿ à°†à°µà°•à°¾à°¯",
+    teTitle: "తీపి మెంతి ఆవకాయ",
     enTitle: "Theepi Methi Avakaya",
-    teText: "à°®à±†à°‚à°¤à°¿ à°®à°°à°¿à°¯à± à°¤à±€à°ªà°¿ à°•à°²à°¿à°¸à°¿à°¨ à°ªà±à°°à°¤à±à°¯à±‡à°• à°°à°•à°‚",
+    teText: "మెంతి మరియు తీపి కలిసిన ప్రత్యేక రకం",
     enText: "Sweet methi avakaya special",
-    price: "â‚¹750 / 1kg",
+    price: "₹750 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°ªà±†à°¸à°° à°†à°µà°•à°¾à°¯",
+    teTitle: "పెసర ఆవకాయ",
     enTitle: "Pesara Avakaya",
-    teText: "à°ªà±à°°à°¤à±à°¯à±‡à°•à°®à±ˆà°¨ à°®à°¿à°¶à±à°°à°®à°‚à°¤à±‹ à°¤à°¯à°¾à°°à±€",
+    teText: "ప్రత్యేకమైన మిశ్రమంతో తయారీ",
     enText: "Special avakaya variety with pesara touch",
-    price: "â‚¹600 / 1kg",
+    price: "₹600 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°¨à±à°µà±à°µà± à°†à°µà°•à°¾à°¯",
+    teTitle: "నువ్వు ఆవకాయ",
     enTitle: "Nuvvu Avakaya",
-    teText: "à°¨à±à°µà±à°µà±à°² à°°à±à°šà°¿à°¤à±‹ à°†à°µà°•à°¾à°¯",
+    teText: "నువ్వుల రుచితో ఆవకాయ",
     enText: "Sesame-style avakaya",
-    price: "â‚¹700 / 1kg",
+    price: "₹700 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°ªà°¨à°¸à°ªà±‹à°Ÿà±à°Ÿà± à°†à°µà°•à°¾à°¯",
+    teTitle: "పనసపోట్టు ఆవకాయ",
     enTitle: "Panasapottu Avakaya",
-    teText: "à°…à°°à±à°¦à±ˆà°¨ à°ªà±à°°à°¤à±à°¯à±‡à°• à°à°Ÿà°®à±",
+    teText: "అరుదైన ప్రత్యేక ఐటమ్",
     enText: "Rare speciality avakaya variety",
-    price: "â‚¹750 / 1kg",
+    price: "₹750 / 1kg",
     image: catSpecial,
   },
   {
     category: "pickles",
-    teTitle: "à°ªà°šà±à°š à°†à°µà°•à°¾à°¯",
+    teTitle: "పచ్చ ఆవకాయ",
     enTitle: "Paccha Avakaya",
-    teText: "à°ªà±à°°à°¤à±à°¯à±‡à°• à°ªà±à°°à±€à°®à°¿à°¯à°‚ à°°à°•à°‚",
+    teText: "ప్రత్యేక ప్రీమియం రకం",
     enText: "Premium fresh avakaya variety",
-    price: "â‚¹850 / 1kg",
+    price: "₹850 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°¦à±‹à°¸à°µà°•à°¾à°¯",
+    teTitle: "దోసవకాయ",
     enTitle: "Dosavakaya",
-    teText: "à°°à±‹à°œà±à°µà°¾à°°à±€ à°­à±‹à°œà°¨à°¾à°¨à°¿à°•à°¿ à°¬à°¾à°—à°¾ à°¸à°°à°¿à°ªà±‹à°¤à±à°‚à°¦à°¿",
+    teText: "రోజువారీ భోజనానికి బాగా సరిపోతుంది",
     enText: "Everyday favourite dosavakaya pickle",
-    price: "â‚¹600 / 1kg",
+    price: "₹600 / 1kg",
     image: pickleLemon,
   },
   {
     category: "pickles",
-    teTitle: "à°®à°¾à°—à°¾à°¯",
+    teTitle: "మాగాయ",
     enTitle: "Magaya",
-    teText: "à°¸à°¾à°‚à°ªà±à°°à°¦à°¾à°¯ à°®à°¾à°®à°¿à°¡à°¿à°•à°¾à°¯ à°ªà°šà±à°šà°¡à°¿",
+    teText: "సాంప్రదాయ మామిడికాయ పచ్చళ్ళు",
     enText: "Traditional magaya mango pickle",
-    price: "â‚¹650 / 1kg",
+    price: "₹650 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°µà°‚à°•à°¾à°¯ à°¨à°¿à°²à±à°µ à°ªà°šà±à°šà°¡à°¿",
-    enTitle: "Vankaya Nilava Pachadi",
-    teText: "à°ªà±à°°à°¤à±à°¯à±‡à°• à°¨à°¿à°²à±à°µ à°°à°•à°‚",
+    teTitle: "వంకాయ నిల్వ",
+    enTitle: "Vankaya Nilava",
+    teText: "ప్రత్యేక నిల్వ రకం",
     enText: "Brinjal preserve pickle",
-    price: "â‚¹850 / 1kg",
+    price: "₹850 / 1kg",
     image: catSpecial,
   },
   {
     category: "pickles",
-    teTitle: "à°…à°²à±à°²à°‚ à°ªà°šà±à°šà°¡à°¿",
-    enTitle: "Allam Pachadi",
-    teText: "à°…à°²à±à°²à°‚ à°°à±à°šà°¿à°¤à±‹ à°ªà±à°°à°¤à±à°¯à±‡à°•à°®à±ˆà°¨ à°ªà°šà±à°šà°¡à°¿",
-    enText: "Homestyle ginger pachadi",
-    price: "â‚¹650 / 1kg",
+    teTitle: "అల్లం",
+    enTitle: "Allam",
+    teText: "అల్లం రుచితో ప్రత్యేకమైన రుచి",
+    enText: "Homestyle ginger special",
+    price: "₹650 / 1kg",
     image: catSpecial,
   },
   {
     category: "pickles",
-    teTitle: "à°®à°¾à°®à°¿à°¡à°¿ à°…à°²à±à°²à°‚ à°ªà°šà±à°šà°¡à°¿",
-    enTitle: "Mamidi Allam Pachadi",
-    teText: "à°®à°¾à°®à°¿à°¡à°¿ à°…à°²à±à°²à°‚ à°•à°²à°¿à°¸à°¿à°¨ à°ªà±à°°à°¤à±à°¯à±‡à°• à°ªà°šà±à°šà°¡à°¿",
-    enText: "Mango ginger pachadi",
-    price: "â‚¹650 / 1kg",
+    teTitle: "మామిడి అల్లం",
+    enTitle: "Mamidi Allam",
+    teText: "మామిడి అల్లం కలిసిన ప్రత్యేక రుచి",
+    enText: "Mango ginger special",
+    price: "₹650 / 1kg",
     image: catSpecial,
   },
   {
     category: "pickles",
-    teTitle: "à°®à°¾à°®à°¿à°¡à°¿ à°…à°²à±à°²à°‚ à°†à°µà°•à°¾à°¯",
+    teTitle: "మామిడి అల్లం ఆవకాయ",
     enTitle: "Mamidi Allam Avakaya",
-    teText: "à°ªà±à°°à±€à°®à°¿à°¯à°‚ à°°à±‡à°‚à°œà± à°ªà±à°°à°¤à±à°¯à±‡à°• à°†à°µà°•à°¾à°¯",
+    teText: "ప్రీమియం రేంజ్ ప్రత్యేక ఆవకాయ",
     enText: "Premium mango ginger avakaya",
-    price: "â‚¹850 / 1kg",
+    price: "₹850 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°Ÿà±Šà°®à±‹à°Ÿà±‹ à°ªà°šà±à°šà°¡à°¿",
-    enTitle: "Tomato Pachadi",
-    teText: "à°‡à°‚à°—à±à°µ à°ªà±‹à°ªà±à°¤à±‹ à°Ÿà±Šà°®à±‹à°Ÿà±‹ à°ªà°šà±à°šà°¡à°¿",
-    enText: "Tempered tomato pachadi",
-    price: "â‚¹650 / 1kg",
+    teTitle: "టొమోటో",
+    enTitle: "Tomato",
+    teText: "ఇంగువ పోపుతో టొమోటో",
+    enText: "Tempered tomato special",
+    price: "₹650 / 1kg",
     image: catSaltPickles,
   },
   {
     category: "pickles",
-    teTitle: "à°®à±à°¨à°•à±à°•à°¾à°¯ à°Ÿà°®à±‹à°Ÿà°¾",
+    teTitle: "మునక్కాయ టమోటా",
     enTitle: "Munakkaya Tomato",
-    teText: "à°®à±à°¨à°•à±à°•à°¾à°¯-à°Ÿà°®à±‹à°Ÿà°¾ à°ªà±à°°à°¤à±à°¯à±‡à°• à°®à°¿à°•à±à°¸à±",
+    teText: "మునక్కాయ-టమోటా ప్రత్యేక మిక్స్",
     enText: "Drumstick tomato pickle special",
-    price: "â‚¹650 / 1kg",
+    price: "₹650 / 1kg",
     image: catSpecial,
   },
   {
     category: "pickles",
-    teTitle: "à°ªà°šà±à°šà°¿à°®à°¿à°°à°ª à°†à°µà°•à°¾à°¯",
+    teTitle: "పచ్చిమిరప ఆవకాయ",
     enTitle: "Pachimirapa Avakaya",
-    teText: "à°ªà°šà±à°šà°¿à°®à°¿à°°à°ª à°˜à°¾à°Ÿà± à°°à±à°šà°¿à°¤à±‹",
+    teText: "పచ్చిమిరప ఘాటు రుచితో",
     enText: "Green chilli avakaya",
-    price: "â‚¹600 / 1kg",
+    price: "₹600 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°®à°¾à°®à°¿à°¡à°¿ à°¤à±à°°à±à°®à± à°ªà°šà±à°šà°¡à°¿",
-    enTitle: "Mamidi Turumu Pachadi",
-    teText: "à°¤à±à°°à°¿à°®à°¿à°¨ à°®à°¾à°®à°¿à°¡à°¿à°¤à±‹ à°šà±‡à°¸à°¿à°¨ à°ªà°šà±à°šà°¡à°¿",
-    enText: "Grated mango pachadi",
-    price: "â‚¹600 / 1kg",
+    teTitle: "మామిడి తురుము",
+    enTitle: "Mamidi Turumu",
+    teText: "తురిమిన మామిడితో చేసిన రుచి",
+    enText: "Grated mango special",
+    price: "₹600 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°®à°¾à°®à°¿à°¡à°¿ à°®à±à°•à±à°•à°² à°ªà°šà±à°šà°¡à°¿",
-    enTitle: "Mamidi Mukkala Pachadi",
-    teText: "à°®à°¾à°®à°¿à°¡à°¿ à°®à±à°•à±à°•à°²à°¤à±‹ à°šà±‡à°¸à°¿à°¨ à°ªà±à°°à°¤à±à°¯à±‡à°• à°°à°•à°‚",
-    enText: "Mango pieces pachadi",
-    price: "â‚¹600 / 1kg",
+    teTitle: "మామిడి ముక్కలు",
+    enTitle: "Mamidi Mukkalu",
+    teText: "మామిడి ముక్కలతో చేసిన ప్రత్యేక రుచి",
+    enText: "Mango pieces special",
+    price: "₹600 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°•à°¾à°¯ à°†à°µà°•à°¾à°¯",
+    teTitle: "కాయ ఆవకాయ",
     enTitle: "Kaya Avakaya",
-    teText: "à°¸à°¾à°‚à°ªà±à°°à°¦à°¾à°¯ à°ªà°¦à±à°¦à°¤à°¿à°²à±‹ à°šà±‡à°¸à°¿à°¨ à°°à°•à°‚",
+    teText: "సాంప్రదాయ పద్దతిలో చేసిన రకం",
     enText: "Traditional kaya avakaya",
-    price: "â‚¹750 / 1kg",
+    price: "₹750 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°¤à±€à°ªà°¿ à°•à°¾à°¯ à°†à°µà°•à°¾à°¯",
+    teTitle: "తీపి కాయ ఆవకాయ",
     enTitle: "Theepi Kaya Avakaya",
-    teText: "à°¤à±€à°ªà°¿ à°°à±à°šà°¿à°¤à±‹ à°ªà±à°°à±€à°®à°¿à°¯à°‚ à°°à°•à°‚",
+    teText: "తీపి రుచితో ప్రీమియం రకం",
     enText: "Sweet kaya avakaya premium",
-    price: "â‚¹850 / 1kg",
+    price: "₹850 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°¤à±€à°ªà°¿ à°¦à°¬à±à°¬à°•à°¾à°¯",
+    teTitle: "తీపి దబ్బకాయ",
     enTitle: "Theepi Dabbakaya",
-    teText: "à°¤à±€à°ªà°¿ à°¸à°¿à°Ÿà±à°°à°¸à± à°°à±à°šà°¿à°¤à±‹ à°ªà±à°°à°¤à±à°¯à±‡à°• à°ªà°šà±à°šà°¡à°¿",
+    teText: "తీపి సిట్రస్ రుచితో ప్రత్యేక పచ్చళ్ళు",
     enText: "Sweet citron pickle",
-    price: "â‚¹650 / 1kg",
+    price: "₹650 / 1kg",
     image: pickleLemon,
   },
   {
     category: "pickles",
-    teTitle: "à°¤à±€à°ªà°¿ à°®à°—à°¯à°¾",
+    teTitle: "తీపి మగయా",
     enTitle: "Theepi Magaya",
-    teText: "à°¤à±€à°ªà°¿-à°ªà±à°²à±à°ªà± à°•à°²à°¿à°¸à°¿à°¨ à°®à°¾à°—à°¾à°¯",
+    teText: "తీపి-పులుపు కలిసిన మాగాయ",
     enText: "Sweet magaya pickle",
-    price: "â‚¹750 / 1kg",
+    price: "₹750 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°ªà±à°²à°¿à°¹à±‹à°° à°†à°µà°•à°¾à°¯",
+    teTitle: "పులిహోర ఆవకాయ",
     enTitle: "Pulihora Avakaya",
-    teText: "à°ªà±à°²à°¿à°¹à±‹à°° à°°à±à°šà°¿à°¨à°¿ à°—à±à°°à±à°¤à± à°šà±‡à°¸à±‡ à°†à°µà°•à°¾à°¯",
+    teText: "పులిహోర రుచిని గుర్తు చేసే ఆవకాయ",
     enText: "Pulihora style avakaya",
-    price: "â‚¹750 / 1kg",
+    price: "₹750 / 1kg",
     image: pickleAvakaya,
   },
   {
     category: "pickles",
-    teTitle: "à°¬à±à°¡à°‚ à°¦à±‹à°¸ à°†à°µà°•à°¾à°¯",
+    teTitle: "బుడం దోస ఆవకాయ",
     enTitle: "Budam Dosa Avakaya",
-    teText: "à°ªà±à°°à°¤à±à°¯à±‡à°• à°à°Ÿà°®à±, à°¡à°¿à°®à°¾à°‚à°¡à± à°‰à°¨à±à°¨ à°°à°•à°‚",
+    teText: "ప్రత్యేక ఐటమ్, డిమాండ్ ఉన్న రకం",
     enText: "Special budam dosa avakaya",
-    price: "â‚¹850 / 1kg",
+    price: "₹850 / 1kg",
     image: catSpecial,
   },
   {
     category: "powders",
-    teTitle: "à°•à°‚à°¦à°¿ à°ªà±Šà°¡à°¿",
+    teTitle: "కంది పొడి",
     enTitle: "Kandi Podi",
-    teText: "à°¨à±†à°¯à±à°¯à°¿ à°…à°¨à±à°¨à°‚à°¤à±‹ à°¤à°¿à°¨à°¡à°¾à°¨à°¿à°•à°¿ à°¬à±†à°¸à±à°Ÿà± à°¸à±†à°²à±à°²à°°à±",
+    teText: "నెయ్యి అన్నంతో తినడానికి బెస్ట్ సెల్లర్",
     enText: "Best-selling kandi podi for rice and ghee",
-    price: "â‚¹750 / 1kg",
+    price: "₹750 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°¨à±à°µà±à°µà±à°² à°ªà±Šà°¡à°¿",
+    teTitle: "నువ్వుల పొడి",
     enTitle: "Nuvvula Podi",
-    teText: "à°¸à°‚à°ªà±à°°à°¦à°¾à°¯ à°¨à±à°µà±à°µà±à°² à°°à±à°šà°¿à°¤à±‹",
+    teText: "సంప్రదాయ నువ్వుల రుచితో",
     enText: "Traditional sesame spice powder",
-    price: "â‚¹700 / 1kg",
+    price: "₹700 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°§à°¨à°¿à°¯à°¾à°² à°ªà±Šà°¡à°¿",
+    teTitle: "ధనియాల పొడి",
     enTitle: "Dhaniyala Podi",
-    teText: "à°°à±‹à°œà±à°µà°¾à°°à±€ à°µà°‚à°Ÿà°²à°•à± à°¸à°°à°¿à°ªà±‹à°¯à±‡ à°ªà±Šà°¡à°¿",
+    teText: "రోజువారీ వంటలకు సరిపోయే పొడి",
     enText: "Everyday coriander spice powder",
-    price: "â‚¹500 / 1kg",
+    price: "₹500 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°ªà°ªà±à°ªà±à°² à°ªà±Šà°¡à°¿",
+    teTitle: "పప్పుల పొడి",
     enTitle: "Pappula Podi",
-    teText: "à°­à±‹à°œà°¨à°¾à°¨à°¿à°•à°¿ à°°à±à°šà°¿à°¨à°¿ à°ªà±†à°‚à°šà±‡ à°¸à°‚à°ªà±à°°à°¦à°¾à°¯ à°ªà±Šà°¡à°¿",
+    teText: "భోజనానికి రుచిని పెంచే సంప్రదాయ పొడి",
     enText: "Traditional lentil powder for full meals",
-    price: "â‚¹600 / 1kg",
+    price: "₹600 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°•à°°à°¿à°µà±‡à°ªà°¾à°•à± à°•à°¾à°°à°ªà±à°ªà±Šà°¡à°¿",
+    teTitle: "కరివేపాకు కారప్పొడి",
     enTitle: "Karivepaku Karam Podi",
-    teText: "à°•à°°à°¿à°µà±‡à°ªà°¾à°•à± à°¸à±à°µà°¾à°¸à°¨à°¤à±‹",
+    teText: "కరివేపాకు సువాసనతో",
     enText: "Curry leaf karam podi",
-    price: "â‚¹650 / 1kg",
+    price: "₹650 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°…à°µà°¿à°¶à°—à°¿à°‚à°œà°² à°ªà±Šà°¡à°¿",
+    teTitle: "అవిశగింజల పొడి",
     enTitle: "Avisaginjala Podi",
-    teText: "à°¨à°¾à°£à±à°¯à°®à±ˆà°¨ à°ªà°¦à°¾à°°à±à°¥à°¾à°²à°¤à±‹ à°¤à°¯à°¾à°°à±€",
+    teText: "నాణ్యమైన పదార్థాలతో తయారీ",
     enText: "Flaxseed podi made with quality ingredients",
-    price: "â‚¹650 / 1kg",
+    price: "₹650 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°•à±Šà°¬à±à°¬à°°à°¿ à°ªà±Šà°¡à°¿",
+    teTitle: "కొబ్బరి పొడి",
     enTitle: "Kobbari Podi",
-    teText: "à°­à±‹à°œà°¨à°¾à°¨à°¿à°•à°¿ à°¸à±ˆà°¡à±â€Œà°—à°¾ à°¸à°°à±ˆà°¨ à°°à±à°šà°¿",
+    teText: "భోజనానికి సైడ్‌గా సరైన రుచి",
     enText: "Coconut podi for everyday meals",
-    price: "â‚¹650 / 1kg",
+    price: "₹650 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°°à°¸à°‚ à°ªà±Šà°¡à°¿",
+    teTitle: "రసం పొడి",
     enTitle: "Rasam Podi",
-    teText: "à°‡à°‚à°Ÿà°¿à°µà°‚à°Ÿ à°°à°¸à°‚ à°•à±‹à°¸à°‚",
+    teText: "ఇంటివంట రసం కోసం",
     enText: "Rasam powder for homestyle cooking",
-    price: "â‚¹550 / 1kg",
+    price: "₹550 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°¸à°¾à°‚à°¬à°¾à°°à± à°ªà±Šà°¡à°¿",
+    teTitle: "సాంబారు పొడి",
     enTitle: "Sambaru Podi",
-    teText: "à°ªà±à°°à°¤à±à°¯à±‡à°• à°¸à°¾à°‚à°¬à°¾à°°à± à°°à±à°šà°¿ à°•à±‹à°¸à°‚",
+    teText: "ప్రత్యేక సాంబారు రుచి కోసం",
     enText: "Traditional sambar powder",
-    price: "â‚¹750 / 1kg",
+    price: "₹750 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°¨à°²à±à°²à°•à°¾à°°à°‚",
+    teTitle: "నల్లకారం",
     enTitle: "Nalla Karam",
-    teText: "à°˜à°¾à°Ÿà± à°°à±à°šà°¿à°¨à°¿ à°‡à°·à±à°Ÿà°ªà°¡à±‡à°µà°¾à°°à°¿à°•à°¿",
+    teText: "ఘాటు రుచిని ఇష్టపడేవారికి",
     enText: "Nalla karam for bold spice lovers",
-    price: "â‚¹800 / 1kg",
+    price: "₹800 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°ªà±à°¦à±€à°¨à°¾ à°•à°¾à°°à°ªà±Šà°¡à°¿",
+    teTitle: "పుదీనా కారపొడి",
     enTitle: "Pudina Karam Podi",
-    teText: "à°ªà±à°¦à±€à°¨à°¾ à°¸à±à°µà°¾à°¸à°¨à°¤à±‹ à°¸à±à°ªà±ˆà°¸à±€ à°ªà±Šà°¡à°¿",
+    teText: "పుదీనా సువాసనతో స్పైసీ పొడి",
     enText: "Mint spice powder",
-    price: "â‚¹750 / 1kg",
+    price: "₹750 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°®à±à°¨à°—à°¾à°•à± à°ªà±Šà°¡à°¿",
+    teTitle: "మునగాకు పొడి",
     enTitle: "Munagaku Podi",
-    teText: "à°ªà±à°°à±€à°®à°¿à°¯à°‚ à°•à±‡à°Ÿà°—à°¿à°°à±€ à°ªà±Šà°¡à°¿",
+    teText: "ప్రీమియం కేటగిరీ పొడి",
     enText: "Premium moringa leaf powder",
-    price: "â‚¹2000 / 1kg",
+    price: "₹2000 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°®à±à°¨à°—à°¾à°•à± à°•à°¾à°°à°ªà±Šà°¡à°¿",
+    teTitle: "మునగాకు కారపొడి",
     enTitle: "Munagaku Karam Podi",
-    teText: "à°®à±à°¨à°—à°¾à°•à± à°•à°¾à°°à°‚à°¤à±‹ à°ªà±à°°à°¤à±à°¯à±‡à°• à°°à±à°šà°¿",
+    teText: "మునగాకు కారంతో ప్రత్యేక రుచి",
     enText: "Moringa karam podi",
-    price: "â‚¹650 / 1kg",
+    price: "₹650 / 1kg",
     image: categoryPowders,
   },
   {
     category: "powders",
-    teTitle: "à°¨à°²à±à°²à±‡à°°à± à°ªà±Šà°¡à°¿",
+    teTitle: "నల్లేరు పొడి",
     enTitle: "Nalleru Podi",
-    teText: "à°…à°°à±à°¦à±ˆà°¨ à°ªà±à°°à°¤à±à°¯à±‡à°• à°ªà±Šà°¡à°¿",
+    teText: "అరుదైన ప్రత్యేక పొడి",
     enText: "Special nalleru podi",
-    price: "â‚¹900 / 1kg",
+    price: "₹900 / 1kg",
     image: categoryPowders,
   },
   {
     category: "fryums",
-    teTitle: "à°¸à°—à±à°—à±à°¬à°¿à°¯à±à°¯à°‚ à°µà°¡à°¿à°¯à°¾à°²à±",
+    teTitle: "సగ్గుబియ్యం వడియాలు",
     enTitle: "Saggubiyyam Vadiyalu",
-    teText: "à°¸à±‚à°°à±à°¯à°¶à±‹à°·à°¿à°¤ à°•à°°à°•à°°à°²à°¾à°¡à±‡ à°µà°¡à°¿à°¯à°¾à°²à±",
+    teText: "సూర్యశోషిత కరకరలాడే వడియాలు",
     enText: "Sun-dried tapioca fryums",
-    price: "â‚¹650 / 1kg",
+    price: "₹650 / 1kg",
     image: categoryVadiyalu,
   },
   {
     category: "fryums",
-    teTitle: "à°ªà±†à°¸à°° à°…à°ªà±à°ªà°¡à°¾à°²à±",
+    teTitle: "పెసర అప్పడాలు",
     enTitle: "Pesara Appadalu",
-    teText: "à°­à±‹à°œà°¨à°¾à°¨à°¿à°•à°¿ à°•à±à°²à°¾à°¸à°¿à°•à± à°…à°ªà±à°ªà°¡à°¾à°²à±",
+    teText: "భోజనానికి క్లాసిక్ అప్పడాలు",
     enText: "Classic green gram appadalu",
-    price: "â‚¹750",
+    price: "₹750",
     image: categoryVadiyalu,
   },
   {
     category: "fryums",
-    teTitle: "à°®à°¿à°¨à°ª à°…à°ªà±à°ªà°¡à°¾à°²à±",
+    teTitle: "మినప అప్పడాలు",
     enTitle: "Minapa Appadalu",
-    teText: "à°¸à°‚à°ªà±à°°à°¦à°¾à°¯ à°‰à°°à°¦à± à°…à°ªà±à°ªà°¡à°¾à°²à±",
+    teText: "సంప్రదాయ ఉరద్ అప్పడాలు",
     enText: "Traditional urad appadalu",
-    price: "â‚¹750",
+    price: "₹750",
     image: categoryVadiyalu,
   },
   {
     category: "fryums",
-    teTitle: "à°šà°²à±à°² à°®à°¿à°°à±à°šà°¿",
+    teTitle: "చల్ల మిర్చి",
     enTitle: "Challa Mirchi",
-    teText: "à°•à°¾à°°à°‚ à°°à±à°šà°¿à°¤à±‹ à°ªà±à°°à°¤à±à°¯à±‡à°• à°à°Ÿà°®à±",
+    teText: "కారం రుచితో ప్రత్యేక ఐటమ్",
     enText: "Spicy sun-dried chilli special",
-    price: "â‚¹1050",
+    price: "₹1050",
     image: categoryVadiyalu,
   },
   {
     category: "fryums",
-    teTitle: "à°—à±à°®à±à°®à°¡à°¿ à°’à°¡à°¿à°¯à°²à±",
+    teTitle: "గుమ్మడి ఒడియలు",
     enTitle: "Gummadi Odiyalu",
-    teText: "à°ªà±à°°à±€à°®à°¿à°¯à°‚ à°µà°¡à°¿à°¯à°¾à°² à°•à±‡à°Ÿà°—à°¿à°°à±€",
+    teText: "ప్రీమియం వడియాల కేటగిరీ",
     enText: "Premium pumpkin odiyalu",
-    price: "â‚¹1150",
+    price: "₹1150",
     image: categoryVadiyalu,
   },
   {
     category: "fryums",
-    teTitle: "à°®à°¿à°¨à°ªà°¿à°‚à°¡à°¿ à°’à°¡à°¿à°¯à°²à±",
+    teTitle: "మినపిండి ఒడియలు",
     enTitle: "Minapindi Odiyalu",
-    teText: "à°‡à°‚à°Ÿà°¿à°µà°‚à°Ÿ à°¶à±ˆà°²à°¿à°²à±‹ à°¤à°¯à°¾à°°à±€",
+    teText: "ఇంటివంట శైలిలో తయారీ",
     enText: "Homestyle urad flour odiyalu",
-    price: "â‚¹650",
+    price: "₹650",
     image: categoryVadiyalu,
   },
   {
     category: "fryums",
-    teTitle: "à°¬à°¿à°¯à±à°¯à°ªà°¾à°°à°µà±à°µ à°’à°¡à°¿à°¯à°²à±",
+    teTitle: "బియ్యపారవ్వ ఒడియలు",
     enTitle: "Biyyaparavva Odiyalu",
-    teText: "à°°à±‹à°œà±à°µà°¾à°°à±€ à°­à±‹à°œà°¨à°¾à°¨à°¿à°•à°¿ à°¸à°°à±ˆà°¨à°µà°¿",
+    teText: "రోజువారీ భోజనానికి సరైనవి",
     enText: "Rice crisps for daily meals",
-    price: "â‚¹650",
+    price: "₹650",
     image: categoryVadiyalu,
   },
   {
     category: "fryums",
-    teTitle: "à°—à±‹à°°à±à°šà°¿à°•à±à°•à±à°¡à± à°“à°¡à°¿à°¯à°¾à°²à±",
+    teTitle: "గోరుచిక్కుడు ఓడియాలు",
     enTitle: "Goruchikkudu Odiyalu",
-    teText: "à°ªà±à°°à°¤à±à°¯à±‡à°• à°µà°¡à°¿à°¯à°¾à°² à°°à°•à°‚",
+    teText: "ప్రత్యేక వడియాల రకం",
     enText: "Cluster beans odiyalu special",
-    price: "â‚¹850",
+    price: "₹850",
     image: categoryVadiyalu,
   },
   {
     category: "combos",
-    teTitle: "à°¬à±à°¡à°‚à°¦à±‹à°¸ à°’à°°à±à°—à±",
+    teTitle: "బుడందోస ఒరుగు",
     enTitle: "Budandosa Orugu",
-    teText: "à°ªà±à°°à°¤à±à°¯à±‡à°• à°à°Ÿà°®à±, 1 à°•à±‡à°œà±€ à°ªà±à°¯à°¾à°•à±",
+    teText: "ప్రత్యేక ఐటమ్, 1 కేజీ ప్యాక్",
     enText: "Special item available in 1 kg pack",
-    price: "â‚¹1250 / 1kg",
+    price: "₹1250 / 1kg",
     image: catSpecial,
   },
   {
     category: "combos",
-    teTitle: "à°ªà°¾à°² à°‡à°‚à°—à±à°µ",
+    teTitle: "పాల ఇంగువ",
     enTitle: "Paala Inguva",
-    teText: "10 à°—à±à°°à°¾à°®à±à°² à°ªà±à°°à°¤à±à°¯à±‡à°• à°ªà°¦à°¾à°°à±à°¥à°‚",
+    teText: "10 గ్రాముల ప్రత్యేక పదార్థం",
     enText: "Special paala inguva, 10 gram pack",
-    price: "â‚¹200 / 10g",
+    price: "₹200 / 10g",
     image: catSpecial,
   },
   {
     category: "combos",
-    teTitle: "à°šà°¿à°Ÿà±à°Ÿà°¿à°‚à°Ÿà°ªà±Šà°Ÿà±à°Ÿà±",
+    teTitle: "చిట్టింటపొట్టు",
     enTitle: "Chittintapottu",
-    teText: "à°®à°¾ à°¦à°—à±à°—à°° à°ªà±à°°à°¤à±à°¯à±‡à°•à°‚à°—à°¾ à°²à°­à°¿à°‚à°šà±à°¨à±",
+    teText: "మా దగ్గర ప్రత్యేకంగా లభించును",
     enText: "Also available as a special item",
     price: "Available",
     image: catSpecial,
@@ -740,17 +740,17 @@ const productCards = [
 const highlights = [
   {
     icon: ShieldCheck,
-    te: "à°•à°²à°°à±à°¸à±, à°ªà±à°°à°¿à°œà°°à±à°µà±‡à°Ÿà°¿à°µà±à°¸à± à°²à±‡à°µà±",
+    te: "కలర్స్, ప్రిజర్వేటివ్స్ లేవు",
     en: "No colours, no preservatives",
   },
   {
     icon: Clock3,
-    te: "à°¬à±à°°à°¾à°¹à±à°®à°£ à°¸à°‚à°ªà±à°°à°¦à°¾à°¯ à°ªà°¦à±à°¦à°¤à°¿à°²à±‹ à°¤à°¯à°¾à°°à±€",
+    te: "బ్రాహ్మణ సంప్రదాయ పద్దతిలో తయారీ",
     en: "Prepared by Brahmin women in the traditional Brahmin method",
   },
   {
     icon: BadgePercent,
-    te: "AS à°¬à±à°°à°¾à°‚à°¡à± à°ªà°ªà±à°ªà±à°¨à±‚à°¨à±†à°¤à±‹ à°®à°¾à°¤à±à°°à°®à±‡ à°¤à°¯à°¾à°°à±€",
+    te: "AS బ్రాండ్ పప్పునూనెతో మాత్రమే తయారీ",
     en: "Made only with AS brand groundnut oil",
   },
 ];
@@ -766,41 +766,41 @@ const saltPickleTitles = new Set([
   "Pandu Mirchi",
   "Dabbakaya",
   "Nimakaya",
-  "Tomato",
-  "Velakkaya",
+    teTitle: "వంకాయ నిల్వ",
+    enTitle: "Vankaya Nilava",
 ]);
 
 const pickleTypeCards = [
   {
     key: "all",
-    teTitle: "à°…à°¨à±à°¨à°¿ à°ªà°šà±à°šà°³à±à°³à±",
+    teTitle: "అన్ని పచ్చళ్ళు",
     enTitle: "All Pickles",
-    teText: "à°‰à°ªà±à°ªà±, à°‡à°‚à°—à±à°µ à°ªà±‹à°ªà±, à°ªà±à°²à°¿à°¹à±‹à°° à°®à°°à°¿à°¯à± à°ªà±à°°à°¤à±à°¯à±‡à°• à°°à°•à°¾à°²à°¨à±à°¨à±€ à°’à°•à±‡à°šà±‹à°Ÿ",
-    enText: "See every pickle in one place",
-    image: pickleAvakaya,
-  },
+    teTitle: "అల్లం",
+    enTitle: "Allam",
+    teText: "అల్లం రుచితో ప్రత్యేకమైన రుచి",
+    enText: "Homestyle ginger special",
   {
     key: "salt",
-    teTitle: "à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°³à±à°³à±",
+    teTitle: "ఉప్పు పచ్చళ్ళు",
     enTitle: "Salt Pickles",
-    teText: "à°ªà°¾à°¤à°•à°¾à°²à°‚ à°°à±à°šà°¿, à°ªà±à°°à°¤à°¿à°°à±‹à°œà±‚ à°…à°¨à±à°¨à°‚à°²à±‹ à°¤à°¿à°¨à±‡à°‚à°¦à±à°•à± à°¸à°°à±ˆà°¨ à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°³à±à°³à±",
-    enText: "Classic salt-cured favourites for everyday meals",
-    image: catSaltPickles,
-  },
-  {
+    teText: "పాతకాలం రుచి, ప్రతిరోజూ అన్నంలో తినేందుకు సరైన ఉప్పు పచ్చళ్ళు",
+    teTitle: "మామిడి అల్లం",
+    enTitle: "Mamidi Allam",
+    teText: "మామిడి అల్లం కలిసిన ప్రత్యేక రుచి",
+    enText: "Mango ginger special",
     key: "tempered",
-    teTitle: "à°‡à°‚à°—à±à°µ à°ªà±‹à°ªà± à°ªà°šà±à°šà°³à±à°³à±",
+    teTitle: "ఇంగువ పోపు పచ్చళ్ళు",
     enTitle: "Tempered Pickles",
-    teText: "à°†à°µà°•à°¾à°¯, à°®à°¾à°—à°¾à°¯, à°ªà±à°²à°¿à°¹à±‹à°° à°®à°°à°¿à°¯à± à°ªà±à°°à°¤à±à°¯à±‡à°• à°‡à°‚à°—à±à°µ à°ªà±‹à°ªà± à°°à°•à°¾à°² à°ªà°šà±à°šà°³à±à°³à±",
+    teText: "ఆవకాయ, మాగాయ, పులిహోర మరియు ప్రత్యేక ఇంగువ పోపు రకాల పచ్చళ్ళు",
     enText: "Avakaya, magaya, pulihora and specialty tempered jars",
-    image: catTemperedPickles,
-  },
-];
-
+    teTitle: "టొమోటో",
+    enTitle: "Tomato",
+    teText: "ఇంగువ పోపుతో టొమోటో",
+    enText: "Tempered tomato special",
 const getPickleType = (title: string) => (saltPickleTitles.has(title) ? "salt" : "tempered");
 
 const parseOneKgPrice = (price: string) => {
-  const match = price.match(/â‚¹?\s*(\d+)\s*\/\s*1kg/i);
+  const match = price.match(/₹?\s*(\d+)\s*\/\s*1kg/i);
   return match ? Number(match[1]) : null;
 };
 
@@ -818,7 +818,7 @@ const getWeightOptions = (price: string) => {
   ];
 };
 
-const formatPrice = (amount: number) => `â‚¹${amount}`;
+const formatPrice = (amount: number) => `₹${amount}`;
 
 const buildWhatsAppOrderUrl = (productName: string, sizeLabel?: string) =>
   `https://wa.me/917981370664?text=${encodeURIComponent(
@@ -851,19 +851,19 @@ const TrustVisual = ({ type }: { type: string }) => {
         <div className="absolute bottom-0 right-0 h-10 w-12 rounded-t-[20px] bg-[#214634]" />
       </div>
     );
-  }
-
-  if (type === "origin") {
-    return (
+        teTitle: "మామిడి తురుము",
+        enTitle: "Mamidi Turumu",
+        teText: "తురిమిన మామిడితో చేసిన రుచి",
+        enText: "Grated mango special",
       <div className="relative h-24 w-24 overflow-hidden rounded-[32px] bg-[#2E5C3E] shadow-inner ring-1 ring-[#3D7A52]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(245,197,24,0.18),transparent_35%),linear-gradient(135deg,#214634,#1A3A2A)]" />
         <div className="absolute inset-3 rounded-[24px] border border-dashed border-[#3D7A52]" />
         <div className="absolute left-5 top-6 h-9 w-12 rounded-[60%_40%_55%_45%] bg-[#9fd18b] opacity-90" />
         <div className="absolute right-4 bottom-5 h-7 w-9 rounded-[40%_60%_50%_50%] bg-[#9fd18b] opacity-80" />
-        <div className="absolute left-[42px] top-[26px] h-12 w-9 rounded-full bg-[#1d4ed8] shadow-[0_0_0_4px_rgba(255,255,255,0.65)]" />
-        <div className="absolute left-[50px] top-[34px] h-4 w-4 -translate-x-1/2 rounded-full bg-[#F5C518]" />
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-[#1A3A2A] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-theme-body shadow-sm">
-          Vijayawada
+        teTitle: "మామిడి ముక్కలు",
+        enTitle: "Mamidi Mukkalu",
+        teText: "మామిడి ముక్కలతో 만든 ప్రత్యేక రుచి",
+        enText: "Mango pieces special",
         </div>
       </div>
     );
@@ -874,11 +874,11 @@ const TrustVisual = ({ type }: { type: string }) => {
       <div className="relative h-24 w-24">
         <div className="absolute inset-x-1 top-1 rounded-[24px] border-[3px] border-[#3D7A52] bg-[#1A3A2A] p-2">
           <div className="flex justify-center gap-1 text-amber-400 text-sm">
-            <span>â˜…</span>
-            <span>â˜…</span>
-            <span>â˜…</span>
-            <span>â˜…</span>
-            <span>â˜…</span>
+            <span>★</span>
+            <span>★</span>
+            <span>★</span>
+            <span>★</span>
+            <span>★</span>
           </div>
         </div>
         <div className="absolute bottom-2 left-8 h-12 w-8 rounded-t-[18px] rounded-b-[8px] bg-sky-900" />
@@ -949,19 +949,19 @@ const MarketplaceHome = ({
 
   const categoryMeta = {
     pickles: {
-      te: "à°ªà°šà±à°šà°³à±à°³à±",
+      te: "పచ్చళ్ళు",
       en: "Pickles",
     },
     powders: {
-      te: "à°ªà±Šà°¡à±à°²à±",
+      te: "పొడులు",
       en: "Podi",
     },
     fryums: {
-      te: "à°µà°¡à°¿à°¯à°¾à°²à± & à°…à°ªà±à°ªà°¡à°¾à°²à±",
+      te: "వడియాలు & అప్పడాలు",
       en: "Vadiyalu & Appadalu",
     },
     combos: {
-      te: "à°ªà±à°°à°¤à±à°¯à±‡à°• à°ªà°¦à°¾à°°à±à°¥à°¾à°²à±",
+      te: "ప్రత్యేక పదార్థాలు",
       en: "Special Items",
     },
   } as const;
@@ -980,13 +980,13 @@ const MarketplaceHome = ({
         ? [
             {
               key: "salt",
-              teTitle: "à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°³à±à°³à±",
+              teTitle: "ఉప్పు పచ్చళ్ళు",
               enTitle: "Salt Pickles",
               products: filteredProducts.filter((product) => getPickleType(product.enTitle) === "salt"),
             },
             {
               key: "tempered",
-              teTitle: "à°‡à°‚à°—à±à°µ à°ªà±‹à°ªà± à°ªà°šà±à°šà°³à±à°³à±",
+              teTitle: "ఇంగువ పోపు పచ్చళ్ళు",
               enTitle: "Tempered Pickles",
               products: filteredProducts.filter((product) => getPickleType(product.enTitle) === "tempered"),
             },
@@ -996,10 +996,10 @@ const MarketplaceHome = ({
               key: `${selectedFilter}-${selectedPickleType}`,
               teTitle:
                 selectedFilter === "pickles" && selectedPickleType === "salt"
-                  ? "à°‰à°ªà±à°ªà± à°ªà°šà±à°šà°³à±à°³à±"
+                  ? "ఉప్పు పచ్చళ్ళు"
                   : selectedFilter === "pickles" && selectedPickleType === "tempered"
-                    ? "à°‡à°‚à°—à±à°µ à°ªà±‹à°ªà± à°ªà°šà±à°šà°³à±à°³à±"
-                    : categoryMeta[selectedFilter as keyof typeof categoryMeta]?.te ?? "à°ªà°¦à°¾à°°à±à°¥à°¾à°²à±",
+                    ? "ఇంగువ పోపు పచ్చళ్ళు"
+                    : categoryMeta[selectedFilter as keyof typeof categoryMeta]?.te ?? "పదార్థాలు",
               enTitle:
                 selectedFilter === "pickles" && selectedPickleType === "salt"
                   ? "Salt Pickles"
@@ -1036,7 +1036,7 @@ const MarketplaceHome = ({
         <div className="border-b border-emerald-900/20 bg-gradient-to-r from-[#f6f0d6] via-[#f0e8c5] to-[#e8dfb9] px-4 py-3 text-center">
           <BilingualText
             as="p"
-            te="మా ప్రీమియం వంటగది నాణ్యత హామీలు"
+            te="?? ???????? ?????? ?????? ??????"
             en="Our Premium Kitchen Quality Promises"
             teluguClassName="text-base font-bold tracking-wide text-[#1e5a34]"
             englishClassName="text-base font-semibold tracking-[0.08em] text-[#1e5a34]"
@@ -1075,14 +1075,14 @@ const MarketplaceHome = ({
               <div>
                 <BilingualText
                   as="p"
-                  te="à°†à°‚à°§à±à°° à°•à°¿à°šà±†à°¨à± à°¡à°¿à°²à±ˆà°Ÿà±à°¸à±"
+                  te="ఆంధ్ర కిచెన్ డిలైట్స్"
                   en="AK Sampradayini Pickles"
                   teluguClassName="font-heading text-lg font-bold text-chilli"
                   englishClassName="font-heading text-2xl font-bold text-chilli"
                 />
                 <BilingualText
                   as="p"
-                  te="à°‡à°‚à°Ÿà°¿à°µà°‚à°Ÿ à°ªà°šà±à°šà°³à±à°³à±, à°ªà±Šà°¡à±à°²à±, à°µà°¡à°¿à°¯à°¾à°²à±"
+                  te="ఇంటివంట పచ్చళ్ళు, పొడులు, వడియాలు"
                   en="Traditional pickles, podulu, and odiyalu"
                   teluguClassName="text-xs text-muted-foreground"
                   englishClassName="text-sm text-muted-foreground"
@@ -1095,7 +1095,7 @@ const MarketplaceHome = ({
                 <Search className="mr-3 h-5 w-5 text-muted-foreground" />
                 <BilingualText
                   as="span"
-                  te="à°ªà°šà±à°šà°³à±à°³à±, à°ªà±Šà°¡à±à°²à±, à°µà°¡à°¿à°¯à°¾à°²à± à°µà±†à°¤à°•à°‚à°¡à°¿"
+                  te="పచ్చళ్ళు, పొడులు, వడియాలు వెతకండి"
                   en="Search pickles, podis, and vadiyalu"
                   className="text-muted-foreground"
                   teluguClassName="text-sm"
@@ -1108,7 +1108,7 @@ const MarketplaceHome = ({
                   <Heart className="h-6 w-6 text-chilli" />
                   <BilingualText
                     as="span"
-                    te="à°µà°¿à°·à±â€Œà°²à°¿à°¸à±à°Ÿà±"
+                    te="విష్‌లిస్ట్"
                     en="Wishlist"
                     teluguClassName="text-xs"
                     englishClassName="text-sm"
@@ -1123,7 +1123,7 @@ const MarketplaceHome = ({
                   <ShoppingCart className="h-5 w-5" />
                   <BilingualText
                     as="span"
-                    te="à°‡à°ªà±à°ªà±à°¡à±‡ à°†à°°à±à°¡à°°à±"
+                    te="ఇప్పుడే ఆర్డర్"
                     en="Order Now"
                     teluguClassName="text-xs"
                     englishClassName="text-sm font-semibold"
@@ -1137,14 +1137,14 @@ const MarketplaceHome = ({
             <div className="rounded-2xl border border-[#3D7A52] bg-[#1A3A2A] px-4 py-3 text-right shadow-sm">
               <BilingualText
                 as="p"
-                te="Ã Â°ÂµÃ Â°Â¿Ã Â°Å“Ã Â°Â¯Ã Â°ÂµÃ Â°Â¾Ã Â°Â¡ Ã Â°Â¨Ã Â±ÂÃ Â°â€šÃ Â°Å¡Ã Â°Â¿ Ã Â°â€¡Ã Â°â€šÃ Â°Å¸Ã Â°Â¿Ã Â°ÂµÃ Â°â€šÃ Â°Å¸ Ã Â°Â°Ã Â±ÂÃ Â°Å¡Ã Â±ÂÃ Â°Â²Ã Â±Â"
+                te="à°µà°¿à°œà°¯à°µà°¾à°¡ à°¨à±à°‚à°šà°¿ à°‡à°‚à°Ÿà°¿à°µà°‚à°Ÿ à°°à±à°šà±à°²à±"
                 en="Homemade taste from Vijayawada"
                 teluguClassName="text-xs font-medium text-foreground"
                 englishClassName="text-sm font-medium text-foreground"
               />
               <BilingualText
                 as="p"
-                te="Ã Â°â€¢Ã Â°Â²Ã Â°Â°Ã Â±ÂÃ Â°Â¸Ã Â±Â, Ã Â°ÂªÃ Â±ÂÃ Â°Â°Ã Â°Â¿Ã Â°Å“Ã Â°Â°Ã Â±ÂÃ Â°ÂµÃ Â±â€¡Ã Â°Å¸Ã Â°Â¿Ã Â°ÂµÃ Â±ÂÃ Â°Â¸Ã Â±Â Ã Â°Â²Ã Â±â€¡Ã Â°ÂµÃ Â±Â"
+                te="à°•à°²à°°à±à°¸à±, à°ªà±à°°à°¿à°œà°°à±à°µà±‡à°Ÿà°¿à°µà±à°¸à± à°²à±‡à°µà±"
                 en="No colours or preservatives"
                 className="mt-1 text-muted-foreground"
                 teluguClassName="text-xs"
@@ -1158,7 +1158,7 @@ const MarketplaceHome = ({
               <Phone className="h-4 w-4 text-chilli" />
               <BilingualText
                 as="span"
-                te="Ã Â°â€¢Ã Â°Â¾Ã Â°Â²Ã Â±Â Ã Â°Å¡Ã Â±â€¡Ã Â°Â¯Ã Â°â€šÃ Â°Â¡Ã Â°Â¿"
+                te="à°•à°¾à°²à± à°šà±‡à°¯à°‚à°¡à°¿"
                 en="Call"
                 teluguClassName="text-xs font-medium"
                 englishClassName="text-sm font-semibold"
@@ -1173,7 +1173,7 @@ const MarketplaceHome = ({
               <ShoppingCart className="h-5 w-5" />
               <BilingualText
                 as="span"
-                te="Ã Â°â€¡Ã Â°ÂªÃ Â±ÂÃ Â°ÂªÃ Â±ÂÃ Â°Â¡Ã Â±â€¡ Ã Â°â€ Ã Â°Â°Ã Â±ÂÃ Â°Â¡Ã Â°Â°Ã Â±Â"
+                te="à°‡à°ªà±à°ªà±à°¡à±‡ à°†à°°à±à°¡à°°à±"
                 en="Order on WhatsApp"
                 teluguClassName="text-xs"
                 englishClassName="text-sm font-semibold"
@@ -1302,14 +1302,14 @@ const MarketplaceHome = ({
           <div className="mb-4">
             <BilingualText
               as="p"
-              te="à°‡à°®à±‡à°œà± à°«à°¿à°²à±à°Ÿà°°à±à°²à±"
+              te="ఇమేజ్ ఫిల్టర్లు"
               en="Image Filters"
               teluguClassName="text-sm font-semibold text-chilli"
               englishClassName="text-sm font-semibold uppercase tracking-[0.2em] text-chilli"
             />
             <BilingualText
               as="h3"
-              te="à°®à±€à°•à± à°•à°¾à°µà°¾à°²à±à°¸à°¿à°¨ à°µà°¿à°­à°¾à°—à°¾à°¨à±à°¨à°¿ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿"
+              te="మీకు కావాల్సిన విభాగాన్ని ఎంచుకోండి"
               en="Choose the category you want"
               teluguClassName="font-heading text-2xl font-bold text-foreground"
               englishClassName="font-heading text-4xl font-bold text-foreground"
@@ -1360,14 +1360,14 @@ const MarketplaceHome = ({
             <div>
               <BilingualText
                 as="p"
-                te="à°®à°¾ à°µà°¿à°­à°¾à°—à°¾à°²à±"
+                te="మా విభాగాలు"
                 en="Shop by Category"
                 teluguClassName="text-sm font-semibold text-accent"
                 englishClassName="text-sm font-semibold uppercase tracking-[0.2em] text-accent"
               />
               <BilingualText
                 as="h3"
-                te="à°®à±€ à°­à±‹à°œà°¨à°¾à°¨à°¿à°•à°¿ à°¸à°°à°¿à°ªà±‹à°¯à±‡ à°µà°‚à°Ÿà°•à°¾à°²à±"
+                te="మీ భోజనానికి సరిపోయే వంటకాలు"
                 en="Collections for every Andhra meal"
                 teluguClassName="font-heading text-2xl font-bold text-foreground"
                 englishClassName="font-heading text-4xl font-bold text-foreground"
@@ -1422,14 +1422,14 @@ const MarketplaceHome = ({
             <div className="p-5 md:p-8">
               <BilingualText
                 as="p"
-                te="à°¹à±‹à°®à±â€Œà°®à±‡à°¡à± à°¸à±à°ªà±†à°·à°²à±"
+                te="హోమ్‌మేడ్ స్పెషల్"
                 en="Homemade Special"
                 teluguClassName="text-xs font-semibold text-turmeric md:text-sm"
                 englishClassName="text-xs font-semibold uppercase tracking-[0.16em] text-turmeric md:text-sm md:tracking-[0.2em]"
               />
               <BilingualText
                 as="h3"
-                te="à°ªà±à°°à°¤à°¿ à°¸à±€à°¸à°¾à°²à±‹ à°¬à±à°°à°¾à°¹à±à°®à°£ à°¸à°‚à°ªà±à°°à°¦à°¾à°¯à°‚"
+                te="ప్రతి సీసాలో బ్రాహ్మణ సంప్రదాయం"
                 en="Brahmin tradition in every jar"
                 className="mt-2 md:mt-3"
                 teluguClassName="font-heading text-xl font-bold md:text-2xl"
@@ -1437,7 +1437,7 @@ const MarketplaceHome = ({
               />
               <BilingualText
                 as="p"
-                te="à°¬à±à°°à°¾à°¹à±à°®à°£ à°®à°¹à°¿à°³à°²à°¤à±‹ à°¤à°¯à°¾à°°à±à°šà±‡à°¯à°¬à°¡à°¿à°¨ à°ªà°šà±à°šà°³à±à°³à±, à°ªà±Šà°¡à±à°²à±, à°…à°ªà±à°ªà°¡à°¾à°²à±, à°’à°¡à°¿à°¯à°¾à°²à± à°…à°¨à±à°¨à°¿ à°•à±à°µà°¾à°²à°¿à°Ÿà±€ à°ªà°¦à°¾à°°à±à°¥à°¾à°²à°¤à±‹ à°šà±‡à°¸à±à°¤à°¾à°®à±."
+                te="బ్రాహ్మణ మహిళలతో తయారుచేయబడిన పచ్చళ్ళు, పొడులు, అప్పడాలు, ఒడియాలు అన్ని క్వాలిటీ పదార్థాలతో చేస్తాము."
                 en="All our pickles, podi, appadalu, and odiyalu are prepared by Brahmin women with quality ingredients, without colours or preservatives."
                 className="mt-3 text-ivory/85 md:mt-4"
                 teluguClassName="text-sm leading-6 md:text-base md:leading-7"
@@ -1462,7 +1462,7 @@ const MarketplaceHome = ({
               <div className="mt-5 rounded-[20px] bg-[#1A3A2A] p-4 md:mt-6 md:rounded-[26px] md:p-5">
                 <BilingualText
                   as="h4"
-                  te="à°¸à°‚à°ªà±à°°à°¦à°¿à°‚à°šà°‚à°¡à°¿"
+                  te="సంప్రదించండి"
                   en="Contact Details"
                   teluguClassName="font-heading text-lg font-bold text-ivory md:text-xl"
                   englishClassName="font-heading text-xl font-bold text-ivory md:text-2xl"
@@ -1474,8 +1474,8 @@ const MarketplaceHome = ({
                 </div>
                 <BilingualText
                   as="p"
-                  te="à°ªà±à°šà±à°šà°¾ à°ªà°²à±à°²à°µà°¿, à°•à°¨à°•à°°à°¾à°œà± à°µà±€à°§à°¿, à°®à°¾à°°à±à°¤à°¿ à°µà±à°¯à°¾à°¯à°¾à°®à°¶à°¾à°², à°®à±à°¤à±à°¯à°¾à°²à°‚à°ªà°¾à°¡à±, à°µà°¿à°œà°¯à°µà°¾à°¡"
-                  en="Puchcha Pallavi, Kanakaraju Veedhi, Maruti Vyayama Shala, Muthyalampadu, Vijayawada"
+                  te="23-30-24, opp sri sai residency, kanakaraju street, satyanarayana puram, Vijayawada -11"
+                  en="23-30-24, opp sri sai residency, kanakaraju street, satyanarayana puram, Vijayawada -11"
                   className="mt-3 text-ivory/85 md:mt-4"
                   teluguClassName="text-sm leading-6 md:text-base md:leading-7"
                   englishClassName="text-sm leading-6 md:text-base md:leading-7"
@@ -1490,7 +1490,7 @@ const MarketplaceHome = ({
               >
                 <BilingualText
                   as="span"
-                  te="à°µà°¾à°Ÿà±à°¸à°¾à°ªà±â€Œà°²à±‹ à°•à±Šà°¨à°‚à°¡à°¿"
+                  te="వాట్సాప్‌లో కొనండి"
                   en="Buy on WhatsApp"
                   teluguClassName="text-sm"
                   englishClassName="text-sm font-semibold"
@@ -1500,7 +1500,7 @@ const MarketplaceHome = ({
               <div className="mt-5 rounded-2xl bg-[#1A3A2A] p-3.5 text-sm md:mt-6 md:p-4">
                 <BilingualText
                   as="p"
-                  te="à°…à°¨à±à°¨à°¿ à°ªà±à°°à°¦à±‡à°¶à°¾à°²à°•à±, à°µà°¿à°¦à±‡à°¶à°¾à°²à°•à± à°•à±‚à°¡à°¾ à°•à±Šà°°à°¿à°¯à°°à± à°¸à±Œà°•à°°à±à°¯à°‚ à°•à°²à°¦à±. à°šà°¾à°°à±à°œà±€à°²à± à°…à°¦à°¨à°‚."
+                  te="అన్ని ప్రదేశాలకు, విదేశాలకు కూడా కొరియర్ సౌకర్యం కలదు. చార్జీలు అదనం."
                   en="Courier facility is available to all places, including overseas. Charges are extra."
                   teluguClassName="text-xs md:text-sm"
                   englishClassName="text-xs md:text-sm"
@@ -1515,14 +1515,14 @@ const MarketplaceHome = ({
               <div className="mb-6">
                 <BilingualText
                   as="p"
-                  te="Ã Â°ÂªÃ Â°Å¡Ã Â±ÂÃ Â°Å¡Ã Â°Â³Ã Â±ÂÃ Â°Â³ Ã Â°Â°Ã Â°â€¢Ã Â°Â¾Ã Â°Â²Ã Â±Â"
+                  te="à°ªà°šà±à°šà°³à±à°³ à°°à°•à°¾à°²à±"
                   en="Pickle Types"
                   teluguClassName="text-sm font-semibold text-accent"
                   englishClassName="text-sm font-semibold uppercase tracking-[0.2em] text-accent"
                 />
                 <BilingualText
                   as="h3"
-                  te="Ã Â°Â®Ã Â±ÂÃ Â°â€šÃ Â°Â¦Ã Â±Â Ã Â°Â°Ã Â°â€¢Ã Â°â€š Ã Â°Å½Ã Â°â€šÃ Â°Å¡Ã Â±ÂÃ Â°â€¢Ã Â±â€¹Ã Â°â€šÃ Â°Â¡Ã Â°Â¿, Ã Â°Â¤Ã Â°Â°Ã Â±ÂÃ Â°ÂµÃ Â°Â¾Ã Â°Â¤ Ã Â°ÂªÃ Â°Å¡Ã Â±ÂÃ Â°Å¡Ã Â°Â³Ã Â±ÂÃ Â°Â³ Ã Â°Â²Ã Â°Â¿Ã Â°Â¸Ã Â±ÂÃ Â°Å¸Ã Â±Â Ã Â°Å¡Ã Â±â€šÃ Â°Â¡Ã Â°â€šÃ Â°Â¡Ã Â°Â¿"
+                  te="à°®à±à°‚à°¦à± à°°à°•à°‚ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿, à°¤à°°à±à°µà°¾à°¤ à°ªà°šà±à°šà°³à±à°³ à°²à°¿à°¸à±à°Ÿà± à°šà±‚à°¡à°‚à°¡à°¿"
                   en="Choose a pickle type, then see the matching list"
                   teluguClassName="font-heading text-2xl font-bold text-foreground"
                   englishClassName="font-heading text-4xl font-bold text-foreground"
@@ -1569,14 +1569,14 @@ const MarketplaceHome = ({
               <div>
                 <BilingualText
                   as="p"
-                  te="à°ªà°¾à°ªà±à°²à°°à± à°à°Ÿà°®à±à°¸à±"
+                  te="పాపులర్ ఐటమ్స్"
                   en="Popular Items"
                   teluguClassName="text-sm font-semibold text-chilli"
                   englishClassName="text-sm font-semibold uppercase tracking-[0.2em] text-chilli"
                 />
                 <BilingualText
                   as="h3"
-                  te="à°‡à°ªà±à°ªà±à°¡à± à°Žà°•à±à°•à±à°µà°—à°¾ à°†à°°à±à°¡à°°à± à°…à°µà±à°¤à±à°¨à±à°¨à°µà°¿"
+                  te="ఇప్పుడు ఎక్కువగా ఆర్డర్ అవుతున్నవి"
                   en={
                     selectedFilter === "pickles" && selectedPickleType === "salt"
                       ? "Salt pickles list"
@@ -1667,7 +1667,7 @@ const MarketplaceHome = ({
                       >
                         <BilingualText
                           as="span"
-                          te="à°†à°°à±à°¡à°°à±"
+                          te="ఆర్డర్"
                           en="Add to Order"
                           teluguClassName="text-sm"
                           englishClassName="text-base"
@@ -1685,7 +1685,7 @@ const MarketplaceHome = ({
               <div className="rounded-[28px] bg-[#2E5C3E] p-10 text-center shadow-sm ring-1 ring-[#3D7A52]">
                 <BilingualText
                   as="p"
-                  te="à°ˆ à°µà°¿à°­à°¾à°—à°¾à°¨à°¿à°•à°¿ à°¸à°‚à°¬à°‚à°§à°¿à°‚à°šà°¿à°¨ à°à°Ÿà°®à±à°¸à± à°¤à±à°µà°°à°²à±‹ à°šà±‡à°°à±à°¸à±à°¤à°¾à°®à±"
+                  te="ఈ విభాగానికి సంబంధించిన ఐటమ్స్ త్వరలో చేరుస్తాము"
                   en="More items for this category will be added soon"
                   teluguClassName="text-base text-muted-foreground"
                   englishClassName="text-base text-muted-foreground"
@@ -1721,4 +1721,5 @@ const MarketplaceHome = ({
 };
 
 export default MarketplaceHome;
+
 

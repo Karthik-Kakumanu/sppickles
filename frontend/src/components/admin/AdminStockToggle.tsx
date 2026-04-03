@@ -2,13 +2,16 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useProductsQuery, getDbProductId } from "@/lib/api";
 import { useStockQuery, useUpdateStockMutation } from "@/lib/api";
-import { CheckCircle, AlertCircle, Loader2, Package, ToggleLeft, ToggleRight, Eye } from "lucide-react";
+import { Loader2, Package, ToggleLeft, ToggleRight, Eye, Search, X, Edit2, Check} from "lucide-react";
 
 export const AdminStockToggle = () => {
   const { data: products = [], isLoading: loadingProducts } = useProductsQuery();
   const { data: stockData = new Map(), isLoading: loadingStock } = useStockQuery();
   const updateStockMutation = useUpdateStockMutation();
   const [updating, setUpdating] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [editingPrice, setEditingPrice] = useState<string | null>(null);
+  const [newPrice, setNewPrice] = useState<string>("");
 
   const handleToggleStock = async (productId: string, currentStatus: boolean) => {
     setUpdating(productId);
@@ -25,6 +28,12 @@ export const AdminStockToggle = () => {
       setUpdating(null);
     }
   };
+
+  // Filter products based on search query
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (loadingProducts || loadingStock) {
     return (
@@ -50,16 +59,45 @@ export const AdminStockToggle = () => {
         </p>
       </div>
 
+      {/* Search Bar */}
+      <div className="relative">
+        <div className="flex items-center gap-3 rounded-xl border-2 border-gray-300 bg-white px-4 py-3 transition-all focus-within:border-gold focus-within:shadow-sm">
+          <Search className="h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search products by name or category..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 bg-transparent outline-none text-theme-body placeholder-gray-400"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="mt-2 text-sm text-theme-body-soft">
+            Found {filteredProducts.length} of {products.length} products
+          </p>
+        )}
+      </div>
+
       {/* Stock Grid */}
       <div className="grid gap-4">
-        {products.length === 0 ? (
+        {filteredProducts.length === 0 ? (
           <div className="text-center py-16">
             <Package className="h-16 w-16 text-gold/30 mx-auto mb-4" />
-            <p className="text-theme-body text-lg">No products found</p>
+            <p className="text-theme-body text-lg">
+              {searchQuery ? "No products match your search" : "No products found"}
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {products.map((product, index) => {
+            {filteredProducts.map((product, index) => {
               const dbProductId = getDbProductId(Number(product.id), product.name);
               const isAvailable = stockData.get(dbProductId) ?? true;
               const isUpdating = updating === dbProductId;
@@ -79,21 +117,61 @@ export const AdminStockToggle = () => {
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-4">
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-bold text-theme-heading line-clamp-1">
                           {product.name}
                         </h3>
                         <p className="text-sm text-theme-body-soft mt-1">
                           Category: <span className="capitalize text-theme-body">{product.category}</span>
                           {" • "}
-                          Price: <span className="font-semibold text-theme-heading">₹{product.price_per_kg}/kg</span>
+                          {editingPrice === product.id ? (
+                            <div className="inline-flex items-center gap-2">
+                              <input
+                                type="number"
+                                value={newPrice}
+                                onChange={(e) => setNewPrice(e.target.value)}
+                                className="w-20 px-2 py-1 border border-gold rounded text-sm"
+                                placeholder="Price/kg"
+                              />
+                            </div>
+                          ) : (
+                            <span className="font-semibold text-theme-heading">₹{product.price_per_kg}/kg</span>
+                          )}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Status Badge + Toggle */}
-                  <div className="flex items-center gap-4">
+                  {/* Status Badge + Toggle + Edit Price */}
+                  <div className="flex items-center gap-3">
+                    {/* Edit Price Button */}
+                    {editingPrice === product.id ? (
+                      <motion.button
+                        onClick={() => {
+                          // TODO: Call update price API
+                          setEditingPrice(null);
+                          setNewPrice("");
+                        }}
+                        whileHover={{ scale: 1.05 }}
+                        className="flex-shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm bg-green-600 text-white border-2 border-green-700 hover:bg-green-700 transition-all"
+                      >
+                        <Check className="h-4 w-4" />
+                        Save
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        onClick={() => {
+                          setEditingPrice(product.id);
+                          setNewPrice(product.price_per_kg.toString());
+                        }}
+                        whileHover={{ scale: 1.05 }}
+                        className="flex-shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm bg-amber-600 text-white border-2 border-amber-700 hover:bg-amber-700 transition-all"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                        Edit Price
+                      </motion.button>
+                    )}
+
                     {/* Status Display */}
                     <div className="flex flex-col items-end gap-2">
                       <motion.div
@@ -115,7 +193,7 @@ export const AdminStockToggle = () => {
                     {/* Toggle Button */}
                     <motion.button
                       onClick={() => handleToggleStock(dbProductId, isAvailable)}
-                      disabled={isUpdating}
+                      disabled={isUpdating || editingPrice === product.id}
                       whileHover={{ scale: isUpdating ? 1 : 1.05 }}
                       whileTap={{ scale: isUpdating ? 1 : 0.95 }}
                       className={`flex-shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-black text-sm transition-all border-2 ${

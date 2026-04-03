@@ -4,7 +4,7 @@ import BilingualText from "@/components/BilingualText";
 
 const storyParagraphs = [
   {
-    te: "విజయవాడలోని ఓ ప్రశాంతమైన బ్రాహ్మణ ఇంటిలో పచ్చడి చేయడం వంట మాత్రమే కాదు, పవిత్రమైన ఆచారం. మా అమ్మమ్మ తెల్లవారుజామునే లేచి, తాజా మామిడికాయలు తీసుకువచ్చి, రాయి రోక్కలిపై మసాలాలు నూరి, ప్రేమతో కలిపేది.",
+    te: "విజయవాడలోని ఓ ప్రశాంతమైన బ్రాహ్మణ ఇంటిలో పచ్చళ్ళు చేయడం వంట మాత్రమే కాదు, పవిత్రమైన ఆచారం. మా అమ్మమ్మ తెల్లవారుజామునే లేచి, తాజా మామిడికాయలు తీసుకువచ్చి, రాయి రోక్కలిపై మసాలాలు నూరి, ప్రేమతో కలిపేది.",
     en: "In the heart of Vijayawada, in a quiet Brahmin household, the art of pickle-making was never just cooking. It was a sacred ritual. Our grandmother would wake before dawn, hand-picking the freshest raw mangoes, grinding spices on a stone mortar, and mixing everything with the patience that only love can teach.",
   },
   {
@@ -56,7 +56,7 @@ const StorySection = () => {
             >
               <motion.img
                 src={storyKitchen}
-                alt="బ్రాహ్మణింటి వంటింట్లో సాంప్రదాయ పచ్చడి తయారీ | Traditional pickle making in a Brahmin household kitchen"
+                alt="బ్రాహ్మణింటి వంటింట్లో సాంప్రదాయ పచ్చళ్ళు తయారీ | Traditional pickle making in a Brahmin household kitchen"
                 loading="lazy"
                 width={1200}
                 height={800}

@@ -1,8 +1,8 @@
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AlertCircle, ArrowRight, CheckCircle2, MapPin, ShoppingBag } from "lucide-react";
-import { getRegionByPincode, validatePincode } from "@/lib/pincode";
-import { formatCurrency } from "@/lib/pricing";
+import { calculateShippingByWeight, getRegionByPincode, validatePincode } from "@/lib/pincode";
+import { formatCurrency, getWeightMultiplier } from "@/lib/pricing";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -68,11 +68,7 @@ const checkoutPageCopy = {
     eyebrow: "Checkout",
     heading: "Delivery details first, payment next",
     intro:
-      "This page is redesigned to feel cleaner and more premium on desktop. Customers can complete address details, confirm the destination on Google Maps, and see the final total update once the pincode is validated.",
-    indiaNote:
-      "We do not display shipping prices loudly on top of the page. Shipping is added after pincode confirmation so the total feels cleaner and more relevant.",
-    intlNote:
-      "India orders calculate shipping after pincode validation. USA and overseas orders are reviewed and confirmed separately after checkout.",
+      "Fill your delivery details, check location on Google Maps, and continue securely to payment.",
     mapTitle: "Address preview on Google Maps",
     mapBody:
       "Use this preview to double-check the delivery location before continuing to the payment page.",
@@ -86,11 +82,7 @@ const checkoutPageCopy = {
     eyebrow: "చెక్‌అవుట్",
     heading: "ముందు డెలివరీ వివరాలు, తరువాత చెల్లింపు",
     intro:
-      "ఈ పేజీని ఇప్పుడు డెస్క్‌టాప్‌లో మరింత శుభ్రంగా, ప్రీమియంగా మార్చాం. కస్టమర్ పూర్తి చిరునామా నమోదు చేసి, Google Maps‌లో లొకేషన్ చూసి, పిన్ కోడ్ ధృవీకరణ తర్వాత మొత్తం మొత్తాన్ని చూడగలడు.",
-    indiaNote:
-      "షిప్పింగ్ ధరలను పేజీపై పైభాగంలో పెద్దగా చూపడం లేదు. పిన్ కోడ్ నిర్ధారణ తర్వాతే షిప్పింగ్ జత అవుతుంది.",
-    intlNote:
-      "భారతదేశం ఆర్డర్లకు పిన్ కోడ్ తర్వాత షిప్పింగ్ లెక్కిస్తాం. USA మరియు విదేశీ ఆర్డర్లను చెక్‌అవుట్ తర్వాత ప్రత్యేకంగా నిర్ధారిస్తాం.",
+      "డెలివరీ వివరాలు పూర్తి చేసి, Google Maps‌లో లొకేషన్ చూసి, సురక్షితంగా చెల్లింపుకి వెళ్లండి.",
     mapTitle: "Google Maps‌లో చిరునామా ప్రివ్యూ",
     mapBody:
       "చెల్లింపు పేజీకి వెళ్లే ముందు డెలివరీ లొకేషన్ సరైనదేనా అనేది ఇక్కడ చూసుకోండి.",
@@ -134,7 +126,14 @@ const CheckoutPage = () => {
   const sanitizedPincode = form.pincode.replace(/\D/g, "").slice(0, 6);
   const isPincodeValid = validatePincode(sanitizedPincode);
   const regionInfo = isPincodeValid ? getRegionByPincode(sanitizedPincode) : null;
-  const shipping = form.country === "IN" && regionInfo ? regionInfo.shippingCost : 0;
+  const totalWeightKg = useMemo(
+    () => cart.reduce((sum, line) => sum + getWeightMultiplier(line.weight) * line.quantity, 0),
+    [cart],
+  );
+  const shipping =
+    form.country === "IN" && regionInfo
+      ? calculateShippingByWeight(regionInfo.shippingRatePerKg, totalWeightKg)
+      : 0;
   const total = subtotal + shipping;
 
   const orderPreview = useMemo(
@@ -245,14 +244,11 @@ const CheckoutPage = () => {
         </div>
       </section>
 
-      <section className={`${pageWrap} grid gap-8 py-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-start`}>
-        <form onSubmit={handleSubmit} className="section-shell px-7 py-8">
-          <div className="space-y-6">
-            <div className="rounded-[1.6rem] border border-[#d8e5d8] bg-[#fff9ed] px-5 py-4 text-sm leading-7 text-theme-body">
-              {form.country === "IN" ? copy.indiaNote : copy.intlNote}
-            </div>
+      <section className={`${pageWrap} grid gap-5 py-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start lg:gap-7 lg:py-8`}>
+        <form onSubmit={handleSubmit} className="section-shell px-4 py-5 sm:px-6 sm:py-6">
+          <div className="space-y-4 sm:space-y-5">
 
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-theme-heading">{t.checkout.name}</span>
                 <input
@@ -289,7 +285,7 @@ const CheckoutPage = () => {
               />
             </label>
 
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-theme-heading">{t.checkout.country}</span>
                 <select
@@ -326,7 +322,7 @@ const CheckoutPage = () => {
             </div>
 
             {form.country === "IN" ? (
-              <div className="grid gap-5 md:grid-cols-[1fr_220px]">
+              <div className="grid gap-4 md:grid-cols-[1fr_200px]">
                 <label className="grid gap-2">
                   <span className="text-sm font-semibold text-theme-heading">{t.checkout.state}</span>
                   <select
@@ -374,7 +370,7 @@ const CheckoutPage = () => {
 
             {form.country === "IN" && sanitizedPincode.length > 0 ? (
               isPincodeValid && regionInfo ? (
-                <div className="flex items-start gap-3 rounded-2xl border border-[#d8e5d8] bg-[#edf5ee] px-4 py-4 text-sm text-theme-body">
+                <div className="flex items-start gap-3 rounded-2xl border border-[#d8e5d8] bg-[#edf5ee] px-4 py-3 text-sm text-theme-body">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#2f7a43]" />
                   <div>
                     <p className="font-semibold text-theme-heading">
@@ -387,13 +383,13 @@ const CheckoutPage = () => {
                     <p className="mt-2 font-semibold text-theme-heading">
                       {copy.shippingLabel}:{" "}
                       <span className="price-figure text-[#2f7a43]">
-                        {formatCurrency(regionInfo.shippingCost)}
+                        {formatCurrency(shipping)}
                       </span>
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-start gap-3 rounded-2xl border border-[#d9644c]/30 bg-[#fff4f1] px-4 py-4 text-sm text-[#d9644c]">
+                <div className="flex items-start gap-3 rounded-2xl border border-[#d9644c]/30 bg-[#fff4f1] px-4 py-3 text-sm text-[#d9644c]">
                   <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
                   <div>
                     <p className="font-semibold">
@@ -409,14 +405,14 @@ const CheckoutPage = () => {
               )
             ) : null}
 
-            <div className="rounded-[1.6rem] border border-[#d8e5d8] bg-white p-3">
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="rounded-[1.4rem] border border-[#d8e5d8] bg-white p-2.5 sm:p-3">
+              <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="font-heading text-2xl font-semibold text-theme-heading">
+                  <h2 className="font-heading text-xl font-semibold text-theme-heading sm:text-2xl">
                     {copy.mapTitle}
                   </h2>
                   <p
-                    className={`mt-2 text-sm leading-7 text-theme-body ${
+                    className={`mt-1.5 text-xs leading-6 text-theme-body sm:text-sm sm:leading-7 ${
                       language === "te" ? "font-telugu" : ""
                     }`}
                   >
@@ -427,7 +423,7 @@ const CheckoutPage = () => {
                   href={mapSearchUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-[#edf5ee] px-5 py-3 text-sm font-semibold text-[#2f7a43] transition hover:bg-[#e5f0e7]"
+                  className="inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-[#edf5ee] px-4 py-2.5 text-xs font-semibold text-[#2f7a43] transition hover:bg-[#e5f0e7] sm:px-5 sm:py-3 sm:text-sm"
                 >
                   {language === "te" ? "మ్యాప్‌లో తెరవండి" : "Open in Google Maps"}
                 </a>
@@ -435,7 +431,7 @@ const CheckoutPage = () => {
               <iframe
                 title="Delivery address preview"
                 src={mapPreviewUrl}
-                className="h-[280px] w-full rounded-[1.3rem]"
+                className="h-[210px] w-full rounded-[1.1rem] sm:h-[280px] sm:rounded-[1.3rem]"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
@@ -449,11 +445,11 @@ const CheckoutPage = () => {
             </div>
           ) : null}
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:gap-3">
             <button
               type="submit"
               disabled={cart.length === 0}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-6 py-4 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-6 sm:py-4"
               style={{ color: "#ffffff" }}
             >
               <ArrowRight className="h-4 w-4" />
@@ -461,15 +457,15 @@ const CheckoutPage = () => {
             </button>
             <Link
               to="/cart"
-              className="inline-flex w-full items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-6 py-4 text-sm font-semibold text-theme-body transition hover:bg-[#edf5ee] sm:w-auto"
+              className="inline-flex w-full items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-5 py-3.5 text-sm font-semibold text-theme-body transition hover:bg-[#edf5ee] sm:w-auto sm:px-6 sm:py-4"
             >
               {copy.backToCart}
             </Link>
           </div>
         </form>
 
-        <aside className="section-shell h-fit px-7 py-8 lg:sticky lg:top-36">
-          <h2 className="font-heading text-3xl font-semibold text-theme-heading">
+        <aside className="section-shell h-fit px-5 py-6 lg:sticky lg:top-36 sm:px-6 sm:py-7">
+          <h2 className="font-heading text-2xl font-semibold text-theme-heading sm:text-3xl">
             {t.checkout.orderSummary}
           </h2>
 
@@ -486,7 +482,7 @@ const CheckoutPage = () => {
             </div>
           ) : (
             <>
-              <div className="mt-8 space-y-4 border-b border-[#d8e5d8] pb-8">
+              <div className="mt-6 space-y-3 border-b border-[#d8e5d8] pb-6 sm:mt-8 sm:space-y-4 sm:pb-8">
                 {orderPreview.map((item) => (
                   <div key={item.key} className="flex justify-between gap-4 text-sm">
                     <div className="min-w-0">
@@ -502,7 +498,7 @@ const CheckoutPage = () => {
                 ))}
               </div>
 
-              <div className="mt-8 space-y-3">
+              <div className="mt-6 space-y-3 sm:mt-8">
                 <div className="flex justify-between text-sm text-theme-body">
                   <span>{language === "te" ? "ఉప మొత్తం" : "Subtotal"}</span>
                   <span className="price-figure">{formatCurrency(subtotal)}</span>
@@ -516,14 +512,14 @@ const CheckoutPage = () => {
                   </span>
                 </div>
                 <div className="border-t border-[#d8e5d8] pt-3">
-                  <div className="flex justify-between font-heading text-2xl font-bold text-theme-heading">
+                  <div className="flex justify-between font-heading text-xl font-bold text-theme-heading sm:text-2xl">
                     <span>{t.checkout.total}</span>
                     <span className="price-figure text-[#2f7a43]">{formatCurrency(total)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 rounded-2xl border border-[#d8e5d8] bg-[#f8fbf8] px-5 py-4 text-sm leading-7 text-theme-body">
+              <div className="mt-5 rounded-2xl border border-[#d8e5d8] bg-[#f8fbf8] px-4 py-3 text-xs leading-6 text-theme-body sm:mt-6 sm:px-5 sm:py-4 sm:text-sm sm:leading-7">
                 {copy.summaryNote}
               </div>
             </>

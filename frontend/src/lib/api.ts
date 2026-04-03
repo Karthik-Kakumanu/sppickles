@@ -305,6 +305,11 @@ export const updateOrderStatus = async (orderId: string, status: OrderRecord["st
   return normalizeOrder(response);
 };
 
+export const deleteOrder = async (orderId: string) =>
+  apiFetch<{ id: string; deleted: boolean }>(`/orders/${orderId}`, {
+    method: "DELETE",
+  });
+
 export const adminLogin = async (email: string, password: string) => {
   const response = await apiFetch<{ token: string; admin: { id: string; email: string } }>(
     "/admin/login",
@@ -459,6 +464,47 @@ export const useUpdateOrderMutation = () => {
         description: error.message || "Failed to update order.",
         variant: "destructive",
       });
+    },
+  });
+};
+
+export const useDeleteOrderMutation = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ orderId }: { orderId: string }) => deleteOrder(orderId),
+    onMutate: async ({ orderId }) => {
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+
+      const previousOrders = queryClient.getQueryData<OrderRecord[]>(["orders"]);
+
+      queryClient.setQueryData(["orders"], (old: OrderRecord[] | undefined) => {
+        if (!old) return old;
+        return old.filter((order) => order.id !== orderId);
+      });
+
+      return { previousOrders };
+    },
+    onSuccess: (_, { orderId }) => {
+      toast({
+        title: "Order deleted",
+        description: `${orderId} was removed completely.`,
+      });
+    },
+    onError: (error: Error, _, context: any) => {
+      if (context?.previousOrders) {
+        queryClient.setQueryData(["orders"], context.previousOrders);
+      }
+
+      toast({
+        title: "Delete failed",
+        description: error.message || "Failed to delete order.",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
   });
 };

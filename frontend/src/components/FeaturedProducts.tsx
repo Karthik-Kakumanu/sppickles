@@ -6,7 +6,7 @@ const featuredProducts = [
   {
     teName: "ఆవకాయ",
     enName: "Avakaya",
-    teSubtitle: "మామిడికాయ పచ్చడి",
+    teSubtitle: "మామిడికాయ",
     enSubtitle: "Mango Pickle",
     image: pickleAvakaya,
     teTagline: "ఆంధ్ర పచ్చళ్ళ రాజు, ఘాటు రుచి మరచిపోలేనిది",
@@ -17,7 +17,7 @@ const featuredProducts = [
   {
     teName: "గోంగూర",
     enName: "Gongura",
-    teSubtitle: "గోంగూర పచ్చడి",
+    teSubtitle: "గోంగూర",
     enSubtitle: "Sorrel Leaf Pickle",
     image: pickleGongura,
     teTagline: "పుల్లటి రుచి, మసాలా వాసన, సంప్రదాయపు ముద్ర",
@@ -28,7 +28,7 @@ const featuredProducts = [
   {
     teName: "నిమ్మకాయ",
     enName: "Nimmakaya",
-    teSubtitle: "నిమ్మకాయ పచ్చడి",
+    teSubtitle: "నిమ్మకాయ",
     enSubtitle: "Lemon Pickle",
     image: pickleLemon,
     teTagline: "పసుపు, ఆవాలతో నానబెట్టిన నిమ్మకాయల రుచి",
