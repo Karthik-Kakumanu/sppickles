@@ -1,5 +1,8 @@
 import http from "node:http";
 import { randomUUID } from "node:crypto";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { readFile, stat } from "node:fs/promises";
 import { pool } from "./db.js";
 import { hashPassword, requireAdmin, signAdminToken, verifyPassword } from "./helpers/auth.js";
 import {
@@ -14,6 +17,10 @@ import {
 const PORT = Number(process.env.PORT || 5000);
 const ENABLE_LOGGING = process.env.ENABLE_REQUEST_LOGGING !== "false";
 const API_PREFIX = "/api";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const FRONTEND_DIST_DIR = path.resolve(__dirname, "../frontend/dist");
+const FRONTEND_INDEX_FILE = path.join(FRONTEND_DIST_DIR, "index.html");
 const VALID_WEIGHTS = new Set(["250g", "500g", "1kg"]);
 const PHONE_PATTERN = /^\d{10}$/;
 const PINCODE_PATTERN = /^\d{6}$/;
@@ -46,6 +53,80 @@ const log = (level, message, metadata = {}) => {
 
 // Request ID generator and tracking
 const getRequestId = (req) => req.headers["x-request-id"] || randomUUID();
+
+const MIME_TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".mjs": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+};
+
+const isApiRequestPath = (pathname) =>
+  pathname === API_PREFIX || pathname.startsWith(`${API_PREFIX}/`);
+
+const getContentType = (filePath) => {
+  const extension = path.extname(filePath).toLowerCase();
+  return MIME_TYPES[extension] || "application/octet-stream";
+};
+
+const sendStaticFile = async (res, filePath, method) => {
+  const body = await readFile(filePath);
+  const isHtml = filePath.endsWith(".html");
+
+  res.writeHead(200, {
+    "Content-Type": getContentType(filePath),
+    "Cache-Control": isHtml ? "no-cache" : "public, max-age=31536000, immutable",
+  });
+
+  if (method === "HEAD") {
+    res.end();
+    return;
+  }
+
+  res.end(body);
+};
+
+const serveFrontendApp = async (res, pathname, method) => {
+  if (method !== "GET" && method !== "HEAD") {
+    return false;
+  }
+
+  const normalizedPath = decodeURIComponent(pathname).replace(/^\/+/, "");
+  let targetFilePath = FRONTEND_INDEX_FILE;
+
+  if (normalizedPath) {
+    const candidatePath = path.resolve(FRONTEND_DIST_DIR, normalizedPath);
+
+    if (candidatePath.startsWith(FRONTEND_DIST_DIR)) {
+      try {
+        const candidateStats = await stat(candidatePath);
+
+        if (candidateStats.isFile()) {
+          targetFilePath = candidatePath;
+        }
+      } catch {
+        // Non-file route falls back to index.html for client-side routing.
+      }
+    }
+  }
+
+  try {
+    await sendStaticFile(res, targetFilePath, method);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 const clearExpiredAdminLoginAttempts = (now = Date.now()) => {
   for (const [key, attempt] of adminLoginAttempts.entries()) {
@@ -649,6 +730,18 @@ const server = http.createServer(async (req, res) => {
     const method = req.method || "GET";
     const url = getRequestUrl(req);
     const { pathname } = url;
+
+    if (!isApiRequestPath(pathname)) {
+      const served = await serveFrontendApp(res, pathname, method);
+
+      if (served) {
+        return;
+      }
+
+      sendError(res, 404, "Frontend app is not available.");
+      return;
+    }
+
     const routePathname = normalizeApiPathname(pathname);
 
     log("info", "API request", {
