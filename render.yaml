@@ -1,11 +1,11 @@
 
-# Production deployment with frontend build and admin seed
+# Production deployment with frontend build
 services:
   - type: web
     name: sp-pickles-backend
     env: node
     plan: free
-    buildCommand: npm install && npm run build:frontend && cd backend && npm install && npm run create-admin admin@sppickles.com sppickles@23
+    buildCommand: npm install && npm run build:frontend && cd backend && npm install
     startCommand: npm run build:frontend && cd backend && npm run start
     envVars:
       - key: NODE_ENV
