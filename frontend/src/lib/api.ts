@@ -328,8 +328,8 @@ export const useStockQuery = () =>
   useQuery({
     queryKey: ["stock"],
     queryFn: getStock,
-    staleTime: 1000 * 20, // 20 seconds
-    refetchInterval: 1000 * 20, // Auto-refresh every 20 seconds
+    staleTime: 1000, // keep UI responsive to rapid stock changes
+    refetchInterval: 1000 * 2, // refresh every 2 seconds for near-instant visibility
   });
 
 export const useUpdateStockMutation = () => {
@@ -356,6 +356,7 @@ export const useUpdateStockMutation = () => {
       return { previousStock };
     },
     onSuccess: (_, { isAvailable }) => {
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
       toast({
         title: "Stock updated",
         description: isAvailable ? "Marked as in stock." : "Marked as out of stock.",

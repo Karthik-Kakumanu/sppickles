@@ -1,6 +1,6 @@
 import { useState, useDeferredValue } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useProductsQuery } from "@/lib/api";
+import { getDbProductId, useProductsQuery } from "@/lib/api";
 import { useStockQuery, useUpdateStockMutation } from "@/lib/api";
 import { Loader2, Package, Search, X, ToggleRight, ToggleLeft, SlidersHorizontal } from "lucide-react";
 
@@ -108,7 +108,10 @@ export const AdminStockToggle = () => {
     return product.category === "fryums";
   });
 
-  const inStockCount  = products.filter((product) => stockData.get(product.id) ?? true).length;
+  const inStockCount  = products.filter((product) => {
+    const dbProductId = getDbProductId(product.id, product.name);
+    return stockData.get(dbProductId) ?? true;
+  }).length;
   const outStockCount = products.length - inStockCount;
 
   // ── loading skeleton ──────────────────────────────────────────────────────
@@ -273,7 +276,7 @@ export const AdminStockToggle = () => {
             className="overflow-hidden rounded-[2rem] border border-[#e3ebe0] bg-white/60 shadow-[0_4px_24px_rgba(15,35,25,0.06)]"
           >
             {filteredProducts.map((product, index) => {
-              const dbProductId = product.id;
+              const dbProductId = getDbProductId(product.id, product.name);
               const isAvailable = stockData.get(dbProductId) ?? true;
               const isUpdating  = updating === dbProductId;
 
