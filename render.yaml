@@ -10,6 +10,8 @@ services:
         value: production
       - key: PORT
         value: 5000
+      - key: JWT_SECRET
+        value: 1d2f3c4a5b6e7f8091a2b3c4d5e6f7089a1b2c3d4e5f60718293a4b5c6d7e8f9
       - key: DATABASE_URL
         fromDatabase:
           name: sp-pickles-db
