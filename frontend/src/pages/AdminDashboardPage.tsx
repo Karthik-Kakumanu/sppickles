@@ -82,7 +82,7 @@ const AdminDashboardPage = () => {
   const { data: orders = [], isLoading, isRefetching, error, refetch } = useOrdersQuery();
   const updateOrderMutation = useUpdateOrderMutation();
   const deleteOrderMutation = useDeleteOrderMutation();
-  const [activeTab, setActiveTab] = useState<"orders" | "stock">("orders");
+  const [viewMode, setViewMode] = useState<"orders" | "stock">("orders");
   const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -268,14 +268,14 @@ const AdminDashboardPage = () => {
         title="SP Traditional Pickles | Admin Orders"
         description="Manage customer orders, statuses, and item details from the admin panel."
       />
-      <AdminLayout title={activeTab === "stock" ? "Stock Management" : "Orders"}>
+      <AdminLayout title={viewMode === "stock" ? "Stock Management" : "Orders"}>
         <div className="space-y-8">
           <div className="flex flex-col gap-4 border-b border-[#ddd4c3] pb-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={() => setActiveTab("orders")}
+                onClick={() => setViewMode("orders")}
                 className={`inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-bold transition ${
-                  activeTab === "orders"
+                  viewMode === "orders"
                     ? "border-[#2f7a43] bg-[#2f7a43] text-white"
                     : "border-[#d8e5d8] bg-white text-theme-body hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading"
                 }`}
@@ -284,9 +284,9 @@ const AdminDashboardPage = () => {
                 Orders
               </button>
               <button
-                onClick={() => setActiveTab("stock")}
+                onClick={() => setViewMode("stock")}
                 className={`inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-bold transition ${
-                  activeTab === "stock"
+                  viewMode === "stock"
                     ? "border-[#2f7a43] bg-[#2f7a43] text-white"
                     : "border-[#d8e5d8] bg-white text-theme-body hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading"
                 }`}
@@ -300,7 +300,7 @@ const AdminDashboardPage = () => {
             </div>
           </div>
 
-          {activeTab === "stock" ? (
+          {viewMode === "stock" ? (
             <div className="space-y-6">
               <div className="theme-card rounded-[2.25rem] border p-8 shadow-md xl:p-10">
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">

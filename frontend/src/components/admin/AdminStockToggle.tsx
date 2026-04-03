@@ -1,27 +1,77 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useDeferredValue } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useProductsQuery, getDbProductId } from "@/lib/api";
 import { useStockQuery, useUpdateStockMutation } from "@/lib/api";
-import { Loader2, Package, ToggleLeft, ToggleRight, Eye, Search, X, Edit2, Check} from "lucide-react";
+import { Loader2, Package, Search, X, ToggleRight, ToggleLeft, SlidersHorizontal } from "lucide-react";
 
+/* ─── tiny reusable stat card ─────────────────────────────────────────────── */
+const StatCard = ({
+  label,
+  count,
+  total,
+  accent,
+  bg,
+  border,
+  sub,
+}: {
+  label: string;
+  count: number;
+  total: number;
+  accent: string;
+  bg: string;
+  border: string;
+  sub: string;
+}) => {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div className={`relative overflow-hidden rounded-2xl border ${border} ${bg} p-5`}>
+      {/* subtle fill bar behind content */}
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 opacity-[0.07] transition-all duration-700"
+        style={{ width: `${pct}%`, background: accent }}
+      />
+      <p className={`relative text-[10px] font-black uppercase tracking-[0.22em] ${accent.replace("bg-", "text-")} opacity-80`}
+        style={{ color: accent.startsWith("#") ? accent : undefined }}
+      >
+        {label}
+      </p>
+      <div className="relative mt-3 flex items-end gap-2">
+        <span className="text-[2.6rem] font-black leading-none tracking-tight" style={{ color: accent.startsWith("#") ? accent : undefined }}>
+          {count}
+        </span>
+        <span className="mb-1 text-sm font-semibold opacity-40" style={{ color: accent.startsWith("#") ? accent : undefined }}>
+          / {total}
+        </span>
+      </div>
+      <div className="relative mt-3 h-1 w-full overflow-hidden rounded-full bg-black/8">
+        <motion.div
+          className="h-full rounded-full"
+          style={{ background: accent.startsWith("#") ? accent : undefined }}
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.9, ease: "easeOut" }}
+        />
+      </div>
+      <p className="relative mt-2.5 text-xs font-medium text-theme-body opacity-70">{sub}</p>
+    </div>
+  );
+};
+
+/* ─── main component ───────────────────────────────────────────────────────── */
 export const AdminStockToggle = () => {
   const { data: products = [], isLoading: loadingProducts } = useProductsQuery();
   const { data: stockData = new Map(), isLoading: loadingStock } = useStockQuery();
   const updateStockMutation = useUpdateStockMutation();
+
   const [updating, setUpdating] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [editingPrice, setEditingPrice] = useState<string | null>(null);
-  const [newPrice, setNewPrice] = useState<string>("");
+  const deferredSearchQuery = useDeferredValue(searchQuery.trim().toLowerCase());
 
+  // ── business logic unchanged ──────────────────────────────────────────────
   const handleToggleStock = async (productId: string, currentStatus: boolean) => {
     setUpdating(productId);
     try {
-      console.log("Toggling stock for product:", productId, "from", currentStatus, "to", !currentStatus);
-      await updateStockMutation.mutateAsync({
-        productId,
-        isAvailable: !currentStatus,
-      });
-      console.log("Stock toggle successful for product:", productId);
+      await updateStockMutation.mutateAsync({ productId, isAvailable: !currentStatus });
     } catch (error) {
       console.error("Error updating stock:", error);
     } finally {
@@ -29,221 +79,250 @@ export const AdminStockToggle = () => {
     }
   };
 
-  // Filter products based on search query
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProducts = products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(deferredSearchQuery) ||
+      p.category.toLowerCase().includes(deferredSearchQuery)
   );
 
+  const inStockCount  = products.filter(
+    (p) => stockData.get(getDbProductId(Number(p.id), p.name)) ?? true
+  ).length;
+  const outStockCount = products.length - inStockCount;
+
+  // ── loading skeleton ──────────────────────────────────────────────────────
   if (loadingProducts || loadingStock) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="inline-flex items-center gap-3 rounded-full bg-gold/15 px-6 py-4">
-          <Loader2 className="h-5 w-5 animate-spin text-gold" />
-          <span className="font-semibold text-theme-heading">Loading products...</span>
-        </div>
+      <div className="flex items-center justify-center py-28">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="inline-flex items-center gap-3 rounded-2xl border border-[#e8dfc8] bg-[#fff9ec] px-7 py-4 shadow-sm"
+        >
+          <Loader2 className="h-4 w-4 animate-spin text-[#8a651a]" />
+          <span className="text-sm font-semibold text-theme-heading">Loading products…</span>
+        </motion.div>
       </div>
     );
   }
 
+  // ── empty state ───────────────────────────────────────────────────────────
+  const isEmpty = filteredProducts.length === 0;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-theme-heading flex items-center gap-3">
-          <Package className="h-8 w-8 text-gold" />
-          Product Stock Status
-        </h2>
-        <p className="text-theme-body mt-2">
-          Manage inventory for all products. Toggle between In Stock and Out of Stock.
-        </p>
+
+      {/* ── Summary stats ── */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <StatCard
+          label="In Stock"
+          count={inStockCount}
+          total={products.length}
+          accent="#2f7a43"
+          bg="bg-[#edf8f1]/70"
+          border="border-[#bde2cd]"
+          sub="Visible to customers"
+        />
+        <StatCard
+          label="Out of Stock"
+          count={outStockCount}
+          total={products.length}
+          accent="#8a651a"
+          bg="bg-[#fef5e8]/70"
+          border="border-[#f0d8b8]"
+          sub="Hidden from customers"
+        />
       </div>
 
-      {/* Search Bar */}
+      {/* ── Search bar ── */}
       <div className="relative">
-        <div className="flex items-center gap-3 rounded-xl border-2 border-gray-300 bg-white px-4 py-3 transition-all focus-within:border-gold focus-within:shadow-sm">
-          <Search className="h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search products by name or category..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 bg-transparent outline-none text-theme-body placeholder-gray-400"
-          />
+        {/* left icon */}
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-body-soft" />
+
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by name or category…"
+          className="
+            theme-input w-full rounded-2xl border border-[#ddd6c4]
+            bg-white/80 py-3.5 pl-11 pr-11 text-[14px] font-medium
+            outline-none ring-0
+            transition-all duration-200
+            placeholder:text-theme-body-soft/60
+            focus:border-[#e2b93b] focus:bg-white focus:ring-4 focus:ring-[#e2b93b]/10
+          "
+        />
+
+        {/* clear button */}
+        <AnimatePresence>
           {searchQuery && (
-            <button
+            <motion.button
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ duration: 0.15 }}
               onClick={() => setSearchQuery("")}
-              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-theme-body-soft transition hover:bg-[#f0e8d8] hover:text-theme-heading"
             >
-              <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-            </button>
+              <X className="h-3.5 w-3.5" />
+            </motion.button>
           )}
-        </div>
-        {searchQuery && (
-          <p className="mt-2 text-sm text-theme-body-soft">
-            Found {filteredProducts.length} of {products.length} products
-          </p>
-        )}
+        </AnimatePresence>
       </div>
 
-      {/* Stock Grid */}
-      <div className="grid gap-4">
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-16">
-            <Package className="h-16 w-16 text-gold/30 mx-auto mb-4" />
-            <p className="text-theme-body text-lg">
-              {searchQuery ? "No products match your search" : "No products found"}
+      {/* ── Result meta line ── */}
+      <AnimatePresence mode="wait">
+        {searchQuery && (
+          <motion.div
+            key="meta"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="flex items-center gap-2"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5 text-theme-body-soft" />
+            <p className="text-xs font-semibold text-theme-body-soft">
+              {filteredProducts.length} of {products.length} products
             </p>
-          </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Product list / empty state ── */}
+      <AnimatePresence mode="wait">
+        {isEmpty ? (
+          /* empty */
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center justify-center gap-4 rounded-[2rem] border border-dashed border-[#d9d2c2] bg-white/40 py-24 text-center"
+          >
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#e3ddd0] bg-[#f8f3e8]">
+              <Package className="h-7 w-7 text-theme-body opacity-30" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-theme-heading">
+                {searchQuery ? "No products match your search" : "No products found"}
+              </p>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="mt-2 text-xs font-semibold text-[#2f7a43] underline-offset-2 hover:underline"
+                >
+                  Clear search
+                </button>
+              )}
+            </div>
+          </motion.div>
         ) : (
-          <div className="space-y-3">
+          /* list */
+          <motion.div
+            key="list"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            /* outer card wrapping all rows */
+            className="overflow-hidden rounded-[2rem] border border-[#e3ebe0] bg-white/60 shadow-[0_4px_24px_rgba(15,35,25,0.06)]"
+          >
             {filteredProducts.map((product, index) => {
               const dbProductId = getDbProductId(Number(product.id), product.name);
               const isAvailable = stockData.get(dbProductId) ?? true;
-              const isUpdating = updating === dbProductId;
+              const isUpdating  = updating === dbProductId;
 
               return (
                 <motion.div
                   key={product.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className={`flex items-center justify-between gap-4 rounded-2xl border-2 p-6 transition-all ${
-                    isAvailable
-                      ? "border-green-500 bg-gradient-to-r from-green-500/15 via-green-400/5 to-transparent"
-                      : "border-gold bg-gradient-to-r from-gold/15 via-amber-300/5 to-transparent"
-                  }`}
+                  transition={{ duration: 0.28, delay: index * 0.035, ease: "easeOut" }}
+                  /* divider between rows */
+                  className={`
+                    flex flex-col gap-3 px-5 py-4 transition-colors duration-200
+                    sm:flex-row sm:items-center sm:justify-between
+                    ${index !== filteredProducts.length - 1 ? "border-b border-[#eee8da]" : ""}
+                    ${isAvailable
+                      ? "hover:bg-[#f2fbf5]"
+                      : "hover:bg-[#fdf8ef]"
+                    }
+                  `}
                 >
-                  {/* Product Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-theme-heading line-clamp-1">
-                          {product.name}
-                        </h3>
-                        <p className="text-sm text-theme-body-soft mt-1">
-                          Category: <span className="capitalize text-theme-body">{product.category}</span>
-                          {" • "}
-                          {editingPrice === product.id ? (
-                            <div className="inline-flex items-center gap-2">
-                              <input
-                                type="number"
-                                value={newPrice}
-                                onChange={(e) => setNewPrice(e.target.value)}
-                                className="w-20 px-2 py-1 border border-gold rounded text-sm"
-                                placeholder="Price/kg"
-                              />
-                            </div>
-                          ) : (
-                            <span className="font-semibold text-theme-heading">₹{product.price_per_kg}/kg</span>
-                          )}
-                        </p>
-                      </div>
+                  {/* ── Left: product info ── */}
+                  <div className="flex min-w-0 flex-1 items-center gap-3.5">
+                    {/* colored accent dot */}
+                    <div
+                      className={`h-2 w-2 shrink-0 rounded-full transition-colors duration-300 ${
+                        isAvailable ? "bg-[#2f7a43]" : "bg-[#e2b93b]"
+                      }`}
+                    />
+
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-semibold text-theme-heading sm:text-[15px]">
+                        {product.name}
+                      </h3>
+                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-theme-body-soft">
+                        <span className="font-medium text-theme-body">{product.category}</span>
+                        <span className="opacity-40">·</span>
+                        {/* fixed encoding: use ₹ entity */}
+                        <span className="font-semibold text-theme-heading">
+                          &#8377;{product.price_per_kg}/kg
+                        </span>
+                      </p>
                     </div>
                   </div>
 
-                  {/* Status Badge + Toggle + Edit Price */}
-                  <div className="flex items-center gap-3">
-                    {/* Edit Price Button */}
-                    {editingPrice === product.id ? (
-                      <motion.button
-                        onClick={() => {
-                          // TODO: Call update price API
-                          setEditingPrice(null);
-                          setNewPrice("");
-                        }}
-                        whileHover={{ scale: 1.05 }}
-                        className="flex-shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm bg-green-600 text-white border-2 border-green-700 hover:bg-green-700 transition-all"
-                      >
-                        <Check className="h-4 w-4" />
-                        Save
-                      </motion.button>
-                    ) : (
-                      <motion.button
-                        onClick={() => {
-                          setEditingPrice(product.id);
-                          setNewPrice(product.price_per_kg.toString());
-                        }}
-                        whileHover={{ scale: 1.05 }}
-                        className="flex-shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm bg-amber-600 text-white border-2 border-amber-700 hover:bg-amber-700 transition-all"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                        Edit Price
-                      </motion.button>
-                    )}
+                  {/* ── Right: badge + toggle ── */}
+                  <div className="flex items-center gap-3 self-start sm:self-auto">
 
-                    {/* Status Display */}
-                    <div className="flex flex-col items-end gap-2">
-                      <motion.div
-                        initial={false}
-                        animate={{
-                          scale: isUpdating ? 0.95 : 1,
-                        }}
-                        className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-black ${
-                          isAvailable
-                            ? "bg-green-600 text-white border-2 border-green-700"
-                            : "bg-gold text-white border-2 border-amber-700"
-                        }`}
-                      >
-                        <Eye className="h-4 w-4" />
-                        {isAvailable ? "✓ IN STOCK" : "✗ OUT OF STOCK"}
-                      </motion.div>
-                    </div>
+                    {/* status badge */}
+                    <span
+                      className={`
+                        inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black
+                        uppercase tracking-[0.16em] transition-colors duration-300
+                        ${isAvailable
+                          ? "bg-[#2f7a43]/10 text-[#2f7a43]"
+                          : "bg-[#e2b93b]/15 text-[#8a651a]"
+                        }
+                      `}
+                    >
+                      {isAvailable ? "In Stock" : "Out of Stock"}
+                    </span>
 
-                    {/* Toggle Button */}
+                    {/* toggle button */}
                     <motion.button
                       onClick={() => handleToggleStock(dbProductId, isAvailable)}
-                      disabled={isUpdating || editingPrice === product.id}
-                      whileHover={{ scale: isUpdating ? 1 : 1.05 }}
-                      whileTap={{ scale: isUpdating ? 1 : 0.95 }}
-                      className={`flex-shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-black text-sm transition-all border-2 ${
-                        isAvailable
-                          ? "bg-green-600 text-white border-green-700 hover:bg-green-700"
-                          : "bg-gold text-white border-amber-700 hover:bg-amber-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      disabled={isUpdating}
+                      whileHover={{ scale: isUpdating ? 1 : 1.08 }}
+                      whileTap={{ scale: isUpdating ? 1 : 0.92 }}
+                      aria-label={isAvailable ? "Mark out of stock" : "Mark in stock"}
+                      className={`
+                        group relative flex h-9 w-9 items-center justify-center
+                        rounded-xl border transition-all duration-200
+                        ${isUpdating
+                          ? "cursor-not-allowed opacity-50"
+                          : isAvailable
+                            ? "border-[#bde2cd] bg-[#edf8f1] hover:border-[#2f7a43] hover:bg-[#2f7a43] hover:shadow-[0_4px_14px_rgba(47,122,67,0.28)]"
+                            : "border-[#f0d8b8] bg-[#fef5e8] hover:border-[#e2b93b] hover:bg-[#e2b93b] hover:shadow-[0_4px_14px_rgba(226,185,59,0.28)]"
+                        }
+                      `}
                     >
                       {isUpdating ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="hidden sm:inline">Updating...</span>
-                        </>
+                        <Loader2 className="h-4 w-4 animate-spin text-[#2f7a43]" />
                       ) : isAvailable ? (
-                        <>
-                          <ToggleRight className="h-5 w-5" />
-                          <span className="hidden sm:inline">Mark Out</span>
-                        </>
+                        <ToggleRight className="h-4 w-4 text-[#2f7a43] transition-colors group-hover:text-white" />
                       ) : (
-                        <>
-                          <ToggleLeft className="h-5 w-5" />
-                          <span className="hidden sm:inline">Mark In</span>
-                        </>
+                        <ToggleLeft className="h-4 w-4 text-[#a8845a] transition-colors group-hover:text-white" />
                       )}
                     </motion.button>
                   </div>
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         )}
-      </div>
-
-      {/* Summary */}
-      <div className="mt-12 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border-2 border-green-500/50 bg-green-500/20 p-6">
-          <p className="text-sm font-bold text-green-700 uppercase tracking-widest">✓ In Stock</p>
-          <p className="mt-3 text-4xl font-black text-green-600">
-            {products.filter(p => stockData.get(p.id) ?? true).length}
-          </p>
-          <p className="text-sm text-green-600 mt-2 font-semibold">Products available for customers</p>
-        </div>
-        <div className="rounded-2xl border-2 border-gold/50 bg-gold/20 p-6">
-          <p className="text-sm font-bold text-amber-700 uppercase tracking-widest">✗ Out of Stock</p>
-          <p className="mt-3 text-4xl font-black text-gold">
-            {products.filter(p => !(stockData.get(p.id) ?? true)).length}
-          </p>
-          <p className="text-sm text-gold/80 mt-2 font-semibold">Products hidden from customers</p>
-        </div>
-      </div>
+      </AnimatePresence>
     </div>
   );
 };
