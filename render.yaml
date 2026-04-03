@@ -1,3 +1,5 @@
+
+# Force rebuild with admin seed
 services:
   - type: web
     name: sp-pickles-backend
