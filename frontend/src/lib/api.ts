@@ -10,7 +10,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { buildWhatsAppOrderUrl } from "@/lib/order";
 
-const DEFAULT_API_ORIGIN = "http://localhost:5000";
+const DEFAULT_API_ORIGIN =
+  typeof window !== "undefined" && window.location.hostname !== "localhost"
+    ? window.location.origin
+    : "http://localhost:5000";
 const normalizeApiBaseUrl = (baseUrl?: string) => {
   const normalizedBaseUrl = String(baseUrl ?? "")
     .trim()
