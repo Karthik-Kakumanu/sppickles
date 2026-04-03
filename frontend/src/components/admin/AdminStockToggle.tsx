@@ -1,6 +1,6 @@
 import { useState, useDeferredValue } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useProductsQuery, getDbProductId } from "@/lib/api";
+import { useProductsQuery } from "@/lib/api";
 import { useStockQuery, useUpdateStockMutation } from "@/lib/api";
 import { Loader2, Package, Search, X, ToggleRight, ToggleLeft, SlidersHorizontal } from "lucide-react";
 
@@ -65,6 +65,7 @@ export const AdminStockToggle = () => {
 
   const [updating, setUpdating] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "salt" | "tempered" | "powders" | "fryums">("all");
   const deferredSearchQuery = useDeferredValue(searchQuery.trim().toLowerCase());
 
   // ── business logic unchanged ──────────────────────────────────────────────
@@ -79,15 +80,35 @@ export const AdminStockToggle = () => {
     }
   };
 
-  const filteredProducts = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(deferredSearchQuery) ||
-      p.category.toLowerCase().includes(deferredSearchQuery)
-  );
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(deferredSearchQuery) ||
+      product.category.toLowerCase().includes(deferredSearchQuery);
 
-  const inStockCount  = products.filter(
-    (p) => stockData.get(getDbProductId(Number(p.id), p.name)) ?? true
-  ).length;
+    if (!matchesSearch) {
+      return false;
+    }
+
+    if (categoryFilter === "all") {
+      return true;
+    }
+
+    if (categoryFilter === "salt") {
+      return product.category === "pickles" && product.subcategory === "salt";
+    }
+
+    if (categoryFilter === "tempered") {
+      return product.category === "pickles" && product.subcategory === "asafoetida";
+    }
+
+    if (categoryFilter === "powders") {
+      return product.category === "powders";
+    }
+
+    return product.category === "fryums";
+  });
+
+  const inStockCount  = products.filter((product) => stockData.get(product.id) ?? true).length;
   const outStockCount = products.length - inStockCount;
 
   // ── loading skeleton ──────────────────────────────────────────────────────
@@ -171,6 +192,30 @@ export const AdminStockToggle = () => {
         </AnimatePresence>
       </div>
 
+      {/* Mobile-first category chips for premium quick filtering */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { key: "all", label: "All" },
+          { key: "salt", label: "Salt Pickles" },
+          { key: "tempered", label: "Tempered Pickles" },
+          { key: "powders", label: "Podulu" },
+          { key: "fryums", label: "Fryums" },
+        ].map((filterItem) => (
+          <button
+            key={filterItem.key}
+            type="button"
+            onClick={() => setCategoryFilter(filterItem.key as typeof categoryFilter)}
+            className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:py-2 sm:text-sm ${
+              categoryFilter === filterItem.key
+                ? "border-[#2f7a43] bg-[#2f7a43] text-white"
+                : "border-[#d8e5d8] bg-white text-theme-body hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading"
+            }`}
+          >
+            {filterItem.label}
+          </button>
+        ))}
+      </div>
+
       {/* ── Result meta line ── */}
       <AnimatePresence mode="wait">
         {searchQuery && (
@@ -228,7 +273,7 @@ export const AdminStockToggle = () => {
             className="overflow-hidden rounded-[2rem] border border-[#e3ebe0] bg-white/60 shadow-[0_4px_24px_rgba(15,35,25,0.06)]"
           >
             {filteredProducts.map((product, index) => {
-              const dbProductId = getDbProductId(Number(product.id), product.name);
+              const dbProductId = product.id;
               const isAvailable = stockData.get(dbProductId) ?? true;
               const isUpdating  = updating === dbProductId;
 
@@ -298,8 +343,8 @@ export const AdminStockToggle = () => {
                       whileTap={{ scale: isUpdating ? 1 : 0.92 }}
                       aria-label={isAvailable ? "Mark out of stock" : "Mark in stock"}
                       className={`
-                        group relative flex h-9 w-9 items-center justify-center
-                        rounded-xl border transition-all duration-200
+                        group relative inline-flex h-9 items-center justify-center gap-1.5
+                        rounded-xl border px-3 transition-all duration-200
                         ${isUpdating
                           ? "cursor-not-allowed opacity-50"
                           : isAvailable
@@ -309,11 +354,24 @@ export const AdminStockToggle = () => {
                       `}
                     >
                       {isUpdating ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-[#2f7a43]" />
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin text-[#2f7a43]" />
+                          <span className="hidden text-[11px] font-semibold sm:inline">Updating</span>
+                        </>
                       ) : isAvailable ? (
-                        <ToggleRight className="h-4 w-4 text-[#2f7a43] transition-colors group-hover:text-white" />
+                        <>
+                          <ToggleRight className="h-4 w-4 text-[#2f7a43] transition-colors group-hover:text-white" />
+                          <span className="hidden text-[11px] font-semibold text-[#2f7a43] transition-colors group-hover:text-white sm:inline">
+                            Mark Out
+                          </span>
+                        </>
                       ) : (
-                        <ToggleLeft className="h-4 w-4 text-[#a8845a] transition-colors group-hover:text-white" />
+                        <>
+                          <ToggleLeft className="h-4 w-4 text-[#a8845a] transition-colors group-hover:text-white" />
+                          <span className="hidden text-[11px] font-semibold text-[#a8845a] transition-colors group-hover:text-white sm:inline">
+                            Mark In
+                          </span>
+                        </>
                       )}
                     </motion.button>
                   </div>

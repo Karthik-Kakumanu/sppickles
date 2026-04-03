@@ -82,7 +82,6 @@ const AdminDashboardPage = () => {
   const { data: orders = [], isLoading, isRefetching, error, refetch } = useOrdersQuery();
   const updateOrderMutation = useUpdateOrderMutation();
   const deleteOrderMutation = useDeleteOrderMutation();
-  const [viewMode, setViewMode] = useState<"orders" | "stock">("orders");
   const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -265,78 +264,16 @@ const AdminDashboardPage = () => {
   return (
     <>
       <Seo
-        title="SP Traditional Pickles | Admin Orders"
-        description="Manage customer orders, statuses, and item details from the admin panel."
+        title="SP Traditional Pickles | Admin Dashboard"
+        description="Premium admin dashboard for order tracking and stock management."
       />
-      <AdminLayout title={viewMode === "stock" ? "Stock Management" : "Orders"}>
+      <AdminLayout title="Dashboard">
         <div className="space-y-8">
-          <div className="flex flex-col gap-4 border-b border-[#ddd4c3] pb-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setViewMode("orders")}
-                className={`inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-bold transition ${
-                  viewMode === "orders"
-                    ? "border-[#2f7a43] bg-[#2f7a43] text-white"
-                    : "border-[#d8e5d8] bg-white text-theme-body hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading"
-                }`}
-              >
-                <ShoppingCart className="h-4 w-4" />
-                Orders
-              </button>
-              <button
-                onClick={() => setViewMode("stock")}
-                className={`inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-bold transition ${
-                  viewMode === "stock"
-                    ? "border-[#2f7a43] bg-[#2f7a43] text-white"
-                    : "border-[#d8e5d8] bg-white text-theme-body hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading"
-                }`}
-              >
-                <Package className="h-4 w-4" />
-                Stock Management
-              </button>
-            </div>
-            <div className="hidden rounded-full border border-[#d9d2c2] bg-white/72 px-4 py-2 text-sm font-semibold text-theme-body xl:block">
-              Desktop operations workspace
-            </div>
+          <div className="rounded-[1.5rem] border border-[#d9d2c2] bg-white/72 px-4 py-2 text-sm font-semibold text-theme-body">
+            Desktop operations workspace
           </div>
 
-          {viewMode === "stock" ? (
-            <div className="space-y-6">
-              <div className="theme-card rounded-[2.25rem] border p-8 shadow-md xl:p-10">
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
-                  <div className="max-w-3xl">
-                    <p className="text-theme-heading text-sm font-semibold uppercase tracking-[0.26em]">
-                      Inventory Control
-                    </p>
-                    <h1 className="mt-4 font-heading text-5xl font-semibold text-theme-heading md:text-6xl">
-                      Stock visibility for desktop review
-                    </h1>
-                    <p className="mt-4 text-lg leading-8 text-theme-body">
-                      Update which products are in stock or out of stock with stronger contrast and
-                      a layout tuned for large screens.
-                    </p>
-                  </div>
-
-                  <div className="rounded-[1.75rem] border border-[#d8e5d8] bg-[#f7fbf7] p-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-theme-body-soft">
-                      Admin Session
-                    </p>
-                    <p className="mt-3 break-all text-base font-semibold text-theme-heading">
-                      {adminEmail}
-                    </p>
-                    <p className="mt-3 text-sm leading-7 text-theme-body">
-                      Switch back to orders anytime to inspect delivery details and shipping totals.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="theme-card rounded-[2rem] border p-6 shadow-md xl:p-8">
-                <AdminStockToggle />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-8">
+          <div className="space-y-8">
               <div className="theme-card rounded-[2.25rem] border p-8 shadow-md xl:p-10">
                 <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
                   <div className="max-w-4xl">
@@ -735,8 +672,38 @@ const AdminDashboardPage = () => {
                   </table>
                 </div>
               </div>
+
+              {/* Orders shown above; stock manager stays below in a single dashboard flow */}
+              <div className="theme-card rounded-[2.25rem] border p-8 shadow-md xl:p-10">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+                  <div className="max-w-3xl">
+                    <p className="text-theme-heading text-sm font-semibold uppercase tracking-[0.26em]">
+                      Stock Management
+                    </p>
+                    <h2 className="mt-4 font-heading text-4xl font-semibold text-theme-heading md:text-5xl">
+                      Live inventory controls
+                    </h2>
+                    <p className="mt-4 text-base leading-8 text-theme-body">
+                      Product status changes sync through shared stock state so storefront visibility updates immediately.
+                    </p>
+                  </div>
+
+                  <div className="rounded-[1.75rem] border border-[#d8e5d8] bg-[#f7fbf7] p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-theme-body-soft">
+                      Admin Session
+                    </p>
+                    <p className="mt-3 break-all text-base font-semibold text-theme-heading">{adminEmail}</p>
+                    <p className="mt-3 text-sm leading-7 text-theme-body">
+                      Use filters to manage Salt Pickles, Tempered Pickles, Podulu, and Fryums faster.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-8 rounded-[2rem] border border-[#d8e5d8] bg-white/70 p-4 sm:p-6">
+                  <AdminStockToggle />
+                </div>
+              </div>
             </div>
-          )}
         </div>
       </AdminLayout>
     </>

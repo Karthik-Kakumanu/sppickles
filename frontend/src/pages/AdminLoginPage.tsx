@@ -240,7 +240,7 @@ const AdminLoginPage = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="relative overflow-hidden rounded-[2.2rem] border border-white/8 bg-[linear-gradient(130deg,#0d2b1d_0%,#143f2d_50%,#1a5239_100%)] p-7 text-white shadow-[0_40px_120px_rgba(13,43,29,0.38),0_0_0_1px_rgba(255,255,255,0.06)_inset] lg:min-h-[800px] lg:p-9 xl:p-11"
+            className="admin-login-hero relative overflow-hidden rounded-[2.2rem] border border-white/8 bg-[linear-gradient(130deg,#0d2b1d_0%,#143f2d_50%,#1a5239_100%)] p-7 text-white shadow-[0_40px_120px_rgba(13,43,29,0.38),0_0_0_1px_rgba(255,255,255,0.06)_inset] lg:min-h-[800px] lg:p-9 xl:p-11"
           >
             {/* Inner glow blobs */}
             <div

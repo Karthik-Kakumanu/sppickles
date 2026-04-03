@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LayoutDashboard, LogOut, Menu, Package2, ShoppingCart, X } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 import { useStore } from "@/components/StoreProvider";
 
 interface AdminLayoutProps {
@@ -14,8 +14,6 @@ interface AdminLayoutProps {
 
 const navItems = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "Products", href: "/admin/products", icon: Package2 },
-  { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
 ];
 
 export function AdminLayout({ title, children }: AdminLayoutProps) {
