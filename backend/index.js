@@ -4,7 +4,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFile, stat } from "node:fs/promises";
 import { pool } from "./db.js";
-import { hashPassword, requireAdmin, signAdminToken, verifyPassword } from "./helpers/auth.js";
+import {
+  clearAdminSessionCookie,
+  hashPassword,
+  requireAdmin,
+  setAdminSessionCookie,
+  signAdminToken,
+  verifyAdminToken,
+  verifyPassword,
+} from "./helpers/auth.js";
 import {
   getRequestUrl,
   handleCors,
@@ -713,6 +721,19 @@ const loginAdmin = async (body, req) => {
   };
 };
 
+const getAdminSession = (req) => {
+  const payload = verifyAdminToken(req);
+
+  if (!payload) {
+    return null;
+  }
+
+  return {
+    id: String(payload.sub ?? ""),
+    email: String(payload.email ?? ""),
+  };
+};
+
 const handleError = (res, error, requestId) => {
   const errorId = randomUUID();
   
@@ -969,7 +990,26 @@ const server = http.createServer(async (req, res) => {
     if (method === "POST" && routePathname === "/admin/login") {
       const body = await parseJsonBody(req);
       const login = await loginAdmin(body, req);
-      sendSuccess(res, 200, login);
+      setAdminSessionCookie(res, login.token);
+      sendSuccess(res, 200, { admin: login.admin }, "Login successful.");
+      return;
+    }
+
+    if (method === "GET" && routePathname === "/admin/session") {
+      const admin = getAdminSession(req);
+
+      if (!admin) {
+        sendError(res, 401, "Not authenticated.");
+        return;
+      }
+
+      sendSuccess(res, 200, { admin });
+      return;
+    }
+
+    if (method === "POST" && routePathname === "/admin/logout") {
+      clearAdminSessionCookie(res);
+      sendSuccess(res, 200, { loggedOut: true }, "Logged out successfully.");
       return;
     }
 

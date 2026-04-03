@@ -30,8 +30,6 @@ const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 const LEGACY_API_BASE_URL = API_BASE_URL.endsWith("/api")
   ? API_BASE_URL.slice(0, -"/api".length)
   : API_BASE_URL;
-const ADMIN_TOKEN_KEY = "adminToken";
-const ADMIN_EMAIL_KEY = "adminEmail";
 const ORDER_STATUS_MAP: Record<string, OrderRecord["status"]> = {
   new: "pending",
   pending: "pending",
@@ -67,18 +65,6 @@ type StockRecord = {
   updated_at: string;
 };
 
-const getStoredToken = () => localStorage.getItem(ADMIN_TOKEN_KEY);
-
-const clearAdminSession = () => {
-  localStorage.removeItem(ADMIN_TOKEN_KEY);
-  localStorage.removeItem(ADMIN_EMAIL_KEY);
-};
-
-const persistAdminSession = (token: string, email: string) => {
-  localStorage.setItem(ADMIN_TOKEN_KEY, token);
-  localStorage.setItem(ADMIN_EMAIL_KEY, email);
-};
-
 const buildRequestUrl = (baseUrl: string, endpoint: string) =>
   `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
@@ -86,6 +72,7 @@ const performRequest = async (requestUrl: string, options: RequestInit, headers:
   try {
     return await fetch(requestUrl, {
       ...options,
+      credentials: "include",
       headers,
     });
   } catch (error) {
@@ -113,11 +100,6 @@ const apiFetch = async <T>(endpoint: string, options: RequestInit = {}) => {
     headers.set("Accept", "application/json");
   }
 
-  const token = getStoredToken();
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-
   let response = await performRequest(requestUrl, options, headers);
   let payload = (await response.json().catch(() => null)) as ApiEnvelope<T> | null;
 
@@ -132,10 +114,6 @@ const apiFetch = async <T>(endpoint: string, options: RequestInit = {}) => {
   }
 
   if (!response.ok) {
-    if ((response.status === 401 || response.status === 403) && token) {
-      clearAdminSession();
-    }
-
     throw new ApiError(
       payload?.error || payload?.message || `API Error: ${response.status}`,
       response.status,
@@ -314,7 +292,7 @@ export const deleteOrder = async (orderId: string) =>
   });
 
 export const adminLogin = async (email: string, password: string) => {
-  const response = await apiFetch<{ token: string; admin: { id: string; email: string } }>(
+  const response = await apiFetch<{ admin: { id: string; email: string } }>(
     "/admin/login",
     {
       method: "POST",
@@ -322,19 +300,22 @@ export const adminLogin = async (email: string, password: string) => {
     },
   );
 
-  if (response.token) {
-    persistAdminSession(response.token, response.admin?.email ?? email.trim().toLowerCase());
-  }
-
   return response;
 };
 
 export const adminLogout = () => {
-  clearAdminSession();
+  return apiFetch<{ loggedOut: boolean }>("/admin/logout", {
+    method: "POST",
+  });
 };
 
-export const isAuthenticated = () => Boolean(getStoredToken());
-export const getStoredAdminEmail = () => localStorage.getItem(ADMIN_EMAIL_KEY);
+export const getAdminSession = async (): Promise<{ admin: { id: string; email: string } } | null> => {
+  try {
+    return await apiFetch<{ admin: { id: string; email: string } }>("/admin/session");
+  } catch {
+    return null;
+  }
+};
 
 export const useProductsQuery = (category: ProductCategory | null = null) =>
   useQuery({
@@ -424,7 +405,6 @@ export const useOrdersQuery = () =>
     queryFn: getOrders,
     staleTime: 1000 * 30, // 30 seconds
     refetchInterval: 1000 * 30, // Auto-refresh every 30 seconds
-    enabled: isAuthenticated(),
   });
 
 export const useUpdateOrderMutation = () => {

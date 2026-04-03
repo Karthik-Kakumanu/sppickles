@@ -3,8 +3,8 @@
 ## Current Setup
 
 **Admin Account:**
-- Email: `SPPICKLES`
-- Password: `sppickles` (hashed and secured in database)
+- Email: `admin@sppickles.com`
+- Password: stored hashed in the database
 
 ## Security Implementation
 
@@ -17,8 +17,8 @@
 ### ✅ Frontend Security
 - Credentials are **NOT** hardcoded in React components
 - No environment variables expose credentials to browser
-- Frontend only receives JWT token after successful login
-- Token is stored securely (httpOnly cookie / secure storage)
+- Frontend only receives a login success response
+- JWT is stored in an HttpOnly cookie and never exposed to JavaScript
 
 ### ✅ Backend Security
 - Rate limiting: 5 failed attempts before lockout
@@ -109,8 +109,8 @@ REQUIRED STEPS:
 ## Testing Login
 
 ```bash
-# Email: SPPICKLES
-# Password: sppickles
+# Email: admin@sppickles.com
+# Password: use the database-seeded admin password
 
 # Frontend: http://localhost:8080/admin/login
 # API: POST http://localhost:5000/api/admin/login

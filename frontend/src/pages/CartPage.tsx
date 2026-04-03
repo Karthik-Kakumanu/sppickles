@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import Seo from "@/components/Seo";
@@ -49,6 +50,71 @@ const cartCopy = {
   },
 } as const;
 
+type QuantityEditorProps = {
+  value: number;
+  onChange: (value: number) => void;
+};
+
+const QuantityEditor = ({ value, onChange }: QuantityEditorProps) => {
+  const [draft, setDraft] = useState(String(value));
+
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const commitValue = (nextValue: string) => {
+    const parsed = Number.parseInt(nextValue, 10);
+    const normalized = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+    setDraft(String(normalized));
+    onChange(normalized);
+  };
+
+  return (
+    <div className="inline-flex items-stretch overflow-hidden rounded-2xl border border-[#d8e5d8] bg-white shadow-sm">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(1, value - 1))}
+        className="flex h-11 w-11 items-center justify-center text-theme-body transition hover:bg-[#edf5ee] hover:text-theme-heading active:scale-95"
+        aria-label="Decrease quantity"
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <input
+        type="number"
+        min={1}
+        inputMode="numeric"
+        value={draft}
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          if (nextValue === "" || /^\d+$/.test(nextValue)) {
+            setDraft(nextValue);
+          }
+
+          if (/^\d+$/.test(nextValue)) {
+            onChange(Math.max(1, Number.parseInt(nextValue, 10)));
+          }
+        }}
+        onBlur={() => commitValue(draft)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.currentTarget.blur();
+          }
+        }}
+        className="h-11 w-14 border-x border-[#e3ebe0] bg-transparent text-center text-sm font-semibold text-theme-heading outline-none [appearance:textfield] focus:bg-[#f8fbf8] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        aria-label="Quantity"
+      />
+      <button
+        type="button"
+        onClick={() => onChange(value + 1)}
+        className="flex h-11 w-11 items-center justify-center text-theme-body transition hover:bg-[#edf5ee] hover:text-theme-heading active:scale-95"
+        aria-label="Increase quantity"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
+    </div>
+  );
+};
+
 const CartPage = () => {
   const {
     cart,
@@ -92,7 +158,7 @@ const CartPage = () => {
         </div>
       </section>
 
-      <section className={`${pageWrap} py-6 md:py-8`}>
+      <section className={`${pageWrap} py-5 md:py-8`}>
 
         {/* ══════════════════════════════════════
             EMPTY STATE
@@ -153,7 +219,7 @@ const CartPage = () => {
             {/* ══════════════════════════════════════
                 FILLED CART
             ══════════════════════════════════════ */}
-            <div className="grid gap-5 lg:grid-cols-[1.18fr_0.82fr]">
+            <div className="grid gap-4 lg:grid-cols-[1.18fr_0.82fr]">
 
               {/* Line items */}
               <div className="space-y-3 sm:space-y-4">
@@ -162,12 +228,7 @@ const CartPage = () => {
                     key={line.key}
                     className="section-shell group overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    {/*
-                      Changed from CSS grid to flex so the image width
-                      is purely controlled by its own size class — no
-                      grid column fights on mobile.
-                    */}
-                    <div className="flex items-start gap-3 p-3 sm:gap-4 sm:p-5">
+                    <div className="flex items-start gap-3 p-3.5 sm:gap-4 sm:p-5">
 
                       {/*
                         FIX ✅ — Mobile image size
@@ -177,7 +238,7 @@ const CartPage = () => {
                         It scales up to 88 px on sm and 104 px on lg.
                         `shrink-0` prevents it from being squeezed by flex.
                       */}
-                      <div className="h-13 w-13 shrink-0 overflow-hidden rounded-xl sm:h-[88px] sm:w-[88px] sm:rounded-2xl lg:h-[104px] lg:w-[104px]">
+                      <div className="h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl border border-[#e1eadf] bg-[#f5faf6] shadow-[0_6px_18px_rgba(30,79,46,0.08)] sm:h-[88px] sm:w-[88px] lg:h-[104px] lg:w-[104px]">
                         <img
                           src={line.product.image}
                           alt={line.product.name}
@@ -186,16 +247,16 @@ const CartPage = () => {
                       </div>
 
                       {/* Details */}
-                      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:gap-3">
+                      <div className="flex min-w-0 flex-1 flex-col gap-2.5 sm:gap-3">
                         <div className="space-y-0.5 sm:space-y-1">
-                          <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#956d00] sm:text-[10px]">
+                          <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-[#956d00] sm:text-[10px]">
                             {line.product.category}
                           </p>
-                          <h2 className="font-heading text-[0.95rem] font-semibold leading-tight text-theme-heading sm:text-[1.25rem]">
+                          <h2 className="max-w-[16rem] font-heading text-[0.98rem] font-semibold leading-tight text-theme-heading sm:max-w-none sm:text-[1.25rem]">
                             {line.product.name}
                           </h2>
                           <p
-                            className={`text-[11px] leading-5 text-theme-body sm:text-sm sm:leading-6 ${
+                            className={`text-[10px] leading-5 text-theme-body sm:text-sm sm:leading-6 ${
                               language === "te" ? "font-telugu" : ""
                             }`}
                           >
@@ -203,42 +264,24 @@ const CartPage = () => {
                           </p>
                         </div>
 
-                        {/* Qty + price */}
-                        <div className="flex flex-wrap items-end justify-between gap-2">
-                          {/* Stepper */}
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
                           <div>
-                            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-theme-heading sm:text-[10px]">
+                            <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-theme-heading sm:text-[10px]">
                               {t.quantity}
                             </p>
-                            <div className="mt-1.5 inline-flex items-center rounded-full border border-[#d8e5d8] bg-white shadow-sm">
-                              <button
-                                type="button"
-                                onClick={() => updateCartLineQuantity(line.key, line.quantity - 1)}
-                                className="px-3 py-1.5 text-theme-body transition hover:text-theme-heading active:scale-90 sm:px-3.5 sm:py-2"
-                                aria-label="Decrease quantity"
-                              >
-                                <Minus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                              </button>
-                              <span className="min-w-[1.75rem] text-center text-xs font-semibold text-theme-heading sm:min-w-[2.25rem] sm:text-sm">
-                                {line.quantity}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => updateCartLineQuantity(line.key, line.quantity + 1)}
-                                className="px-3 py-1.5 text-theme-body transition hover:text-theme-heading active:scale-90 sm:px-3.5 sm:py-2"
-                                aria-label="Increase quantity"
-                              >
-                                <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                              </button>
+                            <div className="mt-1.5">
+                              <QuantityEditor
+                                value={line.quantity}
+                                onChange={(nextValue) => updateCartLineQuantity(line.key, nextValue)}
+                              />
                             </div>
                           </div>
 
-                          {/* Price */}
-                          <div className="text-right">
-                            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-theme-heading sm:text-[10px]">
+                          <div className="text-left sm:text-right">
+                            <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-theme-heading sm:text-[10px]">
                               {t.lineTotal}
                             </p>
-                            <p className="price-figure mt-1 text-base font-extrabold text-[#2f7a43] sm:text-[1.4rem]">
+                            <p className="price-figure mt-1 text-[1rem] font-extrabold text-[#2f7a43] sm:text-[1.35rem]">
                               {formatCurrency(line.totalPrice)}
                             </p>
                             <p className="price-figure mt-0.5 text-[10px] text-theme-body sm:text-xs">
@@ -267,12 +310,12 @@ const CartPage = () => {
               </div>
 
               {/* ── Order summary ── */}
-              <aside className="section-shell h-fit px-5 py-6 lg:sticky lg:top-36 sm:px-6 sm:py-7">
-                <h2 className="font-heading text-xl font-semibold text-theme-heading sm:text-2xl md:text-3xl">
+              <aside className="section-shell h-fit px-4 py-5 lg:sticky lg:top-36 sm:px-6 sm:py-7">
+                <h2 className="font-heading text-[1.25rem] font-semibold text-theme-heading sm:text-2xl md:text-3xl">
                   {t.orderSummary}
                 </h2>
 
-                <div className="mt-5 space-y-3 border-b border-[#d8e5d8] pb-5 sm:mt-6 sm:space-y-4 sm:pb-6">
+                <div className="mt-4 space-y-3 border-b border-[#d8e5d8] pb-4 sm:mt-6 sm:space-y-4 sm:pb-6">
                   <div className="flex items-center justify-between gap-4 text-sm">
                     <span className="text-theme-body">
                       {language === "te"

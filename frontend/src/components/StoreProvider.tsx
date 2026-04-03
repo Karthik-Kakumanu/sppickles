@@ -2,8 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import {
   adminLogin as apiAdminLogin,
   adminLogout as apiAdminLogout,
-  getStoredAdminEmail,
-  isAuthenticated,
+  getAdminSession,
   useStockQuery,
 } from "@/lib/api";
 import {
@@ -42,7 +41,7 @@ type StoreContextValue = {
   removeFromCart: (key: string) => void;
   clearCart: () => void;
   loginAdmin: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  logoutAdmin: () => void;
+  logoutAdmin: () => Promise<void>;
 };
 
 const StoreContext = createContext<StoreContextValue | null>(null);
@@ -62,8 +61,27 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   }, [cartLines]);
 
   useEffect(() => {
-    setAdminEmail(isAuthenticated() ? getStoredAdminEmail() : null);
-    setIsAdminReady(true);
+    let isMounted = true;
+
+    const loadAdminSession = async () => {
+      try {
+        const session = await getAdminSession();
+
+        if (isMounted) {
+          setAdminEmail(session?.admin.email ?? null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsAdminReady(true);
+        }
+      }
+    };
+
+    void loadAdminSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const productsError = error instanceof Error ? error : null;
@@ -200,8 +218,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logoutAdmin = () => {
-    apiAdminLogout();
+  const logoutAdmin = async () => {
+    await apiAdminLogout();
     setAdminEmail(null);
   };
 

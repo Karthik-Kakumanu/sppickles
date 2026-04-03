@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LayoutDashboard, LogOut, Menu, Package2, ShoppingCart, X } from "lucide-react";
+import { useStore } from "@/components/StoreProvider";
 
 interface AdminLayoutProps {
   title: string;
@@ -19,11 +20,12 @@ const navItems = [
 
 export function AdminLayout({ title, children }: AdminLayoutProps) {
   const navigate = useNavigate();
+  const { logoutAdmin } = useStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminEmail");
+  const handleLogout = async () => {
+    await logoutAdmin();
+    setSidebarOpen(false);
     navigate("/admin/login");
   };
 

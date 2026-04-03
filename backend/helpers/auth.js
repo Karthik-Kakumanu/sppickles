@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { sendError } from "./http.js";
 
 const DEFAULT_DEV_JWT_SECRET = "sp-pickles-dev-secret";
+const ADMIN_SESSION_COOKIE_NAME = "sp_pickles_admin_session";
 let hasWarnedAboutJwtSecret = false;
 
 const getJwtSecret = () => {
@@ -43,6 +44,114 @@ const safeCompare = (left, right) => {
   }
 
   return timingSafeEqual(leftBuffer, rightBuffer);
+};
+
+const parseCookieHeader = (cookieHeader) => {
+  if (!cookieHeader) {
+    return {};
+  }
+
+  return String(cookieHeader)
+    .split(";")
+    .reduce((cookies, pair) => {
+      const separatorIndex = pair.indexOf("=");
+
+      if (separatorIndex < 0) {
+        return cookies;
+      }
+
+      const name = pair.slice(0, separatorIndex).trim();
+      const value = pair.slice(separatorIndex + 1).trim();
+
+      if (name) {
+        cookies[name] = value;
+      }
+
+      return cookies;
+    }, {});
+};
+
+const buildCookie = (name, value, options = {}) => {
+  const parts = [`${name}=${value}`];
+
+  if (options.maxAge !== undefined) {
+    parts.push(`Max-Age=${Math.max(0, Math.floor(options.maxAge))}`);
+  }
+
+  if (options.expires) {
+    parts.push(`Expires=${options.expires.toUTCString()}`);
+  }
+
+  parts.push(`Path=${options.path ?? "/"}`);
+  parts.push("HttpOnly");
+  parts.push(`SameSite=${options.sameSite ?? "Lax"}`);
+
+  if (options.secure) {
+    parts.push("Secure");
+  }
+
+  return parts.join("; ");
+};
+
+export const getAdminTokenFromRequest = (req) => {
+  const authorization = req.headers.authorization || "";
+
+  if (authorization.startsWith("Bearer ")) {
+    return authorization.slice("Bearer ".length).trim();
+  }
+
+  const cookies = parseCookieHeader(req.headers.cookie);
+  return cookies[ADMIN_SESSION_COOKIE_NAME] || null;
+};
+
+export const verifyAdminToken = (req) => {
+  const token = getAdminTokenFromRequest(req);
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const payload = jwt.verify(token, getJwtSecret());
+
+    if (payload.role !== "admin") {
+      return null;
+    }
+
+    return payload;
+  } catch {
+    return null;
+  }
+};
+
+export const setAdminSessionCookie = (res, token) => {
+  const isProduction = process.env.NODE_ENV === "production";
+  const maxAgeSeconds = 8 * 60 * 60;
+
+  res.setHeader(
+    "Set-Cookie",
+    buildCookie(ADMIN_SESSION_COOKIE_NAME, token, {
+      maxAge: maxAgeSeconds,
+      secure: isProduction,
+      sameSite: "Lax",
+      path: "/",
+    }),
+  );
+};
+
+export const clearAdminSessionCookie = (res) => {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  res.setHeader(
+    "Set-Cookie",
+    buildCookie(ADMIN_SESSION_COOKIE_NAME, "", {
+      maxAge: 0,
+      expires: new Date(0),
+      secure: isProduction,
+      sameSite: "Lax",
+      path: "/",
+    }),
+  );
 };
 
 export const hashPassword = (password) => {
@@ -92,26 +201,12 @@ export const signAdminToken = (adminUser) =>
   );
 
 export const requireAdmin = (req, res) => {
-  const authorization = req.headers.authorization || "";
+  const payload = verifyAdminToken(req);
 
-  if (!authorization.startsWith("Bearer ")) {
-    sendError(res, 401, "Missing bearer token.");
+  if (!payload) {
+    sendError(res, 401, "Admin session required.");
     return null;
   }
 
-  const token = authorization.slice("Bearer ".length).trim();
-
-  try {
-    const payload = jwt.verify(token, getJwtSecret());
-
-    if (payload.role !== "admin") {
-      sendError(res, 403, "Admin access required.");
-      return null;
-    }
-
-    return payload;
-  } catch {
-    sendError(res, 401, "Invalid or expired token.");
-    return null;
-  }
+  return payload;
 };
