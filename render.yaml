@@ -5,8 +5,8 @@ services:
     name: sp-pickles-backend
     env: node
     plan: free
-    buildCommand: npm install && npm run build:frontend && cd backend && npm install
-    startCommand: npm run build:frontend && cd backend && npm run start
+    buildCommand: npm install && cd backend && npm install
+    startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
