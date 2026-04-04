@@ -23,7 +23,7 @@ const categories: Array<{ key: ProductCategory; label: string }> = [
 
 const pickleSubcategories = [
   { key: "salt", label: "Salt Pickles", teluguLabel: "ఉప్పు పచ్చళ్ళు" },
-  { key: "asafoetida", label: "Asafoetida Pickles", teluguLabel: "ఇంగువ తాలింపు పచ్చళ్ళు" },
+  { key: "asafoetida", label: "Asafoetida Pickles", teluguLabel: "ఇంగువ పోపు పచ్చళ్ళు" },
 ] as const;
 
 const priceRanges = [

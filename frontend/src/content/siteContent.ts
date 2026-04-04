@@ -16,7 +16,7 @@ import { pickleAvakaya, pickleGongura, pickleLemon } from "@/lib/pickleImages";
 
 export const whatsappNumber = "7981370664";
 export const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-  "Hello, I would like to place an order with Sampradaya Pickles.",
+  "Hello, I would like to place an order with Sampradyani Pachachalu with Brahmin Taste.",
 )}`;
 
 export const contactNumbers = ["7981370664", "08664602255", "7382665848"];

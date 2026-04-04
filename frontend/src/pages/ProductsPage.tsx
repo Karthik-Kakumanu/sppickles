@@ -102,7 +102,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
         ? [
             "ఉప్పు పచ్చళ్ళు: రోజువారీ వాడకానికి తగిన సహజ ఉప్పు రుచి.",
             "ఇంగువ తాలింపు: ఇంగువ వాసనతో ఘనమైన మధ్యాహ్న భోజన రుచి.",
-            "పొడులు: సాధారణ ఇంటి ఆహారానికి ప్రోటీన్‌ సమృద్ధిగా ఉండే సులభమైన తోడు.",
+            "పొడులు: సాధారణ ఇంటి ఆహారానికి సులభమైన ప్రోటీన్-రిచ్ సహాయం.",
             "అప్పడాలు, వడియాలు: శుద్ధ శాకాహార ప్లేట్‌కి సంప్రదాయ క్రంచ్ జోడింపు.",
           ]
         : [
@@ -175,7 +175,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
     all: {
       title: t.products.allProducts,
       description: isTe
-        ? "పచ్చళ్ళు, పొడులు, వడియాలు, అప్పడాలు అన్నీ ఒకే చోట చూడడానికి ఈ పూర్తి కాటలాగ్."
+        ? "పచ్చళ్ళు, పొడులు, ఫ్రైయమ్స్ అన్నీ ఒకే చోట చూడడానికి ఈ పూర్తి కాటలాగ్."
         : "The full catalogue for browsing pickles, podulu, and fryums in one place.",
     },
     pickles: {
@@ -205,7 +205,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
     fryums: {
       title: t.products.fryums,
       description: isTe
-        ? "వడియాలు, అప్పడాలు మరియు ఇతర కరకరలాడే వంటకాలు ఈ విభాగంలో కనిపిస్తాయి."
+        ? "వడియాలు, అప్పడాలు మరియు ఫ్రైయమ్స్ ఈ విభాగంలో కనిపిస్తాయి."
         : "Find all fryums, vadiyalu, and crunchy side-dish favourites in one section.",
     },
   };
