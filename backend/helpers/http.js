@@ -44,7 +44,9 @@ export const sendJson = (res, statusCode, payload) => {
   setCorsHeaders(res);
   res.writeHead(statusCode, { 
     "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": statusCode === 200 ? "public, max-age=60" : "no-cache, no-store, must-revalidate"
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    Pragma: "no-cache",
+    Expires: "0",
   });
   const response = {
     success: statusCode >= 200 && statusCode < 300,

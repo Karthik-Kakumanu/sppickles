@@ -77,6 +77,7 @@ const performRequest = async (requestUrl: string, options: RequestInit, headers:
   try {
     return await fetch(requestUrl, {
       ...options,
+      cache: "no-store",
       credentials: "include",
       headers,
     });
