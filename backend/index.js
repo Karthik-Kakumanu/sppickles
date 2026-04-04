@@ -279,6 +279,147 @@ const normalizeStockPayload = (body) => {
   return { isAvailable: isAvailable ? 1 : 0 };
 };
 
+const parseStockNumericId = (productId) => {
+  const match = String(productId ?? "")
+    .trim()
+    .match(/^product-(?:product-)?(\d+)-/);
+
+  return match ? match[1] : null;
+};
+
+const isCanonicalStockProductId = (productId) => {
+  const rawProductId = String(productId ?? "").trim();
+  return /^product-\d+-/.test(rawProductId);
+};
+
+const buildCanonicalStockIdMap = (rows) => {
+  const canonicalByNumericId = new Map();
+
+  rows.forEach((row) => {
+    const rawProductId = String(row.product_id ?? "").trim();
+
+    if (!isCanonicalStockProductId(rawProductId)) {
+      return;
+    }
+
+    const numericId = parseStockNumericId(rawProductId);
+
+    if (numericId && !canonicalByNumericId.has(numericId)) {
+      canonicalByNumericId.set(numericId, rawProductId);
+    }
+  });
+
+  return canonicalByNumericId;
+};
+
+const normalizeStockProductId = (productId, canonicalByNumericId = new Map()) => {
+  const rawProductId = String(productId ?? "").trim();
+
+  if (!rawProductId) {
+    return rawProductId;
+  }
+
+  if (rawProductId.startsWith("product-NaN-")) {
+    return null;
+  }
+
+  const numericId = parseStockNumericId(rawProductId);
+  const canonicalProductId = numericId ? canonicalByNumericId.get(numericId) : null;
+
+  if (canonicalProductId) {
+    return canonicalProductId;
+  }
+
+  if (rawProductId.startsWith("product-product-")) {
+    return rawProductId.slice("product-".length);
+  }
+
+  return rawProductId;
+};
+
+const normalizeStockRows = (rows) => {
+  const canonicalByNumericId = buildCanonicalStockIdMap(rows);
+  const normalizedRows = new Map();
+
+  rows.forEach((row, index) => {
+    const normalizedProductId = normalizeStockProductId(row.product_id, canonicalByNumericId);
+
+    if (!normalizedProductId) {
+      return;
+    }
+
+    const timestamp = Date.parse(String(row.updated_at ?? "")) || index;
+    const previous = normalizedRows.get(normalizedProductId);
+
+    if (!previous || timestamp >= previous.timestamp) {
+      normalizedRows.set(normalizedProductId, {
+        timestamp,
+        row: {
+          ...row,
+          product_id: normalizedProductId,
+        },
+      });
+    }
+  });
+
+  return Array.from(normalizedRows.values(), ({ row }) => row).sort((left, right) =>
+    String(left.product_id).localeCompare(String(right.product_id)),
+  );
+};
+
+const resolveCanonicalStockProductId = async (productId) => {
+  const rawProductId = String(productId ?? "").trim();
+
+  if (!rawProductId) {
+    throw { statusCode: 400, message: "product_id is required." };
+  }
+
+  if (rawProductId.startsWith("product-NaN-")) {
+    throw { statusCode: 400, message: "Invalid product_id." };
+  }
+
+  const numericId = parseStockNumericId(rawProductId);
+
+  if (!numericId) {
+    return rawProductId;
+  }
+
+  const result = await pool.query(
+    `
+      select product_id, updated_at
+      from stock_status
+      where product_id like $1
+      order by updated_at desc, product_id asc
+    `,
+    [`product-${numericId}-%`],
+  );
+
+  const canonicalByNumericId = buildCanonicalStockIdMap(result.rows);
+  return normalizeStockProductId(rawProductId, canonicalByNumericId) ?? rawProductId;
+};
+
+const cleanupLegacyStockAliases = async (canonicalProductId) => {
+  const numericId = parseStockNumericId(canonicalProductId);
+
+  if (!numericId) {
+    return;
+  }
+
+  const slug = String(canonicalProductId).replace(/^product-\d+-/, "");
+
+  await pool.query(
+    `
+      delete from stock_status
+      where product_id <> $1
+        and (
+          product_id like $2
+          or product_id = $3
+        )
+    `,
+    [canonicalProductId, `product-product-${numericId}-%`, `product-NaN-${slug}`],
+  );
+};
+
 const normalizeOrderPayload = (body) => {
   if (!isPlainObject(body)) {
     throw { statusCode: 400, message: "Order payload must be a JSON object." };
@@ -442,14 +583,15 @@ const getStock = async () => {
   const result = await pool.query(`
     select product_id, is_available, updated_at
     from stock_status
-    order by product_id asc
+    order by updated_at desc, product_id asc
   `);
 
-  return result.rows;
+  return normalizeStockRows(result.rows);
 };
 
 const updateStock = async (productId, body) => {
   const payload = normalizeStockPayload(body);
+  const canonicalProductId = await resolveCanonicalStockProductId(productId);
   const result = await pool.query(
     `
       insert into stock_status (product_id, is_available, updated_at)
@@ -460,9 +602,10 @@ const updateStock = async (productId, body) => {
         updated_at = CURRENT_TIMESTAMP
       returning product_id, is_available, updated_at
     `,
-    [productId, payload.isAvailable],
+    [canonicalProductId, payload.isAvailable],
   );
 
+  await cleanupLegacyStockAliases(canonicalProductId);
   return result.rows[0];
 };
 
