@@ -171,7 +171,7 @@ const categoryCards = [
     pickleTypeKey: "salt",
     teTitle: "ఉప్పు పచ్చళ్ళు",
     enTitle: "Salt Pickles",
-    teText: "చింతకాయ తొక్కు నుంచి వేలక్కాయ వరకు 1kg కి ₹550 నుంచి ప్రారంభం",
+    teText: "చింతకాయ తొక్కు నుంచి వెలగకాయ వరకు 1kg కి ₹550 నుంచి ప్రారంభం",
     enText: "Traditional salt pickles from Chintakaya Thokku to Velakkaya starting at Rs.550 per kg",
     image: catSaltPickles,
   },
@@ -251,7 +251,7 @@ const categoryCards = [
   },
   {
     category: "pickles",
-    teTitle: "వేలక్కాయ",
+    teTitle: "వెలగకాయ",
     enTitle: "Velakkaya",
     teText: "ఉప్పు పచ్చళ్ళలో ప్రత్యేక రుచి",
     enText: "Special salt pickle variety",
@@ -413,9 +413,9 @@ const categoryCards = [
   },
   {
     category: "pickles",
-    teTitle: "టొమోటో",
+    teTitle: "టమాటో",
     enTitle: "Tomato",
-    teText: "ఇంగువ పోపుతో టొమోటో",
+    teText: "ఇంగువ తాలింపుతో టమాటో",
     enText: "Tempered tomato special",
     price: "₹650 / 1kg",
     image: catSaltPickles,
@@ -485,7 +485,7 @@ const categoryCards = [
   },
   {
     category: "pickles",
-    teTitle: "తీపి మగయా",
+    teTitle: "తీపి మాగాయ",
     enTitle: "Theepi Magaya",
     teText: "తీపి-పులుపు కలిసిన మాగాయ",
     enText: "Sweet magaya pickle",
@@ -793,9 +793,9 @@ const pickleTypeCards = [
     enTitle: "Tempered Pickles",
     teText: "ఆవకాయ, మాగాయ, పులిహోర మరియు ప్రత్యేక ఇంగువ పోపు రకాల పచ్చళ్ళు",
     enText: "Avakaya, magaya, pulihora and specialty tempered jars",
-    teTitle: "టొమోటో",
+    teTitle: "టమాటో",
     enTitle: "Tomato",
-    teText: "ఇంగువ పోపుతో టొమోటో",
+    teText: "ఇంగువ తాలింపుతో టమాటో",
     enText: "Tempered tomato special",
 const getPickleType = (title: string) => (saltPickleTitles.has(title) ? "salt" : "tempered");
 
@@ -1076,7 +1076,7 @@ const MarketplaceHome = ({
                 <BilingualText
                   as="p"
                   te="ఆంధ్ర కిచెన్ డిలైట్స్"
-                  en="AK Sampradayini Pickles"
+                  en="AK Sampradaya Pickles"
                   teluguClassName="font-heading text-lg font-bold text-chilli"
                   englishClassName="font-heading text-2xl font-bold text-chilli"
                 />
@@ -1721,5 +1721,3 @@ const MarketplaceHome = ({
 };
 
 export default MarketplaceHome;
-
-

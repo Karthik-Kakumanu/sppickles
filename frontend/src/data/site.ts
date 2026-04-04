@@ -85,7 +85,7 @@ export const brand = {
   subtitle:
     "Pure vegetarian homemade pickles, podulu, and fryums prepared in a Brahmin-style kitchen.",
   teluguSubtitle:
-    "విజయవాడలో బ్రాహ్మణ ఇంటివంట పద్ధతిలో తయారయ్యే శుద్ధ శాకాహార పచ్చళ్ళు, పొడులు, ఫ్రైయమ్స్.",
+    "విజయవాడలో బ్రాహ్మణ ఇంటివంట పద్ధతిలో తయారయ్యే శుద్ధ శాకాహార పచ్చళ్ళు, పొడులు, వడియాలు, అప్పడాలు.",
   whatsappNumber: "7981370664",
   whatsappDisplay: "7981370664",
   whatsappUrl: "https://wa.me/917981370664",
@@ -160,7 +160,7 @@ export const homeCategoryCards = [
     description:
       "Simple, pure salt and chilli-based pickles with fresh tanginess. No added spices—just clean, traditional flavor.",
     descriptionTe:
-      "ఉప్పు, మిరప మరియు సూర్యకాంతుల ఆధారంపై చేసిన సరళమైన, తాజా తీక్షణమైన పచ్చళ్ళు - దుర్వ్యవస్థ లేనిది, సంప్రదాయ రుచి.",
+      "ఉప్పు, కారం ఆధారంగా తయారయ్యే సాదాసీదా కానీ ఘాటైన పచ్చళ్ళు. అదనపు మసాలాలు లేకుండా స్వచ్ఛమైన సంప్రదాయ రుచి.",
     image: catSaltPickles,
     to: "/products/pickles/salted",
   },
@@ -171,7 +171,7 @@ export const homeCategoryCards = [
     description:
       "Deep-fried and slow-cooked pickles with roasted spices and complex tempering. Each jar is prepared to deliver richer masala layers.",
     descriptionTe:
-      "రోస్టెడ్ మసాలలతో నెమ్మదిగా తయారుచేసిన, తాలిమ్ప్‌చేసిన పచ్చళ్ళు. ప్రతి సంచిలో పొరల వారీ గాఢమైన రుచి మరియు సుగంధ.",
+      "వేపిన మసాలాలతో నెమ్మదిగా తాలింపు చేసి తయారుచేసిన పచ్చళ్ళు. ప్రతి సీసాలో పొరలుగా లోతైన రుచి, సువాసన ఉంటాయి.",
     image: catTemperedPickles,
     to: "/products/pickles/tempered",
   },
@@ -182,7 +182,7 @@ export const homeCategoryCards = [
     description:
       "Sun-dried powder accompaniments blended with roasted spices and fresh chillies. Crispy, instant, and aromatic for any meal.",
     descriptionTe:
-      "సూర్యప్రకాశ సేకరించిన, రోస్టెడ్ మసాలలు మరియు తాజా మిరపలతో కలిపిన పొడులు - తక్షణ, కరకరలాడే, సుగంధ ఉన్న పొడులు.",
+      "వేడి అన్నం, ఇడ్లీ, దోశలకు సరిపడేలా వేయించిన మసాలాలు, తాజా మిరపలతో తయారుచేసిన సువాసనగల పొడులు.",
     image: categoryPowders,
     to: "/products/podulu",
   },
@@ -193,7 +193,7 @@ export const homeCategoryCards = [
     description:
       "Deep-fried crispy snacks made from rice and lentil flours. Crunchy, light, and traditionally made for festivals and family meals.",
     descriptionTe:
-      "బియ్యం మరియు దాలిదండ్రుల పిండి నుండి చేసిన కరకరలాడే ఫ్రీ చేసిన నుండు. హీరాగా తెలిసిన, తేలికైన, పండుగలు మరియు కుటుంబ భోజనాల కోసం సంప్రదాయ విధానంలో తయారు చేసిన.",
+      "బియ్యం, పప్పుల పిండితో తయారైన కరకరలాడే వడియాలు, అప్పడాలు. రోజువారీ భోజనాలకు, పండుగ విందులకు అచ్చమైన సంప్రదాయ తోడు.",
     image: categoryVadiyalu,
     to: "/products/fryums",
   },
