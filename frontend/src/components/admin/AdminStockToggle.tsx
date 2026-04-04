@@ -1,7 +1,12 @@
 import { useState, useDeferredValue } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getDbProductId, useProductsQuery } from "@/lib/api";
-import { useStockQuery, useUpdateStockMutation } from "@/lib/api";
+import {
+  getDbProductId,
+  getProductAvailability,
+  useProductsQuery,
+  useStockQuery,
+  useUpdateStockMutation,
+} from "@/lib/api";
 import { Loader2, Package, Search, X, ToggleRight, ToggleLeft, SlidersHorizontal } from "lucide-react";
 
 /* ─── tiny reusable stat card ─────────────────────────────────────────────── */
@@ -109,8 +114,7 @@ export const AdminStockToggle = () => {
   });
 
   const inStockCount  = products.filter((product) => {
-    const dbProductId = getDbProductId(product.id, product.name);
-    return stockData.get(dbProductId) ?? true;
+    return getProductAvailability(stockData, product);
   }).length;
   const outStockCount = products.length - inStockCount;
 
@@ -277,7 +281,7 @@ export const AdminStockToggle = () => {
           >
             {filteredProducts.map((product, index) => {
               const dbProductId = getDbProductId(product.id, product.name);
-              const isAvailable = stockData.get(dbProductId) ?? true;
+              const isAvailable = getProductAvailability(stockData, product);
               const isUpdating  = updating === dbProductId;
 
               return (

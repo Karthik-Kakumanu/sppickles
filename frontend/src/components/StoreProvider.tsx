@@ -3,6 +3,7 @@ import {
   adminLogin as apiAdminLogin,
   adminLogout as apiAdminLogout,
   getAdminSession,
+  getProductAvailability,
   useStockQuery,
 } from "@/lib/api";
 import {
@@ -90,7 +91,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     () =>
       defaultProducts.map((product) => ({
         ...product,
-        isAvailable: stockMap.has(product.id) ? stockMap.get(product.id) : product.isAvailable ?? true,
+        isAvailable: getProductAvailability(stockMap, product),
       })),
     [stockMap],
   );

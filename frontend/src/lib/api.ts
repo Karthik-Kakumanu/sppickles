@@ -65,6 +65,11 @@ type StockRecord = {
   updated_at: string;
 };
 
+type StockState = {
+  isAvailable: boolean;
+  updatedAt: number;
+};
+
 const buildRequestUrl = (baseUrl: string, endpoint: string) =>
   `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
@@ -192,15 +197,64 @@ export const getProducts = async (category: ProductCategory | null = null) => {
   return products;
 };
 
-// Convert frontend numeric product ID to database string ID format
-// e.g., 1, "Chintakaya Thokku" -> "product-1-chintakaya-thokku"
-export const getDbProductId = (id: number, name: string): string => {
-  const slug = name
+const slugifyProductName = (name: string) =>
+  String(name)
+    .trim()
     .toLowerCase()
-    .replace(/\s+/g, "-") // Replace spaces with hyphens
-    .replace(/[()]/g, "")  // Remove parentheses
-    .replace(/--+/g, "-"); // Replace multiple hyphens with single hyphen
-  return `product-${id}-${slug}`;
+    .replace(/\s+/g, "-")
+    .replace(/[()]/g, "")
+    .replace(/--+/g, "-");
+
+// Convert frontend product IDs to the database string ID format.
+// If the product already has a canonical ID, keep it unchanged.
+export const getDbProductId = (id: string | number, name: string): string => {
+  const rawId = String(id).trim();
+
+  if (!rawId) {
+    return `product-${slugifyProductName(name)}`;
+  }
+
+  if (rawId.startsWith("product-")) {
+    return rawId;
+  }
+
+  return `product-${rawId}-${slugifyProductName(name)}`;
+};
+
+const getStockLookupIds = (id: string | number, name: string): string[] => {
+  const rawId = String(id).trim();
+  const canonicalId = getDbProductId(id, name);
+  const slug = slugifyProductName(name);
+  const legacyMalformedId = canonicalId ? `product-${canonicalId}-${slug}` : "";
+
+  return Array.from(
+    new Set([canonicalId, rawId, legacyMalformedId].filter((candidate) => candidate.length > 0)),
+  );
+};
+
+const stockAliasToCanonicalId = new Map(
+  defaultProducts.flatMap((product) => {
+    const canonicalId = getDbProductId(product.id, product.name);
+    return getStockLookupIds(product.id, product.name).map((candidate) => [candidate, canonicalId]);
+  }),
+);
+
+const normalizeStockProductId = (productId: string) =>
+  stockAliasToCanonicalId.get(String(productId).trim()) ?? String(productId).trim();
+
+export const getProductAvailability = (
+  stockMap: Map<string, boolean>,
+  product: Pick<ProductRecord, "id" | "name" | "isAvailable">,
+) => {
+  const matchingId = getStockLookupIds(product.id, product.name).find((candidate) =>
+    stockMap.has(candidate),
+  );
+
+  if (matchingId) {
+    return stockMap.get(matchingId) ?? true;
+  }
+
+  return product.isAvailable ?? true;
 };
 
 export const createProduct = async () => productCrudDisabled();
@@ -210,7 +264,26 @@ export const deleteProduct = async () => productCrudDisabled();
 export const getStock = async (): Promise<Map<string, boolean>> => {
   try {
     const records = await apiFetch<StockRecord[]>("/stock");
-    return new Map(records.map((item) => [String(item.product_id), Boolean(item.is_available)]));
+    const normalizedStock = new Map<string, StockState>();
+
+    records.forEach((item, index) => {
+      const rawProductId = String(item.product_id).trim();
+      const normalizedProductId = stockAliasToCanonicalId.get(rawProductId) ?? rawProductId;
+      const updatedAt = Date.parse(item.updated_at);
+      const timestamp = Number.isFinite(updatedAt) ? updatedAt : index;
+      const previous = normalizedStock.get(normalizedProductId);
+
+      if (!previous || timestamp >= previous.updatedAt) {
+        normalizedStock.set(normalizedProductId, {
+          isAvailable: Boolean(item.is_available),
+          updatedAt: timestamp,
+        });
+      }
+    });
+
+    return new Map(
+      Array.from(normalizedStock.entries(), ([productId, state]) => [productId, state.isAvailable]),
+    );
   } catch (error) {
     console.warn("Failed to fetch stock data:", error);
     return new Map();
@@ -218,7 +291,7 @@ export const getStock = async (): Promise<Map<string, boolean>> => {
 };
 
 export const updateStock = async (productId: string, isAvailable: boolean) =>
-  apiFetch<StockRecord>(`/stock/${productId}`, {
+  apiFetch<StockRecord>(`/stock/${normalizeStockProductId(productId)}`, {
     method: "PUT",
     body: JSON.stringify({ is_available: isAvailable }),
   });
@@ -330,6 +403,8 @@ export const useStockQuery = () =>
     queryFn: getStock,
     staleTime: 1000, // keep UI responsive to rapid stock changes
     refetchInterval: 1000 * 2, // refresh every 2 seconds for near-instant visibility
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
   });
 
 export const useUpdateStockMutation = () => {
@@ -340,6 +415,8 @@ export const useUpdateStockMutation = () => {
     mutationFn: ({ productId, isAvailable }: { productId: string; isAvailable: boolean }) =>
       updateStock(productId, isAvailable),
     onMutate: async ({ productId, isAvailable }) => {
+      const normalizedProductId = normalizeStockProductId(productId);
+
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["stock"] });
       
@@ -349,7 +426,7 @@ export const useUpdateStockMutation = () => {
       // Optimistically update the UI
       queryClient.setQueryData(["stock"], (old: Map<string, boolean> | undefined) => {
         const newStock = new Map(old || []);
-        newStock.set(productId, isAvailable);
+        newStock.set(normalizedProductId, isAvailable);
         return newStock;
       });
       

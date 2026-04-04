@@ -13,7 +13,7 @@ import { type StoreFilter } from "@/data/site";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchFilter } from "@/hooks/useSearchFilter";
-import { useStockQuery, getDbProductId } from "@/lib/api";
+import { getProductAvailability, useStockQuery } from "@/lib/api";
 
 type ProductsPageProps = {
   initialFilter?: StoreFilter;
@@ -226,7 +226,10 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
   const activeHeroProduct = heroGallery[heroIndex] ?? heroGallery[0] ?? null;
 
   const bestSellerCount = useMemo(() => products.filter((p) => p.isBestSeller).length, [products]);
-  const inStockCount = useMemo(() => products.filter((p) => p.isAvailable !== false).length, [products]);
+  const inStockCount = useMemo(
+    () => products.filter((product) => getProductAvailability(stockData, product)).length,
+    [products, stockData],
+  );
 
   const handleSelectFilter = (filter: StoreFilter) => {
     setSelectedFilter(filter);
@@ -483,11 +486,10 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
 
             </div>
 
-            {/* Grid */}
+              {/* Grid */}
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
               {visibleProducts.map((product, index) => {
-                const dbProductId = getDbProductId(product.id, product.name);
-                const isAvailable = stockData.get(dbProductId) ?? true;
+                const isAvailable = getProductAvailability(stockData, product);
                 return (
                   <ProductCard
                     key={product.id}
