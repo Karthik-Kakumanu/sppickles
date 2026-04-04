@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useMemo } from "react";
 import { Globe2, Mail, MapPin, Phone, ShoppingBag } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import ProductCard from "@/components/ProductCard";
@@ -78,7 +79,7 @@ const homeCopy = {
     heroEyebrow: "ప్రీమియం ఆంధ్రా ఫుడ్ స్టోర్",
     heroTitle: "శుద్ధ శాకాహార బ్రాహ్మణ శైలిలో పచ్చళ్ళు, పొడులు, ఫ్రైయమ్స్",
     heroDescription:
-      "సప్రదాయని పికిల్స్‌లో శుద్ధ శాకాహార బ్రాహ్మణ శైలిలో తయారయ్యే పచ్చళ్ళు, పొడులు, ఫ్రైయమ్స్ మీ రోజువారీ భోజనానికి తేలికైన రుచి, ఇంటివంట ఫీల్, మరియు ఉపయోగకరమైన భోజన సహాయాన్ని ఇస్తాయి.",
+      "సంప్రదాయ పికిల్స్‌లో శుద్ధ శాకాహార బ్రాహ్మణ శైలిలో తయారయ్యే పచ్చళ్ళు, పొడులు, ఫ్రైయమ్స్ మీ రోజువారీ భోజనానికి తేలికైన రుచి, ఇంటివంట అనుభూతి, మరియు ఉపయుక్తమైన భోజన సహాయాన్ని ఇస్తాయి.",
     heroDetails: [
       "శుద్ధ శాకాహార పచ్చళ్ళు: సహజంగా నానబెట్టిన జార్లు సాధారణ భోజనానికి సమతుల్యమైన పులుపు, కారం, మరియు ఆకలిని పెంచే రుచిని ఇస్తాయి.",
       "పొడులు మరియు ఫ్రైయమ్స్: తేలికైన సంప్రదాయ సైడ్ ఐటమ్స్ రోజువారీ భోజనానికి వెంటనే రుచి, క్రంచ్, మరియు బ్రాహ్మణ ఇంటివంట ఫీల్‌ను తీసుకొస్తాయి.",
@@ -180,7 +181,7 @@ const HomePage = () => {
 
   const visibleHomeCategories = homeCategoryCards.slice(0, 4);
 
-  const featuredProducts = (() => {
+  const featuredProducts = useMemo(() => {
     const source = bestSellers.length > 0 ? bestSellers : products;
     const shuffle = <T,>(items: T[]) => [...items].sort(() => Math.random() - 0.5);
     const pickles = shuffle(source.filter((p) => p.category === "pickles")).slice(0, 5);
@@ -190,7 +191,7 @@ const HomePage = () => {
     const selectedIds = new Set(selected.map((p) => p.id));
     const fallback = shuffle(source.filter((p) => !selectedIds.has(p.id))).slice(0, Math.max(0, 15 - selected.length));
     return shuffle([...selected, ...fallback]).slice(0, 15);
-  })();
+  }, [bestSellers, products]);
 
   const contactLinks = [
     { icon: WhatsAppLogo, text: brand.whatsappDisplay, href: brand.whatsappUrl, blank: true },
@@ -349,7 +350,8 @@ const HomePage = () => {
                   src={category.image}
                   alt={isTe ? category.labelTe : category.label}
                   loading="lazy"
-                  className="aspect-[4/4.2] w-full object-cover mix-blend-multiply transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-105"
+                  decoding="async"
+                  className="aspect-[4/4.2] w-full object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-105"
                 />
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent opacity-60 transition-opacity duration-500 group-hover:opacity-30" />

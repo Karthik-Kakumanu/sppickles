@@ -11,6 +11,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/components/LanguageProvider";
+import { useLanguage } from "@/components/LanguageProvider";
 import { content } from "@/content/translations";
 
 const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -30,22 +31,31 @@ const queryClient = new QueryClient();
 
 
 
-const RouteFallback = () => (
-  <main className="bg-[var(--color-bg-primary)]">
-    <SectionWrapper disableAnimation className="min-h-[60vh]" contentClassName="space-y-10">
-      <SectionTitle
-        eyebrow="Loading"
-        title="Preparing SP Traditional Pickles"
-        subtitle="The page is on the way. Product sections and visuals are loading now."
-      />
-      <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-        <SkeletonCard />
-        <SkeletonCard />
-        <SkeletonCard />
-      </div>
-    </SectionWrapper>
-  </main>
-);
+const RouteFallback = () => {
+  const { language } = useLanguage();
+  const isTelugu = language === "te";
+
+  return (
+    <main className="bg-[var(--color-bg-primary)]">
+      <SectionWrapper disableAnimation className="min-h-[60vh]" contentClassName="space-y-10">
+        <SectionTitle
+          eyebrow={isTelugu ? "లోడ్ అవుతోంది" : "Loading"}
+          title={isTelugu ? "SP Traditional Pickles పేజీ సిద్ధమవుతోంది" : "Preparing SP Traditional Pickles"}
+          subtitle={
+            isTelugu
+              ? "పేజీ త్వరలో కనిపిస్తుంది. ఉత్పత్తుల విభాగాలు మరియు చిత్రాలు లోడ్ అవుతున్నాయి."
+              : "The page is on the way. Product sections and visuals are loading now."
+          }
+        />
+        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      </SectionWrapper>
+    </main>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

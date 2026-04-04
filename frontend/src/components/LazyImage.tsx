@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState } from "react";
 
 interface LazyImageProps {
   src: string;
@@ -8,6 +7,11 @@ interface LazyImageProps {
   width?: number;
   height?: number;
   placeholder?: string;
+  loading?: "eager" | "lazy";
+  decoding?: "sync" | "async" | "auto";
+  fetchPriority?: "high" | "low" | "auto";
+  sizes?: string;
+  srcSet?: string;
   onLoad?: () => void;
 }
 
@@ -23,45 +27,16 @@ export function LazyImage({
   width,
   height,
   placeholder,
+  loading = "lazy",
+  decoding = "async",
+  fetchPriority = "auto",
+  sizes,
+  srcSet,
   onLoad,
 }: LazyImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const [imageSrc, setImageSrc] = useState(placeholder || "");
-  const imgRef = useRef<HTMLImageElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-
-  useEffect(() => {
-    // Use native loading if available, otherwise use Intersection Observer
-    if ("IntersectionObserver" in window && imgRef.current) {
-      observerRef.current = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              setImageSrc(src);
-              if (observerRef.current && imgRef.current) {
-                observerRef.current.unobserve(imgRef.current);
-              }
-            }
-          });
-        },
-        {
-          rootMargin: "50px",
-        }
-      );
-
-      observerRef.current.observe(imgRef.current);
-
-      return () => {
-        if (observerRef.current && imgRef.current) {
-          observerRef.current.unobserve(imgRef.current);
-        }
-      };
-    } else {
-      // Fallback for browsers without IntersectionObserver
-      setImageSrc(src);
-    }
-  }, [src]);
+  const imageSrc = src || placeholder || "";
 
   const handleLoad = () => {
     setIsLoaded(true);
@@ -73,18 +48,19 @@ export function LazyImage({
   };
 
   return (
-    <motion.img
-      ref={imgRef}
-      src={imageSrc || placeholder}
+    <img
+      src={imageSrc}
+      srcSet={srcSet}
+      sizes={sizes}
       alt={alt}
       width={width}
       height={height}
+      loading={loading}
+      decoding={decoding}
+      fetchPriority={fetchPriority}
       onLoad={handleLoad}
       onError={handleError}
-      className={className}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: isLoaded ? 1 : 0 }}
-      transition={{ duration: 0.3 }}
+      className={`${className} transition-opacity duration-300 ${isLoaded ? "opacity-100" : "opacity-95"}`}
       role={error ? "img" : undefined}
       aria-label={error ? `Failed to load: ${alt}` : alt}
     />
@@ -98,29 +74,35 @@ export function LazyImage({
 export function ProgressiveImage({
   src: highQualitySrc,
   placeholder: lowQualitySrc,
+  placeholderSrc,
   alt,
   className = "",
+  loading = "lazy",
+  fetchPriority = "auto",
 }: {
   src: string;
   placeholder?: string;
+  placeholderSrc?: string;
   alt: string;
   className?: string;
+  loading?: "eager" | "lazy";
+  fetchPriority?: "high" | "low" | "auto";
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const resolvedPlaceholder = lowQualitySrc ?? placeholderSrc;
 
   return (
-    <div ref={containerRef} className="relative overflow-hidden">
+    <div className="relative overflow-hidden">
       {/* Low-quality placeholder */}
-      {lowQualitySrc && (
+      {resolvedPlaceholder && (
         <img
-          src={lowQualitySrc}
+          src={resolvedPlaceholder}
           alt=""
           className={`absolute inset-0 ${className}`}
           style={{
-            filter: "blur(20px)",
+            filter: "blur(14px)",
             opacity: isLoaded ? 0 : 1,
-            transition: "opacity 0.3s ease-out",
+            transition: "opacity 0.25s ease-out",
           }}
           aria-hidden="true"
         />
@@ -131,7 +113,9 @@ export function ProgressiveImage({
         src={highQualitySrc}
         alt={alt}
         className={className}
-        placeholder={lowQualitySrc}
+        placeholder={resolvedPlaceholder}
+        loading={loading}
+        fetchPriority={fetchPriority}
         onLoad={() => setIsLoaded(true)}
       />
     </div>

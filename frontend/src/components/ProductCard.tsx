@@ -170,8 +170,9 @@ const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }
         <ProgressiveImage
           src={product.image}
           alt={displayName}
-          placeholderSrc={`${product.image}?w=20&blur=20`}
-          className="aspect-[4/3.2] w-full object-cover mix-blend-multiply"
+          className="aspect-[4/3.2] w-full object-cover object-center"
+          loading="lazy"
+          fetchPriority="auto"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
 

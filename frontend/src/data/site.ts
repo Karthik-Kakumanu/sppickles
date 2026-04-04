@@ -160,7 +160,7 @@ export const homeCategoryCards = [
     description:
       "Simple, pure salt and chilli-based pickles with fresh tanginess. No added spices—just clean, traditional flavor.",
     descriptionTe:
-      "ఉప్పు, మిరప మరియు సూర్యకాంతుల ఆధారంపై చేసిన సరళమైన, తాజా తీక్షణమైన పచ్చళ్ళు - దుర్వ్యవస్థ లేనిది, సంప్రదాయ రుచి.",
+      "సరళమైన ఉప్పు మరియు మిరప ఆధారిత పచ్చళ్ళు. అదనపు మసాలా లేకుండా శుభ్రమైన, సంప్రదాయ రుచి.",
     image: catSaltPickles,
     to: "/products/pickles/salted",
   },
@@ -171,7 +171,7 @@ export const homeCategoryCards = [
     description:
       "Deep-fried and slow-cooked pickles with roasted spices and complex tempering. Each jar is prepared to deliver richer masala layers.",
     descriptionTe:
-      "రోస్టెడ్ మసాలలతో నెమ్మదిగా తయారుచేసిన, తాలిమ్ప్‌చేసిన పచ్చళ్ళు. ప్రతి సంచిలో పొరల వారీ గాఢమైన రుచి మరియు సుగంధ.",
+      "రోస్టెడ్ మసాలాలు మరియు నెమ్మదిగా చేసిన తాలింపుతో తయారయ్యే పచ్చళ్ళు. ప్రతి జార్‌లో లోతైన మసాలా రుచి పొరలు ఉంటాయి.",
     image: catTemperedPickles,
     to: "/products/pickles/tempered",
   },
