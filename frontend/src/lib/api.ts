@@ -65,6 +65,23 @@ type StockRecord = {
   updated_at: string;
 };
 
+const slugifyProductName = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[()]/g, "")
+    .replace(/--+/g, "-");
+
+const buildCanonicalProductId = (id: string | number, name: string) =>
+  `product-${String(id).trim()}-${slugifyProductName(name)}`;
+
+const legacyStockProductIdLookup = new Map(
+  defaultProducts.flatMap((product) => [
+    [product.id, product.id] as const,
+    [`product-${product.id}-${slugifyProductName(product.name)}`, product.id] as const,
+  ]),
+);
+
 const buildRequestUrl = (baseUrl: string, endpoint: string) =>
   `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
@@ -192,15 +209,22 @@ export const getProducts = async (category: ProductCategory | null = null) => {
   return products;
 };
 
-// Convert frontend numeric product ID to database string ID format
-// e.g., 1, "Chintakaya Thokku" -> "product-1-chintakaya-thokku"
-export const getDbProductId = (id: number, name: string): string => {
-  const slug = name
-    .toLowerCase()
-    .replace(/\s+/g, "-") // Replace spaces with hyphens
-    .replace(/[()]/g, "")  // Remove parentheses
-    .replace(/--+/g, "-"); // Replace multiple hyphens with single hyphen
-  return `product-${id}-${slug}`;
+const normalizeStockProductId = (productId: string) =>
+  legacyStockProductIdLookup.get(String(productId).trim()) ?? String(productId).trim();
+
+// Convert numeric legacy IDs to the database string format and leave canonical IDs untouched.
+export const getDbProductId = (id: string | number, name: string): string => {
+  const rawId = String(id).trim();
+
+  if (legacyStockProductIdLookup.has(rawId)) {
+    return legacyStockProductIdLookup.get(rawId) ?? rawId;
+  }
+
+  if (rawId.startsWith("product-")) {
+    return rawId;
+  }
+
+  return buildCanonicalProductId(rawId, name);
 };
 
 export const createProduct = async () => productCrudDisabled();
@@ -210,7 +234,27 @@ export const deleteProduct = async () => productCrudDisabled();
 export const getStock = async (): Promise<Map<string, boolean>> => {
   try {
     const records = await apiFetch<StockRecord[]>("/stock");
-    return new Map(records.map((item) => [String(item.product_id), Boolean(item.is_available)]));
+    const latestStockByProduct = new Map<string, { isAvailable: boolean; updatedAtMs: number }>();
+
+    for (const item of records) {
+      const normalizedProductId = normalizeStockProductId(item.product_id);
+      const updatedAtMs = new Date(item.updated_at).getTime();
+      const previousEntry = latestStockByProduct.get(normalizedProductId);
+
+      if (!previousEntry || updatedAtMs >= previousEntry.updatedAtMs) {
+        latestStockByProduct.set(normalizedProductId, {
+          isAvailable: Boolean(item.is_available),
+          updatedAtMs,
+        });
+      }
+    }
+
+    return new Map(
+      [...latestStockByProduct.entries()].map(([productId, record]) => [
+        productId,
+        record.isAvailable,
+      ]),
+    );
   } catch (error) {
     console.warn("Failed to fetch stock data:", error);
     return new Map();
@@ -218,7 +262,7 @@ export const getStock = async (): Promise<Map<string, boolean>> => {
 };
 
 export const updateStock = async (productId: string, isAvailable: boolean) =>
-  apiFetch<StockRecord>(`/stock/${productId}`, {
+  apiFetch<StockRecord>(`/stock/${normalizeStockProductId(productId)}`, {
     method: "PUT",
     body: JSON.stringify({ is_available: isAvailable }),
   });
