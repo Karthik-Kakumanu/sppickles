@@ -210,7 +210,6 @@ const SiteFooter = () => {
                 aria-label="PixelKode WhatsApp"
               >
                 <WhatsAppLogo className="h-3.5 w-3.5" />
-                WhatsApp +91 8897925715
               </a>
               <span className="hidden text-gray-300 sm:inline">•</span>
               <a
@@ -221,7 +220,6 @@ const SiteFooter = () => {
                 aria-label="PixelKode Instagram"
               >
                 <Instagram className="h-3.5 w-3.5" />
-                Instagram @pixelkode.co
               </a>
             </div>
           </div>
