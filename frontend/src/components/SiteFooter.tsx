@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, MapPin, Phone, Facebook, Instagram, Youtube } from "lucide-react";
+import { Globe2, Mail, MapPin, Phone, Facebook, Instagram, Youtube } from "lucide-react";
 import { brand, navigation } from "@/data/site";
 import { useLanguage } from "@/components/LanguageProvider";
 import { content as translations } from "@/content/translations";
@@ -170,22 +170,59 @@ const SiteFooter = () => {
 
         {/* Footer Bottom */}
         <div className="border-t border-[#d8e5d8] pt-8">
-          <div className="grid gap-6 md:grid-cols-2 mb-6">
-            <p className={`text-sm text-theme-body-soft ${language === "te" ? "font-telugu" : ""}`}>
-              {t.footer.copyright}
-            </p>
-            <div className="flex flex-wrap gap-4 justify-end md:justify-start">
-              <Link to="/privacy" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
-                {t.footer.privacy}
-              </Link>
-              <span className="text-gray-300">•</span>
-              <Link to="/terms" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
-                {t.footer.terms}
-              </Link>
-              <span className="text-gray-300">•</span>
-              <Link to="/refund" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
-                Refund Policy
-              </Link>
+          <div className="space-y-4 mb-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <p className={`text-sm text-theme-body-soft ${language === "te" ? "font-telugu" : ""}`}>
+                {t.footer.copyright}
+              </p>
+              <div className="flex flex-wrap gap-4 justify-end md:justify-start">
+                <Link to="/privacy" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
+                  {t.footer.privacy}
+                </Link>
+                <span className="text-gray-300">•</span>
+                <Link to="/terms" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
+                  {t.footer.terms}
+                </Link>
+                <span className="text-gray-300">•</span>
+                <Link to="/refund" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
+                  Refund Policy
+                </Link>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 text-[11px] leading-5 text-theme-body-soft/80 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3">
+              <span className="font-semibold uppercase tracking-[0.18em] text-theme-body-soft/90">Developed by</span>{" "}
+              <a
+                href="https://pixelkode.netlify.app"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 font-semibold text-theme-heading transition hover:text-[#2f7a43]"
+              >
+                <Globe2 className="h-3 w-3" />
+                PixelKode
+              </a>
+              <span className="hidden text-gray-300 sm:inline">•</span>
+              <a
+                href="https://wa.me/918897925715"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 transition hover:text-[#2f7a43]"
+                aria-label="PixelKode WhatsApp"
+              >
+                <WhatsAppLogo className="h-3.5 w-3.5" />
+                WhatsApp +91 8897925715
+              </a>
+              <span className="hidden text-gray-300 sm:inline">•</span>
+              <a
+                href="https://instagram.com/pixelkode.co"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 transition hover:text-[#2f7a43]"
+                aria-label="PixelKode Instagram"
+              >
+                <Instagram className="h-3.5 w-3.5" />
+                Instagram @pixelkode.co
+              </a>
             </div>
           </div>
         </div>

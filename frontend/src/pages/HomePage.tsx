@@ -13,7 +13,6 @@ const pageWrap = "w-full px-5 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 max-w-[1920px]
 
 const homeCopy = {
   en: {
-    heroEyebrow: "Premium Andhra Pantry",
     heroTitle: "Pure Veg Brahmin-Style Pickles, Podulu, and Fryums",
     heroDescription:
       "Sampradaya Pickles makes pure-veg Brahmin-style pickles, podis, and fryums that add clean flavour, homestyle comfort, and everyday meal support without feeling heavy.",
@@ -76,7 +75,6 @@ const homeCopy = {
       "Phone, WhatsApp, email, and location details are kept visible so customers know there is a real team behind the brand.",
   },
   te: {
-    heroEyebrow: "ప్రీమియం ఆంధ్రా ఫుడ్ స్టోర్",
     heroTitle: "శుద్ధ శాకాహార బ్రాహ్మణ శైలిలో పచ్చళ్ళు, పొడులు, ఫ్రైయమ్స్",
     heroDescription:
       "సంప్రదాయ పికిల్స్‌లో శుద్ధ శాకాహార బ్రాహ్మణ శైలిలో తయారయ్యే పచ్చళ్ళు, పొడులు, ఫ్రైయమ్స్ మీ రోజువారీ భోజనానికి తేలికైన రుచి, ఇంటివంట అనుభూతి, మరియు ఉపయుక్తమైన భోజన సహాయాన్ని ఇస్తాయి.",
@@ -207,8 +205,8 @@ const HomePage = () => {
   return (
     <main className="overflow-hidden bg-[var(--color-bg-primary)]">
       <Seo
-        title="SP Pickles (sppickles.com) | Sampradaya Traditional Pickles"
-        description="SP Pickles at sppickles.com offers authentic homemade Andhra pickles, podulu, and fryums with direct order support."
+        title="Sampradaya Traditional Pickles | Pure Veg Pickles, Podulu & Fryums"
+        description="Sampradaya Traditional Pickles offers authentic homemade Andhra pickles, podulu, and fryums with direct order support."
         image={brand.logo}
       />
 
@@ -222,11 +220,6 @@ const HomePage = () => {
           <div className="space-y-10">
             {/* Eyebrow + headline + description */}
             <div className="space-y-5">
-              <Eyebrow variant="green">{t.heroEyebrow}</Eyebrow>
-              <p className={`text-xs font-semibold uppercase tracking-[0.16em] text-theme-body/65 ${isTe ? "font-telugu normal-case tracking-normal" : ""}`}>
-                {isTe ? "అధికారిక వెబ్‌సైట్: sppickles.com" : "Official website: sppickles.com"}
-              </p>
-
               {/* Hero headline — tighter tracking, larger on XL */}
               <h1 className={`text-balance font-heading text-[2.1rem] font-extrabold leading-[1.08] tracking-[-0.02em] text-theme-heading sm:text-5xl md:text-6xl xl:text-[4rem] ${isTe ? "font-telugu leading-[1.2]" : ""}`}>
                 {t.heroTitle}
