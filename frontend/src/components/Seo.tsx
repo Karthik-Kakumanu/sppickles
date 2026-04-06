@@ -178,8 +178,8 @@ const Seo = ({
     ensureLinkTag('link[rel="canonical"]', "canonical").href = canonicalPath
       ? new URL(canonicalPath, siteUrl).toString()
       : canonicalUrl;
-    ensureLinkTag('link[rel="icon"]', "icon").href = "/favicon.png";
-    ensureLinkTag('link[rel="shortcut icon"]', "shortcut icon").href = "/favicon.png";
+    ensureLinkTag('link[rel="icon"]', "icon").href = "/favicon.ico";
+    ensureLinkTag('link[rel="shortcut icon"]', "shortcut icon").href = "/favicon.ico";
     ensureLinkTag('link[rel="apple-touch-icon"]', "apple-touch-icon").href = "/favicon.png";
 
     const existingSchema = document.getElementById("seo-jsonld");
