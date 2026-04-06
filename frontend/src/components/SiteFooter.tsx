@@ -142,7 +142,7 @@ const SiteFooter = () => {
         </div>
 
         {/* Info Sections */}
-        <div className="grid gap-8 mb-12 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 mb-12 md:grid-cols-2">
           {/* About */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h4 className="font-heading text-lg font-semibold text-theme-heading mb-3">{t.footer.about}</h4>
@@ -150,14 +150,6 @@ const SiteFooter = () => {
               {language === "te"
                 ? "కుటుంబ ఆధారిత ఆంధ్ర ఆహార బ్రాండ్, ఇది సరిపోవు వీక్ష్యాన్ని, జాగ్రత్త పూర్ణ ప్యాకేజింగ్, మరియు సంప్రదాయ శాకాహార రుచులపై దృష్టి సారిస్తుంది."
                 : t.footer.aboutText}
-            </p>
-          </div>
-
-          {/* Shipping */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h4 className="font-heading text-lg font-semibold text-theme-heading mb-3">{t.footer.shipping}</h4>
-            <p className={`text-sm leading-6 text-theme-body ${language === "te" ? "font-telugu" : ""}`}>
-              {language === "te" ? t.footer.shippingText : t.footer.shippingText}
             </p>
           </div>
 
