@@ -182,14 +182,18 @@ const SiteFooter = () => {
             <p className={`text-sm text-theme-body-soft ${language === "te" ? "font-telugu" : ""}`}>
               {t.footer.copyright}
             </p>
-            <div className="flex gap-4 justify-end md:justify-start">
-              <a href="#/privacy" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
+            <div className="flex flex-wrap gap-4 justify-end md:justify-start">
+              <Link to="/privacy" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
                 {t.footer.privacy}
-              </a>
+              </Link>
               <span className="text-gray-300">•</span>
-              <a href="#/terms" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
+              <Link to="/terms" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
                 {t.footer.terms}
-              </a>
+              </Link>
+              <span className="text-gray-300">•</span>
+              <Link to="/refund" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
+                Refund Policy
+              </Link>
             </div>
           </div>
         </div>

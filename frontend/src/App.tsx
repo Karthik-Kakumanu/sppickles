@@ -25,7 +25,10 @@ const HomePage = lazy(() => import("./pages/HomePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OrderSuccessPage = lazy(() => import("./pages/OrderSuccessPage"));
 const PaymentPage = lazy(() => import("./pages/PaymentPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
+const RefundPolicyPage = lazy(() => import("./pages/RefundPolicyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
 
 const queryClient = new QueryClient();
 
@@ -88,6 +91,9 @@ const App = () => (
                 <Route path="/order-success" element={<OrderSuccessPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/refund" element={<RefundPolicyPage />} />
               </Route>
               <Route path="/pickles" element={<Navigate to="/products/pickles" replace />} />
               <Route path="/powders" element={<Navigate to="/products/podulu" replace />} />
