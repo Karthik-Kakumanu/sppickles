@@ -1,6 +1,6 @@
-import Database from "better-sqlite3";
 import pkg from "pg";
 import { hashPassword } from "../helpers/auth.js";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { randomUUID } from "crypto";
@@ -8,11 +8,56 @@ import { randomUUID } from "crypto";
 const { Pool } = pkg;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, "..", "sp-pickles.db");
+const envPath = path.join(__dirname, "..", ".env");
+
+const loadEnvFile = (filePath) => {
+  if (!fs.existsSync(filePath)) {
+    return;
+  }
+
+  const fileContents = fs.readFileSync(filePath, "utf8");
+
+  fileContents.split(/\r?\n/).forEach((line) => {
+    const trimmedLine = line.trim();
+
+    if (!trimmedLine || trimmedLine.startsWith("#")) {
+      return;
+    }
+
+    const separatorIndex = trimmedLine.indexOf("=");
+
+    if (separatorIndex < 0) {
+      return;
+    }
+
+    const key = trimmedLine.slice(0, separatorIndex).trim();
+    let value = trimmedLine.slice(separatorIndex + 1).trim();
+
+    if (!key || process.env[key] !== undefined) {
+      return;
+    }
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  });
+};
+
+loadEnvFile(envPath);
 
 const email = process.argv[2] ?? "admin@sppickles.com";
 const password = process.argv[3] ?? "sp-pickles-admin";
-const usePostgres = Boolean(process.env.DATABASE_URL);
+const databaseUrl = String(process.env.DATABASE_URL ?? "").trim();
+
+if (!databaseUrl) {
+  console.error("❌ DATABASE_URL is required. This script seeds Railway PostgreSQL only.");
+  process.exit(1);
+}
 
 if (!email || !password) {
   console.error("Usage: node scripts/create-admin.mjs <email> <password>");
@@ -23,51 +68,31 @@ if (!email || !password) {
 try {
   const passwordHash = hashPassword(password);
   const userId = randomUUID();
+  const pool = new Pool({
+    connectionString: databaseUrl,
+    ssl: { rejectUnauthorized: false },
+  });
 
-  if (usePostgres) {
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-    });
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS admin_users (
+      id TEXT PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS admin_users (
-        id TEXT PRIMARY KEY,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+  await pool.query(
+    `INSERT INTO admin_users (id, email, password_hash)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (email) DO UPDATE SET
+       id = EXCLUDED.id,
+       password_hash = EXCLUDED.password_hash,
+       created_at = CURRENT_TIMESTAMP`,
+    [userId, email, passwordHash],
+  );
 
-    await pool.query(
-      `INSERT INTO admin_users (id, email, password_hash)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (email) DO UPDATE SET
-         id = EXCLUDED.id,
-         password_hash = EXCLUDED.password_hash,
-         created_at = CURRENT_TIMESTAMP`,
-      [userId, email, passwordHash],
-    );
-
-    await pool.end();
-  } else {
-    const db = new Database(dbPath);
-
-    // Enable foreign keys
-    db.pragma("foreign_keys = ON");
-
-    const stmt = db.prepare(`
-      INSERT INTO admin_users (id, email, password_hash) 
-      VALUES (?, ?, ?)
-      ON CONFLICT(email) DO UPDATE SET
-        id = excluded.id,
-        password_hash = excluded.password_hash,
-        created_at = CURRENT_TIMESTAMP
-    `);
-
-    stmt.run(userId, email, passwordHash);
-    db.close();
-  }
+  await pool.end();
 
   console.log("✅ Admin user created successfully!");
   console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);

@@ -1,6 +1,14 @@
 const DEFAULT_BODY_LIMIT = 1_000_000;
 
-const getAllowedOrigin = () => process.env.CORS_ORIGIN || "http://localhost:8080";
+const getAllowedOrigin = () => {
+  if (process.env.CORS_ORIGIN) {
+    return process.env.CORS_ORIGIN;
+  }
+
+  return process.env.NODE_ENV === "production"
+    ? "https://sppickles.com"
+    : "http://localhost:8080";
+};
 
 const getSecurityHeaders = () => ({
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",

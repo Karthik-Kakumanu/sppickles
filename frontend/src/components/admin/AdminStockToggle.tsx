@@ -1,7 +1,6 @@
 import { useState, useDeferredValue } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  getDbProductId,
   getProductAvailability,
   useProductsQuery,
   useStockQuery,
@@ -75,9 +74,10 @@ export const AdminStockToggle = () => {
 
   // ── business logic unchanged ──────────────────────────────────────────────
   const handleToggleStock = async (productId: string, currentStatus: boolean) => {
-    setUpdating(productId);
+    const exactProductId = String(productId).trim();
+    setUpdating(exactProductId);
     try {
-      await updateStockMutation.mutateAsync({ productId, isAvailable: !currentStatus });
+      await updateStockMutation.mutateAsync({ productId: exactProductId, isAvailable: !currentStatus });
     } catch (error) {
       console.error("Error updating stock:", error);
     } finally {
@@ -280,7 +280,7 @@ export const AdminStockToggle = () => {
             className="overflow-hidden rounded-[2rem] border border-[#e3ebe0] bg-white/60 shadow-[0_4px_24px_rgba(15,35,25,0.06)]"
           >
             {filteredProducts.map((product, index) => {
-              const dbProductId = getDbProductId(product.id, product.name);
+              const dbProductId = String(product.id).trim();
               const isAvailable = getProductAvailability(stockData, product);
               const isUpdating  = updating === dbProductId;
 

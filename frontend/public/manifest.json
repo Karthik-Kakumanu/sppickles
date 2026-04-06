@@ -1,0 +1,17 @@
+{
+  "name": "Sampradaya Pickles",
+  "short_name": "SP Pickles",
+  "description": "Authentic Andhra pickles, podulu, fryums, and vadiyalu from Vijayawada.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8f3e8",
+  "theme_color": "#8b0000",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

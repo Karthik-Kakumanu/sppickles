@@ -345,17 +345,31 @@ const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }
               className={`flex w-full items-center justify-center gap-3 rounded-xl py-3.5 text-[14px] font-bold tracking-wide
                 transition-all duration-200
                 ${!isAvailable
-                  ? "bg-gradient-to-r from-[#c8deca] to-[#bdd5c1] text-white/60 cursor-not-allowed shadow-none"
+                  ? "border border-[#efb2b2] bg-[#fff1f1] text-[#b42318] cursor-not-allowed shadow-none"
                   : "bg-gradient-to-r from-[#1a5c2a] to-[#0f3d1c] text-white shadow-[0_6px_20px_rgba(26,92,42,0.25)] hover:from-[#163f1e] hover:to-[#0b2c15] hover:shadow-[0_8px_28px_rgba(26,92,42,0.35)]"
                 }`}
             >
-              <motion.div
-                animate={isAvailable ? { y: [0, -2, 0] } : {}}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <ShoppingCart className="h-5 w-5 shrink-0" />
-              </motion.div>
-              {isAvailable ? productCardCopy.addToCart : productCardCopy.outOfStock}
+              {isAvailable ? (
+                <>
+                  <motion.div
+                    animate={{ y: [0, -2, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <ShoppingCart className="h-5 w-5 shrink-0" />
+                  </motion.div>
+                  {productCardCopy.addToCart}
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-5 w-5 shrink-0 text-[#b42318]" />
+                  <span className="inline-flex items-center gap-2">
+                    <span>{productCardCopy.outOfStock}</span>
+                    <span className="rounded-full bg-[#f9d6d6] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-[#b42318]">
+                      Unavailable
+                    </span>
+                  </span>
+                </>
+              )}
             </motion.button>
           </div>
         ) : (
@@ -410,24 +424,24 @@ const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }
                   {getWeightLabel(language, weight)}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={!isAvailable}
-                aria-label={`${productCardCopy.addToCart} ${getWeightLabel(language, weight)}`}
-                className={`relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.15rem] border transition-all duration-200
-                  ${isAvailable
-                    ? "border-[#d7b15b] bg-[linear-gradient(180deg,#216732_0%,#184f25_100%)] text-white shadow-[0_14px_28px_rgba(26,92,42,0.22),0_0_0_3px_rgba(246,196,67,0.12)] hover:-translate-y-0.5 hover:scale-105 hover:bg-[#163f1e] active:scale-95"
-                    : "border-[#dce8dc] bg-[#edf5ee] text-theme-body/30 cursor-not-allowed"
-                  }`}
-              >
-                <ShoppingCart className="h-6 w-6" />
-                {isAvailable && (
+              {isAvailable ? (
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  aria-label={`${productCardCopy.addToCart} ${getWeightLabel(language, weight)}`}
+                  className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.15rem] border border-[#d7b15b] bg-[linear-gradient(180deg,#216732_0%,#184f25_100%)] text-white shadow-[0_14px_28px_rgba(26,92,42,0.22),0_0_0_3px_rgba(246,196,67,0.12)] transition-all duration-200 hover:-translate-y-0.5 hover:scale-105 hover:bg-[#163f1e] active:scale-95"
+                >
+                  <ShoppingCart className="h-6 w-6" />
                   <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-white/80 bg-[#f6c443] text-[#173d1c] shadow-sm">
                     <Plus className="h-3 w-3" />
                   </span>
-                )}
-              </button>
+                </button>
+              ) : (
+                <div className="flex shrink-0 items-center gap-2 rounded-[1.15rem] border border-[#efb2b2] bg-[#fff1f1] px-3 py-2 text-[#b42318]">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.12em]">Out of Stock</span>
+                </div>
+              )}
             </div>
           </div>
         )}

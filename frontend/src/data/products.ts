@@ -144,7 +144,7 @@ const pickleNameTelugu: Record<string, string> = {
   "Challa Mirchi": "చల్లా మిర్చి",
   "Gummadi Vadiyalu": "గుమ్మడి వడియాలు",
   "Minapindi Vadiyalu": "మినపిండి వడియాలు",
-  "Biyyam Paravva Vadiyalu": "బియ్యం పరవ్వ వడియాలు",
+  "Biyyapu Rava Vadiyalu": "బియ్యపు రవ్వ వడియాలు",
   "Goruchikkudu Vadiyalu": "గోరుచిక్కుడు వడియాలు",
 };
 
@@ -217,7 +217,7 @@ const catalogSeed: CatalogSeed[] = [
   { id: 66, name: "Challa Mirchi", category: "fryums", price: 1050 },
   { id: 67, name: "Gummadi Vadiyalu", category: "fryums", price: 1150 },
   { id: 68, name: "Minapindi Vadiyalu", category: "fryums", price: 650 },
-  { id: 69, name: "Biyyam Paravva Vadiyalu", category: "fryums", price: 650 },
+  { id: 69, name: "Biyyapu Rava Vadiyalu", category: "fryums", price: 650 },
   { id: 70, name: "Goruchikkudu Vadiyalu", category: "fryums", price: 850 },
   { id: 71, name: "Kaya Avakaya", category: "pickles", subcategory: "asafoetida", price: 750 },
 ];
@@ -472,7 +472,7 @@ const uploadedProductImageByName: Record<string, string> = {
   "Challa Mirchi": localProductImage("fryums/challa-mirchi.jpg"),
   "Gummadi Vadiyalu": localProductImage("fryums/gummadi-vadiyalu.jpg"),
   "Minapindi Vadiyalu": localProductImage("fryums/minapindi-vadiyalu.jpg"),
-  "Biyyam Paravva Vadiyalu": localProductImage("fryums/saggubiyyam-vadiyalu.jpg"),
+  "Biyyapu Rava Vadiyalu": localProductImage("fryums/biyyapu-rava.jpg"),
   "Goruchikkudu Vadiyalu": localProductImage("fryums/goruchikkudu-vadiyalu.jpg"),
 };
 
@@ -625,8 +625,13 @@ const resolveProductImage = (name: string, category: ProductCategory) => {
   return imageLibrary.mangoPickle;
 };
 
+const LEGACY_SLUG_BY_PRODUCT_ID: Record<number, string> = {
+  // Keep legacy slug so existing stock/order references remain stable.
+  69: "biyyam-paravva-vadiyalu",
+};
+
 export const productCatalog: ProductRecord[] = catalogSeed.map((product) => ({
-  id: `product-${product.id}-${slugify(product.name)}`,
+  id: `product-${product.id}-${LEGACY_SLUG_BY_PRODUCT_ID[product.id] ?? slugify(product.name)}`,
   name: product.name,
   name_te: pickleNameTelugu[product.name],
   category: product.category,

@@ -1,6 +1,6 @@
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AlertCircle, ArrowRight, CheckCircle2, MapPin, ShoppingBag } from "lucide-react";
+import { AlertCircle, ArrowRight, ShoppingBag } from "lucide-react";
 import { calculateShippingByWeight, getRegionByPincode, validatePincode } from "@/lib/pincode";
 import { formatCurrency, getWeightMultiplier } from "@/lib/pricing";
 import Seo from "@/components/Seo";
@@ -234,6 +234,7 @@ const CheckoutPage = () => {
       <Seo
         title="SP Traditional Pickles | Checkout"
         description="Complete your SP Traditional Pickles order with a cleaner checkout flow."
+        noIndex
       />
 
       <section className="border-b border-[#d8e5d8] bg-[linear-gradient(180deg,#fffefa_0%,#f8faf6_100%)]">
@@ -367,43 +368,6 @@ const CheckoutPage = () => {
                 />
               </label>
             )}
-
-            {form.country === "IN" && sanitizedPincode.length > 0 ? (
-              isPincodeValid && regionInfo ? (
-                <div className="flex items-start gap-3 rounded-2xl border border-[#d8e5d8] bg-[#edf5ee] px-4 py-3 text-sm text-theme-body">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#2f7a43]" />
-                  <div>
-                    <p className="font-semibold text-theme-heading">
-                      {language === "te" ? regionInfo.regionTe : regionInfo.region}
-                    </p>
-                    <p className="mt-1 flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {language === "te" ? "పిన్ కోడ్ రేంజ్" : "Pincode range"}: {regionInfo.pincodeRange}
-                    </p>
-                    <p className="mt-2 font-semibold text-theme-heading">
-                      {copy.shippingLabel}:{" "}
-                      <span className="price-figure text-[#2f7a43]">
-                        {formatCurrency(shipping)}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-start gap-3 rounded-2xl border border-[#d9644c]/30 bg-[#fff4f1] px-4 py-3 text-sm text-[#d9644c]">
-                  <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold">
-                      {language === "te" ? "తప్పు పిన్ కోడ్" : "Invalid pincode"}
-                    </p>
-                    <p className="mt-1">
-                      {language === "te"
-                        ? "చెల్లుబాటు అయ్యే 6 అంకెల పిన్ కోడ్ నమోదు చేయండి."
-                        : "Enter a valid 6-digit pincode to continue."}
-                    </p>
-                  </div>
-                </div>
-              )
-            ) : null}
 
             <div className="rounded-[1.4rem] border border-[#d8e5d8] bg-white p-2.5 sm:p-3">
               <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">

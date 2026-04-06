@@ -85,10 +85,15 @@ const SiteLayout = () => {
                 </a>
                 <Link
                   to="/cart"
-                  className="inline-flex items-center rounded-full border border-[#e8ede8] bg-white px-3 py-2 text-xs font-bold text-[#2f7a43]"
-                  aria-label="Cart"
+                  className="relative inline-flex items-center rounded-full border border-[#e8ede8] bg-white px-3 py-2 text-xs font-bold text-[#2f7a43]"
+                  aria-label={`Cart${cartCount > 0 ? ` (${cartCount} items)` : ""}`}
                 >
                   <ShoppingBag className="h-3.5 w-3.5" />
+                  {cartCount > 0 ? (
+                    <span className="absolute -right-1 -top-1 text-[12px] font-black leading-none text-[#b42318]">
+                      {cartCount > 99 ? "99+" : cartCount}
+                    </span>
+                  ) : null}
                 </Link>
                 <button
                   type="button"

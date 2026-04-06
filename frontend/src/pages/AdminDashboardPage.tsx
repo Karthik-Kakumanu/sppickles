@@ -266,47 +266,44 @@ const AdminDashboardPage = () => {
       <Seo
         title="SP Traditional Pickles | Admin Dashboard"
         description="Premium admin dashboard for order tracking and stock management."
+        noIndex
       />
       <AdminLayout title="Dashboard">
         <div className="space-y-8">
-          <div className="rounded-[1.5rem] border border-[#d9d2c2] bg-white/72 px-4 py-2 text-sm font-semibold text-theme-body">
-            Desktop operations workspace
-          </div>
-
           <div className="space-y-8">
-              <div className="theme-card rounded-[2.25rem] border p-8 shadow-md xl:p-10">
-                <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+              <div className="theme-card rounded-[1.25rem] border p-4 shadow-sm xl:p-5">
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
                   <div className="max-w-4xl">
-                    <p className="text-theme-heading text-sm font-semibold uppercase tracking-[0.26em]">
+                    <p className="text-theme-heading text-[10px] font-semibold uppercase tracking-[0.18em]">
                       Admin Orders
                     </p>
-                    <h1 className="mt-4 font-heading text-5xl font-semibold text-theme-heading md:text-6xl">
+                    <h1 className="mt-2 font-heading text-2xl font-semibold text-theme-heading md:text-3xl">
                       Real order management
                     </h1>
-                    <p className="mt-4 max-w-3xl text-lg leading-8 text-theme-body">
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-theme-body">
                       Review customer orders, update delivery progress, and open each row to inspect
                       the full item list before dispatch.
                     </p>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="rounded-[1.75rem] border border-[#ead9a2] bg-[#fff7e3] px-5 py-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a651a]">
+                  <div className="space-y-3">
+                    <div className="rounded-[1rem] border border-[#ead9a2] bg-[#fff7e3] px-4 py-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8a651a]">
                         Logged In
                       </p>
-                      <p className="mt-3 break-all text-base font-semibold text-theme-heading">
+                      <p className="mt-1 break-all text-sm font-semibold text-theme-heading">
                         {adminEmail}
                       </p>
                     </div>
 
-                    <div className="rounded-[1.75rem] border border-[#d8e5d8] bg-[#f7fbf7] p-4">
-                      <div className="flex flex-col gap-3">
+                    <div className="rounded-[1rem] border border-[#d8e5d8] bg-[#f7fbf7] p-3">
+                      <div className="flex flex-col gap-2">
                         <button
                           type="button"
                           onClick={handleExportToSheets}
-                          className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-5 py-3 text-sm font-semibold text-theme-body transition hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading"
+                          className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-4 py-2 text-xs font-semibold text-theme-body transition hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading"
                         >
-                          <FileSpreadsheet className="h-4 w-4" />
+                          <FileSpreadsheet className="h-3.5 w-3.5" />
                           Export to Sheets
                         </button>
                         <button
@@ -315,15 +312,15 @@ const AdminDashboardPage = () => {
                             void refetch();
                           }}
                           disabled={isLoading || isRefetching}
-                          className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-5 py-3 text-sm font-semibold text-theme-body transition hover:border-[#e2b93b] hover:bg-[#fff8e8] hover:text-theme-heading disabled:cursor-not-allowed disabled:opacity-70"
+                          className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-4 py-2 text-xs font-semibold text-theme-body transition hover:border-[#e2b93b] hover:bg-[#fff8e8] hover:text-theme-heading disabled:cursor-not-allowed disabled:opacity-70"
                         >
-                          <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
+                          <RefreshCw className={`h-3.5 w-3.5 ${isRefetching ? "animate-spin" : ""}`} />
                           Refresh orders
                         </button>
                         <button
                           type="button"
                           onClick={logoutAdmin}
-                          className="inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-5 py-3 text-sm font-semibold text-theme-body transition hover:border-[#d9c5b5] hover:bg-[#fdf7f2] hover:text-theme-heading"
+                          className="inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-4 py-2 text-xs font-semibold text-theme-body transition hover:border-[#d9c5b5] hover:bg-[#fdf7f2] hover:text-theme-heading"
                         >
                           Sign out
                         </button>

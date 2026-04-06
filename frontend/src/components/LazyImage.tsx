@@ -57,7 +57,7 @@ export function LazyImage({
       height={height}
       loading={loading}
       decoding={decoding}
-      fetchPriority={fetchPriority}
+      {...({ fetchpriority: fetchPriority } as Record<string, string>)}
       onLoad={handleLoad}
       onError={handleError}
       className={`${className} transition-opacity duration-300 ${isLoaded ? "opacity-100" : "opacity-95"}`}

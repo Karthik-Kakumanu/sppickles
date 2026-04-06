@@ -15,6 +15,7 @@ const NotFound = () => {
       <Seo
         title="SP Traditional Pickles | Page Not Found"
         description="The page you are looking for could not be found."
+        noIndex
       />
 
       <div className="w-full max-w-xl rounded-[2rem] border border-[#3D7A52] bg-[#2E5C3E] px-8 py-12 text-center shadow-md ring-1 ring-[#3D7A52]">

@@ -137,6 +137,7 @@ const CartPage = () => {
       <Seo
         title="SP Traditional Pickles | Cart"
         description="Review your cart and continue to checkout for SP Traditional Pickles."
+        noIndex
       />
 
       {/* ── Top bar ── */}

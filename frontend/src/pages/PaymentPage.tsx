@@ -176,6 +176,7 @@ const PaymentPage = () => {
       <Seo
         title="SP Traditional Pickles | Payment"
         description="Choose the payment confirmation method for your SP Traditional Pickles order."
+        noIndex
       />
 
       <section className="border-b border-[#d8e5d8] bg-[linear-gradient(180deg,#fffefa_0%,#f8faf6_100%)]">

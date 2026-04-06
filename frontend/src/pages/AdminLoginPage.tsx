@@ -215,6 +215,7 @@ const AdminLoginPage = () => {
       <Seo
         title="SP Traditional Pickles | Admin Login"
         description="Premium desktop admin login for SP Traditional Pickles operations."
+        noIndex
       />
 
       {/* ── Ambient background layer ── */}

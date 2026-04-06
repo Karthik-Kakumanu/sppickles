@@ -137,6 +137,7 @@ const OrderSuccessPage = () => {
       <Seo
         title="SP Traditional Pickles | Order Confirmed"
         description="Your SP Traditional Pickles order has been confirmed."
+        noIndex
       />
 
       <section className="border-b border-[#d8e5d8] bg-[linear-gradient(180deg,#fffefa_0%,#f8faf6_100%)]">

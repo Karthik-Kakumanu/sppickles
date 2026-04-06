@@ -1,37 +1,70 @@
 import pkg from "pg";
-import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const { Pool } = pkg;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, "sp-pickles.db");
 
-// Determine which database to use
-const USE_POSTGRESQL = !!process.env.DATABASE_URL;
+const loadEnvFile = (filePath) => {
+  if (!fs.existsSync(filePath)) {
+    return;
+  }
+
+  const fileContents = fs.readFileSync(filePath, "utf8");
+
+  fileContents.split(/\r?\n/).forEach((line) => {
+    const trimmedLine = line.trim();
+
+    if (!trimmedLine || trimmedLine.startsWith("#")) {
+      return;
+    }
+
+    const separatorIndex = trimmedLine.indexOf("=");
+
+    if (separatorIndex < 0) {
+      return;
+    }
+
+    const key = trimmedLine.slice(0, separatorIndex).trim();
+    let value = trimmedLine.slice(separatorIndex + 1).trim();
+
+    if (!key || process.env[key] !== undefined) {
+      return;
+    }
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  });
+};
+
+loadEnvFile(path.join(__dirname, ".env"));
+
+const DATABASE_URL = String(process.env.DATABASE_URL ?? "").trim();
+
+if (!DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL is required. This backend is configured to use Railway PostgreSQL tables only.",
+  );
+}
+
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
-let pgPool = null;
-let sqlite = null;
+console.log("[db] Using PostgreSQL from DATABASE_URL");
+const pgPool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: IS_PRODUCTION ? { rejectUnauthorized: false } : false,
+});
 
-// Initialize PostgreSQL pool if DATABASE_URL is set
-if (USE_POSTGRESQL) {
-  console.log("[db] Using PostgreSQL from DATABASE_URL");
-  pgPool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: IS_PRODUCTION ? { rejectUnauthorized: false } : false,
-  });
-
-  pgPool.on("error", (err) => {
-    console.error("[db] Unexpected error on idle client", err);
-  });
-} else {
-  // Fall back to SQLite for local development
-  console.log("[db] Using SQLite (local development)");
-  sqlite = new Database(dbPath);
-  sqlite.pragma("journal_mode = WAL");
-}
+pgPool.on("error", (err) => {
+  console.error("[db] Unexpected error on idle client", err);
+});
 
 // Initialize schema
 const initializeSchema = async () => {
@@ -82,27 +115,19 @@ const initializeSchema = async () => {
     CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
   `;
 
-  if (USE_POSTGRESQL) {
-    try {
-      const statements = schema
-        .split(";")
-        .map((s) => s.trim())
-        .filter(Boolean);
+  try {
+    const statements = schema
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
 
-      for (const stmt of statements) {
-        await pgPool.query(stmt);
-      }
-      console.log("[db] PostgreSQL schema initialized");
-    } catch (error) {
-      console.error("[db] Failed to initialize PostgreSQL schema:", error.message);
+    for (const stmt of statements) {
+      await pgPool.query(stmt);
     }
-  } else {
-    try {
-      sqlite.exec(schema);
-      console.log("[db] SQLite schema initialized");
-    } catch (error) {
-      console.error("[db] Failed to initialize SQLite schema:", error.message);
-    }
+    console.log("[db] PostgreSQL schema initialized");
+  } catch (error) {
+    console.error("[db] Failed to initialize PostgreSQL schema:", error.message);
+    throw error;
   }
 };
 
@@ -143,119 +168,23 @@ class PostgreSQLConnection {
   }
 }
 
-// SQLite Connection Wrapper
-class SQLiteConnection {
-  constructor() {
-    this.inTransaction = false;
-  }
-
-  async query(sql, params) {
-    // Convert PostgreSQL $1, $2 params to SQLite ? params
-    let sqliteQuery = sql;
-    let orderedParams = params || [];
-
-    if (params && params.length > 0) {
-      const paramIndices = [];
-      sql.replace(/\$(\d+)/g, (match, index) => {
-        paramIndices.push(parseInt(index) - 1);
-        return match;
-      });
-
-      if (paramIndices.length > 0) {
-        orderedParams = paramIndices.map((i) => params[i]);
-        sqliteQuery = sql.replace(/\$\d+/g, "?");
-      }
-    }
-
-    const stmt = sqlite.prepare(sqliteQuery);
-
-    if (sqliteQuery.trim().toLowerCase().startsWith("insert")) {
-      const info = stmt.run(...orderedParams);
-      return {
-        rows: [{ id: info.lastInsertRowid }],
-        rowCount: info.changes,
-      };
-    } else if (sqliteQuery.trim().toLowerCase().startsWith("update")) {
-      const info = stmt.run(...orderedParams);
-      return {
-        rows: [],
-        rowCount: info.changes,
-      };
-    } else if (sqliteQuery.trim().toLowerCase().startsWith("delete")) {
-      const info = stmt.run(...orderedParams);
-      return {
-        rows: [],
-        rowCount: info.changes,
-      };
-    } else if (sqliteQuery.trim().toLowerCase().startsWith("select")) {
-      const rows = stmt.all(...orderedParams);
-      return {
-        rows: rows || [],
-        rowCount: rows?.length || 0,
-      };
-    } else {
-      if (sqliteQuery.trim().toUpperCase() === "BEGIN") {
-        this.inTransaction = true;
-        sqlite.exec("BEGIN");
-      } else if (sqliteQuery.trim().toUpperCase() === "COMMIT") {
-        this.inTransaction = false;
-        sqlite.exec("COMMIT");
-      } else if (sqliteQuery.trim().toUpperCase() === "ROLLBACK") {
-        this.inTransaction = false;
-        sqlite.exec("ROLLBACK");
-      } else {
-        sqlite.exec(sqliteQuery);
-      }
-      return { rows: [], rowCount: 0 };
-    }
-  }
-
-  async begin() {
-    sqlite.exec("BEGIN");
-    this.inTransaction = true;
-  }
-
-  async commit() {
-    sqlite.exec("COMMIT");
-    this.inTransaction = false;
-  }
-
-  async rollback() {
-    sqlite.exec("ROLLBACK");
-    this.inTransaction = false;
-  }
-
-  release() {
-    // SQLite doesn't need connection pooling
-  }
-}
-
-// Create a pool-like interface that works with both PostgreSQL and SQLite
+// Pool wrapper for PostgreSQL
 export const pool = {
   connect: async () => {
-    if (USE_POSTGRESQL) {
-      const client = await pgPool.connect();
-      return new PostgreSQLConnection(client);
-    } else {
-      return new SQLiteConnection();
-    }
+    const client = await pgPool.connect();
+    return new PostgreSQLConnection(client);
   },
 
   query: async (sql, params) => {
-    if (USE_POSTGRESQL) {
-      const result = await pgPool.query(sql, params);
-      return {
-        rows: result.rows || [],
-        rowCount: result.rowCount || 0,
-      };
-    } else {
-      const conn = new SQLiteConnection();
-      return conn.query(sql, params);
-    }
+    const result = await pgPool.query(sql, params);
+    return {
+      rows: result.rows || [],
+      rowCount: result.rowCount || 0,
+    };
   },
 
   close: async () => {
-    if (USE_POSTGRESQL && pgPool) {
+    if (pgPool) {
       await pgPool.end();
     }
   },

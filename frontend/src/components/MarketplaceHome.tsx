@@ -692,8 +692,8 @@ const categoryCards = [
   },
   {
     category: "fryums",
-    teTitle: "బియ్యపారవ్వ ఒడియలు",
-    enTitle: "Biyyaparavva Odiyalu",
+    teTitle: "బియ్యపు రవ్వ వడియాలు",
+    enTitle: "Biyyapu Rava Vadiyalu",
     teText: "రోజువారీ భోజనానికి సరైనవి",
     enText: "Rice crisps for daily meals",
     price: "₹650",

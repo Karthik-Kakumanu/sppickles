@@ -133,7 +133,7 @@ const productCategories: ProductCategory[] = [
       { teName: "చల్లా మిర్చి", enName: "Challa Mirchi", price: "₹1050" },
       { teName: "గుమ్మడి వడియాలు", enName: "Gummadi Vadiyalu", price: "₹1150" },
       { teName: "మినపిండి వడియాలు", enName: "Minapindi Vadiyalu", price: "₹650" },
-      { teName: "బియ్యపరవ్వ ఒడియాలు", enName: "Biyyaparavva Odiayalu", price: "₹650" },
+      { teName: "బియ్యపు రవ్వ వడియాలు", enName: "Biyyapu Rava Vadiyalu", price: "₹650" },
       { teName: "గోరుచిక్కుడు ఒడియాలు", enName: "Goruchikkudu Odiayalu", price: "₹850" },
     ],
   },
