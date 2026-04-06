@@ -39,6 +39,9 @@ const ensureLinkTag = (selector: string, rel: string) => {
 };
 
 const baseKeywords = [
+  "sppickles",
+  "sppickles.com",
+  "SP Pickles",
   "Sampradaya Pickles",
   "SP Traditional Pickles",
   "Andhra pickles Vijayawada",
@@ -95,6 +98,7 @@ const Seo = ({
           "@type": "Organization",
           "@id": `${siteUrl}/#organization`,
           name: brand.name,
+          alternateName: ["SP Pickles", "sppickles", "sppickles.com"],
           url: siteUrl,
           logo: canonicalImage,
           description: brand.subtitle,
@@ -107,6 +111,7 @@ const Seo = ({
           "@id": `${siteUrl}/#website`,
           url: siteUrl,
           name: brand.name,
+          alternateName: ["SP Pickles", "sppickles", "sppickles.com"],
           description: brand.subtitle,
           publisher: { "@id": `${siteUrl}/#organization` },
           inLanguage: "en-IN",

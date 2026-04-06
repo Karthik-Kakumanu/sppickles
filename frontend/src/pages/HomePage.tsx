@@ -207,8 +207,8 @@ const HomePage = () => {
   return (
     <main className="overflow-hidden bg-[var(--color-bg-primary)]">
       <Seo
-        title="SP Traditional Pickles"
-        description="Authentic homemade Andhra pickles, podulu, and fryums with direct order support."
+        title="SP Pickles (sppickles.com) | Sampradaya Traditional Pickles"
+        description="SP Pickles at sppickles.com offers authentic homemade Andhra pickles, podulu, and fryums with direct order support."
         image={brand.logo}
       />
 
@@ -223,6 +223,9 @@ const HomePage = () => {
             {/* Eyebrow + headline + description */}
             <div className="space-y-5">
               <Eyebrow variant="green">{t.heroEyebrow}</Eyebrow>
+              <p className={`text-xs font-semibold uppercase tracking-[0.16em] text-theme-body/65 ${isTe ? "font-telugu normal-case tracking-normal" : ""}`}>
+                {isTe ? "అధికారిక వెబ్‌సైట్: sppickles.com" : "Official website: sppickles.com"}
+              </p>
 
               {/* Hero headline — tighter tracking, larger on XL */}
               <h1 className={`text-balance font-heading text-[2.1rem] font-extrabold leading-[1.08] tracking-[-0.02em] text-theme-heading sm:text-5xl md:text-6xl xl:text-[4rem] ${isTe ? "font-telugu leading-[1.2]" : ""}`}>
