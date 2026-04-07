@@ -115,6 +115,13 @@ export const content = {
       selectState: "Select state / union territory",
       selectCountry: "Select country",
       placeOrder: "Continue to Payment",
+      bulkOrderCta: "Chat on WhatsApp",
+      bulkOrderNoticeTitle: "Bulk orders above 10 kg",
+      bulkOrderNotice:
+        "For orders above 10 kg, please contact us on WhatsApp to discuss the shipping price. We will share the final rate after reviewing your cart.",
+      bulkOrderWhatsappLabel: "WhatsApp details",
+      bulkOrderShipping: "Discuss on WhatsApp",
+      bulkOrderTotal: "Final total on WhatsApp",
       orderSummary: "Order Summary",
       total: "Total",
       orderReference: "Order Reference",
@@ -122,6 +129,7 @@ export const content = {
       errors: {
         emptyCart: "Your cart is empty.",
         required: "Please fill in all required delivery details.",
+        invalidState: "Please select your state / union territory.",
         invalidPhone: "Enter a valid 10-digit phone number.",
         invalidPincode: "Enter a valid 6-digit pincode.",
       },
@@ -249,6 +257,13 @@ export const content = {
       selectState: "రాష్ట్రం / కేంద్ర పాలిత ప్రాంతం ఎంచుకోండి",
       selectCountry: "దేశం ఎంచుకోండి",
       placeOrder: "చెల్లింపుకు కొనసాగండి",
+      bulkOrderCta: "వాట్సాప్‌లో చాట్ చేయండి",
+      bulkOrderNoticeTitle: "10 కిలోల పైబడి బల్క్ ఆర్డర్లు",
+      bulkOrderNotice:
+        "10 కిలోల పైబడి ఆర్డర్లకు షిప్పింగ్ ధరను చర్చించడానికి దయచేసి వాట్సాప్‌లో మమ్మల్ని సంప్రదించండి. మీ కార్ట్ చూసిన తర్వాత తుది ధరను తెలియజేస్తాం.",
+      bulkOrderWhatsappLabel: "వాట్సాప్ వివరాలు",
+      bulkOrderShipping: "వాట్సాప్‌లో చర్చించండి",
+      bulkOrderTotal: "తుది మొత్తం వాట్సాప్‌లో",
       orderSummary: "ఆర్డర్ సారాంశం",
       total: "మొత్తం",
       orderReference: "ఆర్డర్ సూచన",
@@ -256,6 +271,7 @@ export const content = {
       errors: {
         emptyCart: "మీ కార్ట్ ఖాళీగా ఉంది.",
         required: "అవసరమైన అన్ని వివరాలు నమోదు చేయండి.",
+        invalidState: "దయచేసి మీ రాష్ట్రం / కేంద్ర పాలిత ప్రాంతాన్ని ఎంచుకోండి.",
         invalidPhone: "చెల్లుబాటు అయ్యే 10 అంకెల ఫోన్ నంబర్ నమోదు చేయండి.",
         invalidPincode: "చెల్లుబాటు అయ్యే 6 అంకెల పిన్ కోడ్ నమోదు చేయండి.",
       },

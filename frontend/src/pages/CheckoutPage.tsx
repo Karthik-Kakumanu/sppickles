@@ -1,17 +1,19 @@
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AlertCircle, ArrowRight, ShoppingBag } from "lucide-react";
-import { calculateShippingByWeight, getRegionByPincode, validatePincode } from "@/lib/pincode";
+import { calculateShippingByWeight, getRegionByState, validatePincode } from "@/lib/pincode";
 import { formatCurrency, getWeightMultiplier } from "@/lib/pricing";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
+import WhatsAppLogo from "@/components/WhatsAppLogo";
 import { content } from "@/content/translations";
 import { brand } from "@/data/site";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 const inputClassName =
   "theme-input w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-[#e2b93b] focus:ring-4 focus:ring-[#e2b93b]/10";
+const BULK_ORDER_WEIGHT_LIMIT_KG = 10;
 
 const COUNTRIES = [
   { code: "IN", name: "India" },
@@ -73,7 +75,7 @@ const checkoutPageCopy = {
     mapBody:
       "Use this preview to double-check the delivery location before continuing to the payment page.",
     shippingLabel: "Estimated shipping",
-    pendingShipping: "Will update after pincode check",
+    pendingShipping: "Will update after state selection",
     summaryNote:
       "Secure packing and leakage-conscious handling remain part of the order experience.",
     backToCart: "Back to Cart",
@@ -87,7 +89,7 @@ const checkoutPageCopy = {
     mapBody:
       "చెల్లింపు పేజీకి వెళ్లే ముందు డెలివరీ లొకేషన్ సరైనదేనా అనేది ఇక్కడ చూసుకోండి.",
     shippingLabel: "అంచనా షిప్పింగ్",
-    pendingShipping: "పిన్ కోడ్ తర్వాత అప్డేట్ అవుతుంది",
+    pendingShipping: "రాష్ట్రం ఎంచుకున్న తర్వాత అప్డేట్ అవుతుంది",
     summaryNote: "సురక్షితమైన ప్యాకింగ్ మరియు లీకేజీ నియంత్రణపై శ్రద్ధ కొనసాగుతుంది.",
     backToCart: "కార్ట్‌కి తిరుగు",
   },
@@ -125,11 +127,12 @@ const CheckoutPage = () => {
   const sanitizedPhone = form.phone.replace(/\D/g, "").slice(0, 10);
   const sanitizedPincode = form.pincode.replace(/\D/g, "").slice(0, 6);
   const isPincodeValid = validatePincode(sanitizedPincode);
-  const regionInfo = isPincodeValid ? getRegionByPincode(sanitizedPincode) : null;
+  const regionInfo = form.country === "IN" && form.state.trim() ? getRegionByState(form.state) : null;
   const totalWeightKg = useMemo(
     () => cart.reduce((sum, line) => sum + getWeightMultiplier(line.weight) * line.quantity, 0),
     [cart],
   );
+  const isBulkOrder = totalWeightKg > BULK_ORDER_WEIGHT_LIMIT_KG;
   const shipping =
     form.country === "IN" && regionInfo
       ? calculateShippingByWeight(regionInfo.shippingRatePerKg, totalWeightKg)
@@ -157,6 +160,41 @@ const CheckoutPage = () => {
   const mapSearchUrl = mapQuery
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`
     : brand.mapUrl;
+  const bulkOrderWhatsappText = useMemo(() => {
+    const lines = [
+      language === "te"
+        ? "నమస్కారం, నాకు 10 కిలోల పైబడి బల్క్ ఆర్డర్ ఉంది. షిప్పింగ్ ధరను WhatsApp‌లో చర్చించాలి."
+        : "Hello, I have a bulk order above 10 kg. I would like to discuss the shipping price on WhatsApp.",
+      "",
+      language === "te" ? "ఆర్డర్ వివరాలు:" : "Order details:",
+      `- ${language === "te" ? "పేరు" : "Name"}: ${form.name.trim()}`,
+      `- ${language === "te" ? "ఫోన్" : "Phone"}: ${sanitizedPhone}`,
+      `- ${language === "te" ? "చిరునామా" : "Address"}: ${form.address.trim()}`,
+      `- ${language === "te" ? "నగరం" : "City"}: ${form.city.trim()}`,
+      `- ${language === "te" ? "రాష్ట్రం" : "State"}: ${form.state.trim()}`,
+      form.country === "IN"
+        ? `- ${language === "te" ? "పిన్ కోడ్" : "Pincode"}: ${sanitizedPincode}`
+        : null,
+      "",
+      language === "te" ? "కార్ట్‌లోని ఉత్పత్తులు:" : "Products in cart:",
+      ...cart.map(
+        (line) =>
+          `- ${line.product.name} (${line.weight}) x ${line.quantity} = ${formatCurrency(line.totalPrice)}`,
+      ),
+      "",
+      `- ${language === "te" ? "మొత్తం బరువు" : "Total weight"}: ${totalWeightKg.toFixed(2)} kg`,
+      `- ${language === "te" ? "ఉప మొత్తం" : "Subtotal"}: ${formatCurrency(subtotal)}`,
+      `- ${language === "te" ? "గమనిక" : "Note"}: ${language === "te" ? "10 కిలోల పైబడి ఆర్డర్లకు తుది షిప్పింగ్ ధర వాట్సాప్‌లో నిర్ణయించబడుతుంది." : "Final shipping price for orders above 10 kg will be confirmed on WhatsApp."}`,
+      "",
+      `${language === "te" ? "వాట్సాప్" : "WhatsApp"}: ${brand.whatsappDisplay}`,
+    ];
+
+    return lines.filter(Boolean).join("\n");
+  }, [cart, form.address, form.city, form.country, form.name, form.pincode, form.state, language, sanitizedPincode, sanitizedPhone, subtotal, totalWeightKg]);
+  const bulkOrderWhatsappUrl = useMemo(
+    () => `${brand.whatsappUrl}?text=${encodeURIComponent(bulkOrderWhatsappText)}`,
+    [bulkOrderWhatsappText],
+  );
 
   const handleFieldChange =
     (field: keyof CheckoutForm) =>
@@ -208,8 +246,18 @@ const CheckoutPage = () => {
       return;
     }
 
-    if (form.country === "IN" && !isPincodeValid) {
+    if (form.country === "IN" && !form.state.trim()) {
+      setErrorMessage(t.checkout.errors.invalidState);
+      return;
+    }
+
+    if (form.country === "IN" && sanitizedPincode && !isPincodeValid) {
       setErrorMessage(t.checkout.errors.invalidPincode);
+      return;
+    }
+
+    if (isBulkOrder) {
+      window.open(bulkOrderWhatsappUrl, "_blank", "noopener,noreferrer");
       return;
     }
 
@@ -400,6 +448,31 @@ const CheckoutPage = () => {
                 referrerPolicy="no-referrer-when-downgrade"
               />
             </div>
+
+            {isBulkOrder ? (
+              <div className="rounded-[1.4rem] border border-[#e2b93b]/30 bg-[#fff9ed] px-4 py-4 text-sm leading-7 text-[#8a6400] sm:px-5 sm:py-5">
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#956d00]">
+                  {t.checkout.bulkOrderNoticeTitle}
+                </p>
+                <p className={`mt-2 ${language === "te" ? "font-telugu" : ""}`}>
+                  {t.checkout.bulkOrderNotice}
+                </p>
+                <div className="mt-4 rounded-2xl border border-[#f1d28d] bg-white px-4 py-3 text-xs text-theme-body">
+                  <p className="font-semibold uppercase tracking-[0.18em] text-theme-body-soft">
+                    {t.checkout.bulkOrderWhatsappLabel}
+                  </p>
+                  <a
+                    href={bulkOrderWhatsappUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex items-center gap-2 font-semibold text-[#2f7a43] transition hover:text-[#245f33]"
+                  >
+                    <WhatsAppLogo className="h-4 w-4" />
+                    {brand.whatsappDisplay}
+                  </a>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {errorMessage ? (
@@ -416,8 +489,8 @@ const CheckoutPage = () => {
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-6 sm:py-4"
               style={{ color: "#ffffff" }}
             >
-              <ArrowRight className="h-4 w-4" />
-              {t.checkout.placeOrder}
+              {isBulkOrder ? <WhatsAppLogo className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+              {isBulkOrder ? t.checkout.bulkOrderCta : t.checkout.placeOrder}
             </button>
             <Link
               to="/cart"
@@ -469,16 +542,24 @@ const CheckoutPage = () => {
                 </div>
                 <div className="flex justify-between text-sm text-theme-body">
                   <span>{copy.shippingLabel}</span>
-                  <span className={form.country === "IN" && regionInfo ? "price-figure" : undefined}>
-                    {form.country === "IN" && regionInfo
-                      ? formatCurrency(shipping)
-                      : copy.pendingShipping}
+                  <span
+                    className={
+                      isBulkOrder || form.country !== "IN" || !regionInfo ? undefined : "price-figure"
+                    }
+                  >
+                    {isBulkOrder
+                      ? t.checkout.bulkOrderShipping
+                      : form.country === "IN" && regionInfo
+                        ? formatCurrency(shipping)
+                        : copy.pendingShipping}
                   </span>
                 </div>
                 <div className="border-t border-[#d8e5d8] pt-3">
                   <div className="flex justify-between font-heading text-xl font-bold text-theme-heading sm:text-2xl">
                     <span>{t.checkout.total}</span>
-                    <span className="price-figure text-[#2f7a43]">{formatCurrency(total)}</span>
+                    <span className={isBulkOrder ? "text-[#956d00]" : "price-figure text-[#2f7a43]"}>
+                      {isBulkOrder ? t.checkout.bulkOrderTotal : formatCurrency(total)}
+                    </span>
                   </div>
                 </div>
               </div>

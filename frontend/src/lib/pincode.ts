@@ -7,6 +7,17 @@ export interface RegionInfo {
   code: "ap-telangana" | "south-india" | "north-india";
 }
 
+const SOUTH_INDIA_STATES = new Set([
+  "Andhra Pradesh",
+  "Karnataka",
+  "Kerala",
+  "Tamil Nadu",
+  "Telangana",
+  "Puducherry",
+  "Lakshadweep",
+  "Andaman and Nicobar Islands",
+]);
+
 export const validatePincode = (pincode: string): boolean => /^\d{6}$/.test(pincode.trim());
 
 export const getRegionByPincode = (pincode: string): RegionInfo => {
@@ -28,8 +39,8 @@ export const getRegionByPincode = (pincode: string): RegionInfo => {
       region: "AP / Telangana",
       regionTe: "ఆంధ్రప్రదేశ్ / తెలంగాణ",
       pincodeRange: "5xxxx",
-      shippingCost: 150,
-      shippingRatePerKg: 150,
+      shippingCost: 100,
+      shippingRatePerKg: 100,
       code: "ap-telangana",
     };
   }
@@ -39,8 +50,8 @@ export const getRegionByPincode = (pincode: string): RegionInfo => {
       region: "South India",
       regionTe: "దక్షిణ భారతదేశం",
       pincodeRange: "6xxxx",
-      shippingCost: 200,
-      shippingRatePerKg: 200,
+      shippingCost: 150,
+      shippingRatePerKg: 150,
       code: "south-india",
     };
   }
@@ -49,8 +60,54 @@ export const getRegionByPincode = (pincode: string): RegionInfo => {
     region: "North India",
     regionTe: "ఉత్తర భారతదేశం",
     pincodeRange: "Others",
-    shippingCost: 250,
-    shippingRatePerKg: 250,
+    shippingCost: 200,
+    shippingRatePerKg: 200,
+    code: "north-india",
+  };
+};
+
+export const getRegionByState = (state: string): RegionInfo => {
+  const cleanState = state.trim();
+
+  if (!cleanState) {
+    return {
+      region: "State not selected",
+      regionTe: "రాష్ట్రం ఎంచుకోలేదు",
+      pincodeRange: "",
+      shippingCost: 0,
+      shippingRatePerKg: 0,
+      code: "north-india",
+    };
+  }
+
+  if (cleanState === "Andhra Pradesh" || cleanState === "Telangana") {
+    return {
+      region: "AP / Telangana",
+      regionTe: "ఆంధ్రప్రదేశ్ / తెలంగాణ",
+      pincodeRange: "State based",
+      shippingCost: 100,
+      shippingRatePerKg: 100,
+      code: "ap-telangana",
+    };
+  }
+
+  if (SOUTH_INDIA_STATES.has(cleanState)) {
+    return {
+      region: "South India",
+      regionTe: "దక్షిణ భారతదేశం",
+      pincodeRange: "State based",
+      shippingCost: 150,
+      shippingRatePerKg: 150,
+      code: "south-india",
+    };
+  }
+
+  return {
+    region: "North India",
+    regionTe: "ఉత్తర భారతదేశం",
+    pincodeRange: "State based",
+    shippingCost: 200,
+    shippingRatePerKg: 200,
     code: "north-india",
   };
 };
@@ -73,24 +130,24 @@ export const SHIPPING_TIERS = [
     region: "AP / Telangana",
     regionTe: "ఆంధ్రప్రదేశ్ / తెలంగాణ",
     pincodeRange: "5xxxx",
-    shippingCost: 150,
-    shippingRatePerKg: 150,
+    shippingCost: 100,
+    shippingRatePerKg: 100,
     code: "ap-telangana",
   },
   {
     region: "South India",
     regionTe: "దక్షిణ భారతదేశం",
     pincodeRange: "6xxxx",
-    shippingCost: 200,
-    shippingRatePerKg: 200,
+    shippingCost: 150,
+    shippingRatePerKg: 150,
     code: "south-india",
   },
   {
     region: "North India",
     regionTe: "ఉత్తర భారతదేశం",
     pincodeRange: "Others",
-    shippingCost: 250,
-    shippingRatePerKg: 250,
+    shippingCost: 200,
+    shippingRatePerKg: 200,
     code: "north-india",
   },
 ] as const;
