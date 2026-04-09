@@ -175,52 +175,52 @@ const SiteFooter = () => {
               <p className={`text-sm text-theme-body-soft ${language === "te" ? "font-telugu" : ""}`}>
                 {t.footer.copyright}
               </p>
-              <div className="flex flex-wrap gap-4 justify-end md:justify-start">
-                <Link to="/privacy" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
+              <div className="grid grid-cols-3 items-center gap-2 text-center md:flex md:items-center md:justify-start md:gap-4">
+                <Link to="/privacy" className="text-xs text-theme-body-soft transition hover:text-theme-heading sm:text-sm whitespace-nowrap">
                   {t.footer.privacy}
                 </Link>
-                <span className="text-gray-300">•</span>
-                <Link to="/terms" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
+                <Link to="/terms" className="text-xs text-theme-body-soft transition hover:text-theme-heading sm:text-sm whitespace-nowrap">
                   {t.footer.terms}
                 </Link>
-                <span className="text-gray-300">•</span>
-                <Link to="/refund" className="text-sm text-theme-body-soft hover:text-theme-heading transition">
+                <Link to="/refund" className="text-xs text-theme-body-soft transition hover:text-theme-heading sm:text-sm whitespace-nowrap">
                   Refund Policy
                 </Link>
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 text-[11px] leading-5 text-theme-body-soft/80 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3">
-              <span className="font-semibold uppercase tracking-[0.18em] text-theme-body-soft/90">Developed by</span>{" "}
+            <div className="flex flex-col items-start gap-2 text-[11px] leading-5 text-theme-body-soft/80">
+              <span className="font-semibold uppercase tracking-[0.18em] text-theme-body-soft/90">Developed by</span>
+              <div className="grid w-full grid-cols-3 items-center gap-2 sm:flex sm:w-auto sm:items-center sm:gap-4">
               <a
                 href="https://pixelkode.netlify.app"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 font-semibold text-theme-heading transition hover:text-[#2f7a43]"
+                className="inline-flex items-center justify-center gap-1.5 font-semibold text-theme-heading transition hover:text-[#2f7a43] whitespace-nowrap"
               >
                 <Globe2 className="h-3 w-3" />
                 PixelKode
               </a>
-              <span className="hidden text-gray-300 sm:inline">•</span>
               <a
                 href="https://wa.me/918897925715"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 transition hover:text-[#2f7a43]"
+                className="inline-flex items-center justify-center gap-1.5 transition hover:text-[#2f7a43] whitespace-nowrap"
                 aria-label="PixelKode WhatsApp"
               >
                 <WhatsAppLogo className="h-3.5 w-3.5" />
+                WhatsApp
               </a>
-              <span className="hidden text-gray-300 sm:inline">•</span>
               <a
                 href="https://instagram.com/pixelkode.co"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 transition hover:text-[#2f7a43]"
+                className="inline-flex items-center justify-center gap-1.5 transition hover:text-[#2f7a43] whitespace-nowrap"
                 aria-label="PixelKode Instagram"
               >
                 <Instagram className="h-3.5 w-3.5" />
+                Instagram
               </a>
+              </div>
             </div>
           </div>
         </div>
