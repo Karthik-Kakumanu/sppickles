@@ -111,6 +111,11 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
             "Podulu: a simple protein-rich side support for regular home food.",
             "Appadalu and vadiyalu: classic vegetarian crunch that completes the plate.",
           ],
+      overseasOrderTitle: isTe ? "విదేశీ ఆర్డర్లు" : "Overseas Orders",
+      overseasOrderBody: isTe
+        ? "USA లేదా ఇతర విదేశీ ఆర్డర్ల కోసం దయచేసి నేరుగా మాతో సంప్రదించండి. మేము షిప్పింగ్ మరియు ధర వివరాలు మీకు వ్యక్తిగతంగా తెలియజేస్తాం."
+        : "For USA and other overseas orders, please contact us directly. We will share shipping and final pricing details personally.",
+      overseasOrderCta: isTe ? "ఇప్పుడే సంప్రదించండి" : "Contact Now",
     }),
     [isTe],
   );
@@ -474,6 +479,24 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
           </div>
         ) : visibleProducts.length > 0 ? (
           <div ref={gridRef} className="space-y-6">
+            <div className="rounded-2xl border border-[#d9c7a2] bg-[linear-gradient(180deg,#fff9ea_0%,#fffdf7_100%)] px-5 py-4 shadow-[0_10px_24px_rgba(141,102,17,0.08)]">
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#8d6611]">
+                {pageCopy.overseasOrderTitle}
+              </p>
+              <p className={`mt-2 text-sm leading-7 text-[#6f5414] ${isTe ? "font-telugu" : ""}`}>
+                {pageCopy.overseasOrderBody}
+              </p>
+              <div className="mt-3">
+                <PrimaryButton
+                  to="/contact"
+                  variant="secondary"
+                  className="w-full sm:w-auto rounded-xl border border-[#e2c46f] bg-white px-5 py-2.5 text-sm font-bold text-[#6f5414] hover:bg-[#fff5d9]"
+                >
+                  {pageCopy.overseasOrderCta}
+                </PrimaryButton>
+              </div>
+            </div>
+
             {/* Search and Filter Bar */}
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
               {/* Search Bar - takes full width on mobile, 1fr on desktop */}
