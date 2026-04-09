@@ -174,6 +174,18 @@ const normalizeOrder = (order: any): OrderRecord => {
     subtotal,
     shipping,
     total,
+    paymentMethod: String(order.paymentMethod ?? order.payment_method ?? "upi"),
+    paymentStatus: String(order.paymentStatus ?? order.payment_status ?? "pending"),
+    paymentId: String(order.paymentId ?? order.razorpayPaymentId ?? order.razorpay_payment_id ?? ""),
+    paymentTime: String(
+      order.paymentTime ??
+        order.payment_time ??
+        order.paymentCapturedAt ??
+        order.payment_captured_at ??
+        order.createdAt ??
+        order.created_at ??
+        new Date().toISOString(),
+    ),
     status: normalizeOrderStatus(order.status),
     createdAt: String(order.createdAt ?? order.created_at ?? new Date().toISOString()),
     whatsappUrl:
@@ -274,7 +286,7 @@ export const updateStock = async (productId: string, isAvailable: boolean) =>
     body: JSON.stringify({ is_available: isAvailable }),
   });
 
-export const createOrder = async (orderData: {
+export type CheckoutOrderPayload = {
   name: string;
   phone: string;
   address: string;
@@ -283,7 +295,7 @@ export const createOrder = async (orderData: {
   country: string;
   pincode: string;
   shipping: number;
-  paymentMethod?: "upi" | "bank" | "cod";
+  paymentMethod?: "upi";
   items: Array<{
     productId: string;
     name: string;
@@ -291,7 +303,64 @@ export const createOrder = async (orderData: {
     weight: WeightOption;
     price: number;
   }>;
+};
+
+export const createRazorpayOrder = async (orderData: CheckoutOrderPayload) =>
+  apiFetch<{
+    keyId: string;
+    orderId: string;
+    amount: number;
+    currency: string;
+  }>("/payments/razorpay/order", {
+    method: "POST",
+    body: JSON.stringify({
+      customer: {
+        name: orderData.name,
+        phone: orderData.phone,
+        address: orderData.address,
+        city: orderData.city,
+        state: orderData.state,
+        country: orderData.country,
+        pincode: orderData.pincode,
+      },
+      shipping: orderData.shipping,
+      paymentMethod: orderData.paymentMethod || "upi",
+      items: orderData.items.map((item) => ({
+        product_id: item.productId,
+        name: item.name,
+        quantity: item.quantity,
+        weight: item.weight,
+        price: item.price,
+      })),
+    }),
+  });
+
+export const verifyRazorpayPayment = async (payload: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+  checkoutPayload: CheckoutOrderPayload;
 }) => {
+  const response = await apiFetch<{
+    order: any;
+    payment: {
+      provider: "razorpay";
+      razorpayOrderId: string;
+      razorpayPaymentId: string;
+      status: string;
+    };
+  }>("/payments/razorpay/verify", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  return {
+    order: normalizeOrder(response.order),
+    payment: response.payment,
+  };
+};
+
+export const createOrder = async (orderData: CheckoutOrderPayload) => {
   const response = await apiFetch<any>("/orders", {
     method: "POST",
     body: JSON.stringify({
@@ -305,7 +374,7 @@ export const createOrder = async (orderData: {
         pincode: orderData.pincode,
       },
       shipping: orderData.shipping,
-      paymentMethod: orderData.paymentMethod || "cod",
+      paymentMethod: orderData.paymentMethod || "upi",
       items: orderData.items.map((item) => ({
         product_id: item.productId,
         name: item.name,

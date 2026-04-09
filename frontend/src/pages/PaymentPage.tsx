@@ -1,7 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AlertCircle, ArrowRight, BadgeCheck, Loader2, Wallet } from "lucide-react";
-import { useCreateOrderMutation } from "@/lib/api";
+import { AlertCircle, ArrowRight, CreditCard, Loader2 } from "lucide-react";
+import {
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+  type CheckoutOrderPayload,
+} from "@/lib/api";
 import { formatCurrency } from "@/lib/pricing";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
@@ -10,7 +14,7 @@ import { content } from "@/content/translations";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 
-type PaymentMethod = "bank" | "cod";
+type PaymentMethod = "upi";
 
 type CheckoutData = {
   name: string;
@@ -32,21 +36,73 @@ type OrderPreviewItem = {
   totalPrice: number;
 };
 
+type RazorpaySuccessResponse = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayOptions = {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  prefill?: {
+    name?: string;
+    contact?: string;
+  };
+  notes?: Record<string, string>;
+  theme?: {
+    color?: string;
+  };
+  handler: (response: RazorpaySuccessResponse) => void;
+  modal?: {
+    ondismiss?: () => void;
+  };
+};
+
+type RazorpayInstance = {
+  open: () => void;
+};
+
+const loadRazorpayScript = () =>
+  new Promise<void>((resolve, reject) => {
+    if (window.Razorpay) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Razorpay checkout."));
+    document.body.appendChild(script);
+  });
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: RazorpayOptions) => RazorpayInstance;
+  }
+}
+
 const paymentCopy = {
   en: {
     eyebrow: "Payment",
     title: "Choose how this order should be confirmed",
     intro:
-      "The payment page is cleaned up for launch readiness. Online gateway space is reserved for Razorpay later, while manual confirmation and cash on delivery keep the current flow honest and usable.",
-    comingSoonTitle: "Online payment",
+      "Use UPI/Card to complete your order securely. This checkout step is simplified for a faster and clearer payment experience.",
+    comingSoonTitle: "UPI / Card",
     comingSoonBody:
-      "Razorpay or another gateway can be connected here in the next phase. This card is kept visible so the layout is already ready for that integration.",
-    bankTitle: "Manual confirmation / transfer",
+      "Pay using any UPI app or card via Razorpay secure checkout.",
+    bankTitle: "UPI / Card",
     bankBody:
-      "Choose this if the payment will be confirmed directly with the team. Final transfer details can be shared after the order is recorded.",
-    codTitle: "Cash on Delivery",
-    codBody:
-      "Choose this when the customer wants to complete payment at the time of delivery, if the location is eligible.",
+      "UPI and card payments are supported for this order.",
+    backWarningTitle: "Important",
+    backWarningBody:
+      "Do not press back or refresh until payment is confirmed. Closing this step early can interrupt payment verification.",
     confirm: "Confirm Order",
     back: "Back to Checkout",
   },
@@ -54,16 +110,16 @@ const paymentCopy = {
     eyebrow: "చెల్లింపు",
     title: "ఈ ఆర్డర్‌ను ఎలా నిర్ధారించాలో ఎంచుకోండి",
     intro:
-      "లాంచ్‌కి సిద్ధంగా ఉండేలా ఈ పేమెంట్ పేజీని శుభ్రంగా మార్చాం. Razorpay కోసం స్థలం సిద్ధంగా ఉంచి, ప్రస్తుతం manual confirmation మరియు cash on delivery ద్వారా flow‌ను నిజాయితీగా ఉంచుతున్నాం.",
-    comingSoonTitle: "ఆన్‌లైన్ చెల్లింపు",
+      "మీ ఆర్డర్‌ను సురక్షితంగా పూర్తి చేయడానికి UPI/Card ఉపయోగించండి. వేగంగా మరియు సులభంగా ఉండేలా ఈ checkout దశను సరళీకరించాం.",
+    comingSoonTitle: "UPI / కార్డ్",
     comingSoonBody:
-      "తరువాతి దశలో Razorpay లేదా మరొక gateway ఇక్కడ జత చేయవచ్చు. ఆ integration కోసం layout ఇప్పటికే సిద్ధంగా ఉంది.",
-    bankTitle: "డైరెక్ట్ నిర్ధారణ / ట్రాన్స్‌ఫర్",
+      "Razorpay సురక్షిత checkout ద్వారా ఏదైనా UPI యాప్ లేదా కార్డ్‌తో చెల్లించవచ్చు.",
+    bankTitle: "UPI / కార్డ్",
     bankBody:
-      "టీమ్‌తో నేరుగా మాట్లాడి చెల్లింపు నిర్ధారించాలనుకుంటే ఈ ఎంపికను ఎంచుకోండి. ఆర్డర్ నమోదు అయిన తర్వాత transfer వివరాలు పంచుకోవచ్చు.",
-    codTitle: "క్యాష్ ఆన్ డెలివరీ",
-    codBody:
-      "లొకేషన్‌కు అందుబాటులో ఉంటే, డెలివరీ సమయానికి చెల్లించాలనుకునే కస్టమర్ ఈ ఎంపికను ఎంచుకోవచ్చు.",
+      "ఈ ఆర్డర్‌కు UPI మరియు కార్డ్ చెల్లింపులు అందుబాటులో ఉన్నాయి.",
+    backWarningTitle: "ముఖ్యం",
+    backWarningBody:
+      "చెల్లింపు నిర్ధారణ అయ్యే వరకు వెనక్కి వెళ్లకండి లేదా refresh చేయకండి. మధ్యలో ఆపితే payment verification అంతరాయం కలగవచ్చు.",
     confirm: "ఆర్డర్ నిర్ధారించండి",
     back: "చెక్‌అవుట్‌కి తిరుగు",
   },
@@ -76,10 +132,9 @@ const PaymentPage = () => {
   const { language } = useLanguage();
   const t = content[language];
   const copy = paymentCopy[language];
-  const createOrderMutation = useCreateOrderMutation();
 
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("upi");
   const [errorMessage, setErrorMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -87,13 +142,20 @@ const PaymentPage = () => {
     const data =
       location.state?.checkoutData ?? JSON.parse(sessionStorage.getItem("checkoutData") || "null");
 
-    if (!data || !cart.length) {
+    if (!data) {
       navigate("/checkout");
       return;
     }
 
     setCheckoutData(data);
-  }, [location.state, cart.length, navigate]);
+  }, [location.state, navigate]);
+
+  useEffect(() => {
+    // Warm up Razorpay script while user is reviewing the payment details.
+    void loadRazorpayScript().catch(() => {
+      // Keep silent here; checkout flow already shows a clear error if script fails.
+    });
+  }, []);
 
   if (!checkoutData) {
     return null;
@@ -109,13 +171,26 @@ const PaymentPage = () => {
 
   const total = checkoutData.subtotal + checkoutData.shipping;
 
+  const openRazorpayCheckout = (options: RazorpayOptions) =>
+    new Promise<RazorpaySuccessResponse>((resolve, reject) => {
+      if (!window.Razorpay) {
+        reject(new Error("Razorpay checkout is unavailable."));
+        return;
+      }
+
+      const checkout = new window.Razorpay({
+        ...options,
+        handler: (response) => resolve(response),
+        modal: {
+          ondismiss: () => reject(new Error("Payment was cancelled.")),
+        },
+      });
+
+      checkout.open();
+    });
+
   const handlePaymentConfirm = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (!selectedPayment) {
-      setErrorMessage(language === "te" ? "దయచేసి ఒక ఎంపికను ఎంచుకోండి." : "Please select a payment method.");
-      return;
-    }
 
     if (cart.length === 0) {
       setErrorMessage(t.checkout.errors.emptyCart);
@@ -126,7 +201,7 @@ const PaymentPage = () => {
     setErrorMessage("");
 
     try {
-      const order = await createOrderMutation.mutateAsync({
+      const orderPayload: CheckoutOrderPayload = {
         name: checkoutData.name,
         phone: checkoutData.phone,
         address: checkoutData.address,
@@ -143,6 +218,37 @@ const PaymentPage = () => {
           weight: line.weight,
           price: line.price,
         })),
+      };
+
+      const razorpayOrder = await createRazorpayOrder(orderPayload);
+      await loadRazorpayScript();
+
+      const paymentResponse = await openRazorpayCheckout({
+        key: razorpayOrder.keyId,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        order_id: razorpayOrder.orderId,
+        name: "SP Traditional Pickles",
+        description: `Order payment - ${formatCurrency(total)}`,
+        prefill: {
+          name: checkoutData.name,
+          contact: checkoutData.phone,
+        },
+        notes: {
+          customer_name: checkoutData.name,
+          customer_phone: checkoutData.phone,
+        },
+        theme: {
+          color: "#2f7a43",
+        },
+        handler: () => {},
+      });
+
+      const { order } = await verifyRazorpayPayment({
+        razorpay_order_id: paymentResponse.razorpay_order_id,
+        razorpay_payment_id: paymentResponse.razorpay_payment_id,
+        razorpay_signature: paymentResponse.razorpay_signature,
+        checkoutPayload: orderPayload,
       });
 
       clearCart();
@@ -202,20 +308,20 @@ const PaymentPage = () => {
             </p>
           </div>
 
-          <label className={getOptionClassName("bank")}>
+          <label className={getOptionClassName("upi")}>
             <div className="flex items-start gap-4">
               <input
                 type="radio"
                 name="payment"
-                value="bank"
-                checked={selectedPayment === "bank"}
+                value="upi"
+                checked={selectedPayment === "upi"}
                 onChange={(event) => setSelectedPayment(event.target.value as PaymentMethod)}
                 className="mt-1 h-4 w-4 accent-[#2f7a43]"
               />
               <div className="flex-1">
                 <div className="flex items-center gap-3">
                   <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf5ee]">
-                    <Wallet className="h-5 w-5 text-[#2f7a43]" />
+                    <CreditCard className="h-5 w-5 text-[#2f7a43]" />
                   </div>
                   <div>
                     <p className={`font-semibold text-theme-heading ${language === "te" ? "font-telugu" : ""}`}>
@@ -234,37 +340,14 @@ const PaymentPage = () => {
             </div>
           </label>
 
-          <label className={getOptionClassName("cod")}>
-            <div className="flex items-start gap-4">
-              <input
-                type="radio"
-                name="payment"
-                value="cod"
-                checked={selectedPayment === "cod"}
-                onChange={(event) => setSelectedPayment(event.target.value as PaymentMethod)}
-                className="mt-1 h-4 w-4 accent-[#2f7a43]"
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf5ee]">
-                    <BadgeCheck className="h-5 w-5 text-[#2f7a43]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold text-theme-heading ${language === "te" ? "font-telugu" : ""}`}>
-                      {copy.codTitle}
-                    </p>
-                    <p
-                      className={`mt-1 text-sm text-theme-body ${
-                        language === "te" ? "font-telugu" : ""
-                      }`}
-                    >
-                      {copy.codBody}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </label>
+          <div className="rounded-2xl border border-[#d9644c]/35 bg-[#fff4f1] px-4 py-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#c14f3a]">
+              {copy.backWarningTitle}
+            </p>
+            <p className={`mt-2 text-sm leading-6 text-[#b84c39] ${language === "te" ? "font-telugu" : ""}`}>
+              {copy.backWarningBody}
+            </p>
+          </div>
 
           {errorMessage ? (
             <div className="flex items-start gap-3 rounded-2xl border border-[#d9644c]/30 bg-[#fff4f1] px-4 py-4 text-sm text-[#d9644c]">
@@ -276,7 +359,7 @@ const PaymentPage = () => {
           <div className="flex flex-col gap-3 pt-4 sm:flex-row">
             <button
               type="submit"
-              disabled={isProcessing || !selectedPayment}
+              disabled={isProcessing}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-6 py-4 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {isProcessing ? (

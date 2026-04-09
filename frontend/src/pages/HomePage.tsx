@@ -347,7 +347,7 @@ const HomePage = () => {
                   alt={isTe ? category.labelTe : category.label}
                   loading="lazy"
                   decoding="async"
-                  className="aspect-[4/4.2] w-full object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-105"
+                  className="aspect-[4/4.2] w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
                 />
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent opacity-60 transition-opacity duration-500 group-hover:opacity-30" />

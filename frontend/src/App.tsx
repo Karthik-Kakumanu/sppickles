@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ScrollToTop from "@/components/ScrollToTop";
 import SectionTitle from "@/components/SectionTitle";
@@ -32,6 +32,11 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 
 const queryClient = new QueryClient();
 
+type IdleWindow = Window & {
+  requestIdleCallback?: (callback: () => void) => number;
+  cancelIdleCallback?: (id: number) => void;
+};
+
 
 
 const RouteFallback = () => {
@@ -60,17 +65,40 @@ const RouteFallback = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <StoreProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <ScrollToTop />
-            <Suspense fallback={<RouteFallback />}>
-              <Routes>
+const App = () => {
+  useEffect(() => {
+    const idleWindow = window as IdleWindow;
+    const warmRoutes = () => {
+      // Warm critical route chunks so navigation feels instant after first load.
+      void Promise.all([
+        import("./pages/ProductsPage"),
+        import("./pages/CartPage"),
+        import("./pages/CheckoutPage"),
+        import("./pages/PaymentPage"),
+        import("./pages/OrderSuccessPage"),
+      ]);
+    };
+
+    if (idleWindow.requestIdleCallback) {
+      const idleId = idleWindow.requestIdleCallback(warmRoutes);
+      return () => idleWindow.cancelIdleCallback?.(idleId);
+    }
+
+    const timeoutId = window.setTimeout(warmRoutes, 1200);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <StoreProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <ScrollToTop />
+              <Suspense fallback={<RouteFallback />}>
+                <Routes>
               <Route element={<SiteLayout />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/products" element={<ProductsPage initialFilter="all" />} />
@@ -107,13 +135,14 @@ const App = () => (
               <Route path="/admin/orders" element={<AdminDashboardPage />} />
               <Route path="/admin" element={<Navigate to="/admin/orders" replace />} />
               <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </StoreProvider>
-    </LanguageProvider>
-  </QueryClientProvider>
-);
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TooltipProvider>
+        </StoreProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

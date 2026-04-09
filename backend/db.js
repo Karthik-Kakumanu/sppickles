@@ -94,10 +94,19 @@ const initializeSchema = async () => {
       shipping INTEGER NOT NULL DEFAULT 0,
       subtotal INTEGER NOT NULL,
       total INTEGER NOT NULL,
-      payment_method TEXT NOT NULL DEFAULT 'cod',
+      payment_method TEXT NOT NULL DEFAULT 'upi',
+      razorpay_order_id TEXT,
+      razorpay_payment_id TEXT,
+      payment_status TEXT NOT NULL DEFAULT 'pending',
+      payment_captured_at TIMESTAMP,
       status TEXT NOT NULL DEFAULT 'pending',
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
+
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_order_id TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_payment_id TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending';
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_captured_at TIMESTAMP;
 
     CREATE TABLE IF NOT EXISTS order_items (
       id TEXT PRIMARY KEY,
@@ -113,6 +122,7 @@ const initializeSchema = async () => {
 
     CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
     CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_razorpay_payment_id ON orders(razorpay_payment_id) WHERE razorpay_payment_id IS NOT NULL;
   `;
 
   try {

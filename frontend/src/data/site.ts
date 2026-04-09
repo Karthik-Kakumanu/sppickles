@@ -1,5 +1,4 @@
 import heroMeal from "@/assets/hero-meal.jpg";
-import introVideo from "@/assets/intro-video.mp4";
 import storyKitchen from "@/assets/story-kitchen.jpg";
 import categoryPowders from "@/assets/category-powders.jpg";
 import categoryVadiyalu from "@/assets/category-vadiyalu.jpg";
@@ -60,6 +59,10 @@ export type OrderRecord = {
   subtotal: number;
   shipping?: number;
   total: number;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  paymentId?: string;
+  paymentTime?: string;
   status: OrderStatus;
   createdAt: string;
   whatsappUrl: string;
@@ -266,16 +269,6 @@ export const processSteps = [
 ];
 
 export const trustStripItems = brand.usps;
-
-export const siteMedia = {
-  heroMeal,
-  storyKitchen,
-  introVideo,
-  categoryPowders,
-  categoryVadiyalu,
-  saltPickles: catSaltPickles,
-  temperedPickles: catTemperedPickles,
-};
 
 export const weightOptions: Array<{ label: WeightOption; multiplier: number }> = [
   { label: "250g", multiplier: 0.25 },

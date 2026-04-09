@@ -1,7 +1,8 @@
 import { HeartHandshake, Leaf, PackageCheck, Sparkles } from "lucide-react";
 import Seo from "@/components/Seo";
 import { useLanguage } from "@/components/LanguageProvider";
-import { brand, siteMedia } from "@/data/site";
+import { brand } from "@/data/site";
+import storyKitchen from "@/assets/story-kitchen.jpg";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 
@@ -132,9 +133,10 @@ const AboutPage = () => {
 
           <div className="section-shell overflow-hidden p-3">
             <img
-              src={siteMedia.storyKitchen}
+              src={storyKitchen}
               alt={brand.name}
               loading="lazy"
+              decoding="async"
               className="h-[420px] w-full rounded-[1.7rem] object-cover"
             />
           </div>

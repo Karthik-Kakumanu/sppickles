@@ -1,8 +1,9 @@
 import http from "node:http";
-import { randomUUID } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFile, stat } from "node:fs/promises";
+import Razorpay from "razorpay";
 import { pool } from "./db.js";
 import {
   clearAdminSessionCookie,
@@ -47,7 +48,17 @@ const DUMMY_ADMIN_PASSWORD_HASH = hashPassword("sp-pickles-dummy-password");
 const ADMIN_LOGIN_MAX_ATTEMPTS = Number(process.env.ADMIN_LOGIN_MAX_ATTEMPTS || 5);
 const ADMIN_LOGIN_WINDOW_MS = Number(process.env.ADMIN_LOGIN_WINDOW_MS || 15 * 60 * 1000);
 const ADMIN_LOGIN_LOCKOUT_MS = Number(process.env.ADMIN_LOGIN_LOCKOUT_MS || 30 * 60 * 1000);
+const RAZORPAY_KEY_ID = String(process.env.RAZORPAY_KEY_ID ?? "").trim();
+const RAZORPAY_KEY_SECRET = String(process.env.RAZORPAY_KEY_SECRET ?? "").trim();
+const RAZORPAY_CURRENCY = String(process.env.RAZORPAY_CURRENCY ?? "INR").trim().toUpperCase();
 const adminLoginAttempts = new Map();
+const razorpayClient =
+  RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET
+    ? new Razorpay({
+        key_id: RAZORPAY_KEY_ID,
+        key_secret: RAZORPAY_KEY_SECRET,
+      })
+    : null;
 
 // Logging utility
 const log = (level, message, metadata = {}) => {
@@ -434,7 +445,7 @@ const normalizeOrderPayload = (body) => {
   const country = String(customerSource.country ?? "IN").trim();
   const pincode = String(customerSource.pincode ?? "").trim();
   const shipping = Number(body.shipping ?? 0);
-  const paymentMethod = String(body.paymentMethod ?? "cod").trim();
+  const paymentMethod = String(body.paymentMethod ?? "upi").trim();
   const items = Array.isArray(body.items) ? body.items : [];
 
   if (name.length < 2) {
@@ -472,8 +483,8 @@ const normalizeOrderPayload = (body) => {
     throw { statusCode: 400, message: "Shipping must be zero or a positive number." };
   }
 
-  if (!["upi", "bank", "cod"].includes(paymentMethod)) {
-    throw { statusCode: 400, message: "Payment method must be 'upi', 'bank', or 'cod'." };
+  if (!["upi"].includes(paymentMethod)) {
+    throw { statusCode: 400, message: "Payment method must be 'upi'." };
   }
 
   if (items.length === 0) {
@@ -532,6 +543,63 @@ const normalizeOrderPayload = (body) => {
   };
 };
 
+const assertRazorpayConfigured = () => {
+  if (!razorpayClient || !RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+    throw {
+      statusCode: 503,
+      message:
+        "Online payment is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET on the backend.",
+    };
+  }
+};
+
+const toRazorpayAmount = (rupees) => {
+  const numericRupees = Number(rupees);
+
+  if (!Number.isFinite(numericRupees) || numericRupees <= 0) {
+    throw { statusCode: 400, message: "Order total must be greater than zero for online payment." };
+  }
+
+  return Math.round(numericRupees * 100);
+};
+
+const buildRazorpayReceipt = () => `sp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+
+const buildOrderTotals = (payload) => {
+  const subtotal = payload.items.reduce((sum, item) => sum + item.totalPrice, 0);
+  const total = subtotal + payload.shipping;
+  return { subtotal, total };
+};
+
+const createRazorpayPaymentOrder = async (body) => {
+  assertRazorpayConfigured();
+
+  const payload = normalizeOrderPayload({
+    ...body,
+    paymentMethod: "upi",
+  });
+
+  const { total } = buildOrderTotals(payload);
+  const amount = toRazorpayAmount(total);
+
+  const razorpayOrder = await razorpayClient.orders.create({
+    amount,
+    currency: RAZORPAY_CURRENCY,
+    receipt: buildRazorpayReceipt(),
+    notes: {
+      customer_name: payload.customer.name,
+      customer_phone: payload.customer.phone,
+    },
+  });
+
+  return {
+    keyId: RAZORPAY_KEY_ID,
+    currency: razorpayOrder.currency,
+    amount: razorpayOrder.amount,
+    orderId: razorpayOrder.id,
+  };
+};
+
 const serializeOrderRows = (rows) => {
   const orders = new Map();
   console.log("[serializeOrderRows] Processing", rows.length, "rows");
@@ -553,6 +621,10 @@ const serializeOrderRows = (rows) => {
         subtotal: Number(row.subtotal),
         shipping: Number(row.shipping),
         total: Number(row.total),
+        paymentMethod: row.payment_method,
+        paymentStatus: row.payment_status,
+        paymentId: row.razorpay_payment_id,
+        paymentTime: row.payment_captured_at ?? row.created_at,
         status: normalizeOrderStatus(row.status),
         createdAt: row.created_at,
       });
@@ -609,10 +681,8 @@ const updateStock = async (productId, body) => {
   return result.rows[0];
 };
 
-const createOrder = async (body) => {
-  const payload = normalizeOrderPayload(body);
-  const subtotal = payload.items.reduce((sum, item) => sum + item.totalPrice, 0);
-  const total = subtotal + payload.shipping;
+const createOrderFromPayload = async (payload, paymentDetails = null) => {
+  const { subtotal, total } = buildOrderTotals(payload);
   const orderId = buildOrderId();
   const client = await pool.connect();
 
@@ -634,9 +704,13 @@ const createOrder = async (body) => {
           subtotal,
           total,
           payment_method,
+          razorpay_order_id,
+          razorpay_payment_id,
+          payment_status,
+          payment_captured_at,
           status
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending')
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 'pending')
       `,
       [
         orderId,
@@ -651,6 +725,10 @@ const createOrder = async (body) => {
         subtotal,
         total,
         payload.paymentMethod,
+        paymentDetails?.razorpayOrderId ?? null,
+        paymentDetails?.razorpayPaymentId ?? null,
+        paymentDetails?.paymentStatus ?? "pending",
+        paymentDetails?.paymentCapturedAt ?? null,
       ],
     );
 
@@ -706,8 +784,108 @@ const createOrder = async (body) => {
     shipping: payload.shipping,
     total,
     paymentMethod: payload.paymentMethod,
+    razorpayOrderId: paymentDetails?.razorpayOrderId ?? null,
+    razorpayPaymentId: paymentDetails?.razorpayPaymentId ?? null,
+    paymentStatus: paymentDetails?.paymentStatus ?? "pending",
+    paymentTime: paymentDetails?.paymentCapturedAt ?? new Date().toISOString(),
     status: "pending",
     createdAt: new Date().toISOString(),
+  };
+};
+
+const createOrder = async (body, paymentDetails = null) => {
+  const payload = normalizeOrderPayload(body);
+  return createOrderFromPayload(payload, paymentDetails);
+};
+
+const verifyRazorpayPaymentAndCreateOrder = async (body) => {
+  assertRazorpayConfigured();
+
+  if (!isPlainObject(body)) {
+    throw { statusCode: 400, message: "Request body must be a JSON object." };
+  }
+
+  const razorpayOrderId = String(body.razorpay_order_id ?? "").trim();
+  const razorpayPaymentId = String(body.razorpay_payment_id ?? "").trim();
+  const razorpaySignature = String(body.razorpay_signature ?? "").trim();
+  const checkoutPayload = body.checkoutPayload;
+
+  if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+    throw {
+      statusCode: 400,
+      message: "razorpay_order_id, razorpay_payment_id, and razorpay_signature are required.",
+    };
+  }
+
+  const payload = normalizeOrderPayload({
+    ...checkoutPayload,
+    paymentMethod: "upi",
+  });
+  const { total } = buildOrderTotals(payload);
+  const expectedAmount = toRazorpayAmount(total);
+
+  const expectedSignature = createHmac("sha256", RAZORPAY_KEY_SECRET)
+    .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+    .digest("hex");
+
+  if (expectedSignature !== razorpaySignature) {
+    throw { statusCode: 400, message: "Payment signature verification failed." };
+  }
+
+  const payment = await razorpayClient.payments.fetch(razorpayPaymentId);
+
+  if (String(payment.order_id ?? "") !== razorpayOrderId) {
+    throw { statusCode: 400, message: "Payment does not belong to the provided Razorpay order." };
+  }
+
+  if (Number(payment.amount) !== expectedAmount) {
+    throw { statusCode: 400, message: "Payment amount mismatch." };
+  }
+
+  if (!["captured", "authorized"].includes(String(payment.status ?? ""))) {
+    throw { statusCode: 400, message: "Payment is not successful yet." };
+  }
+
+  const existingOrderResult = await pool.query(
+    `
+      select id
+      from orders
+      where razorpay_payment_id = $1
+      limit 1
+    `,
+    [razorpayPaymentId],
+  );
+
+  if (existingOrderResult.rowCount > 0) {
+    const existingOrder = await getOrderById(existingOrderResult.rows[0].id);
+    return {
+      order: existingOrder,
+      payment: {
+        provider: "razorpay",
+        razorpayOrderId,
+        razorpayPaymentId,
+        status: String(payment.status ?? "pending"),
+      },
+    };
+  }
+
+  const order = await createOrderFromPayload(payload, {
+    razorpayOrderId,
+    razorpayPaymentId,
+    paymentStatus: String(payment.status ?? "pending"),
+    paymentCapturedAt: payment.created_at
+      ? new Date(Number(payment.created_at) * 1000).toISOString()
+      : new Date().toISOString(),
+  });
+
+  return {
+    order,
+    payment: {
+      provider: "razorpay",
+      razorpayOrderId,
+      razorpayPaymentId,
+      status: String(payment.status ?? "pending"),
+    },
   };
 };
 
@@ -725,6 +903,10 @@ const getOrders = async () => {
       o.shipping,
       o.subtotal,
       o.total,
+      o.payment_method,
+      o.razorpay_payment_id,
+      o.payment_status,
+      o.payment_captured_at,
       o.status,
       o.created_at,
       oi.id as item_id,
@@ -757,6 +939,10 @@ const getOrderById = async (orderId) => {
         o.shipping,
         o.subtotal,
         o.total,
+        o.payment_method,
+        o.razorpay_payment_id,
+        o.payment_status,
+        o.payment_captured_at,
         o.status,
         o.created_at,
         oi.id as item_id,
@@ -953,6 +1139,8 @@ const server = http.createServer(async (req, res) => {
           stock: `GET ${API_PREFIX}/stock`,
           updateStock: `PUT ${API_PREFIX}/stock/:product_id`,
           createOrder: `POST ${API_PREFIX}/orders`,
+          createRazorpayOrder: `POST ${API_PREFIX}/payments/razorpay/order`,
+          verifyRazorpayPayment: `POST ${API_PREFIX}/payments/razorpay/verify`,
           getOrders: `GET ${API_PREFIX}/orders?limit=20&offset=0`,
           getOrder: `GET ${API_PREFIX}/orders/:order_id`,
           updateOrderStatus: `PATCH ${API_PREFIX}/orders/:order_id/status`,
@@ -1023,6 +1211,18 @@ const server = http.createServer(async (req, res) => {
               body: { status: "pending|processing|delivered" },
             },
           },
+          payments: {
+            createRazorpayOrder: {
+              path: "/payments/razorpay/order",
+              method: "POST",
+              description: "Create a Razorpay order for online payment",
+            },
+            verifyRazorpayPayment: {
+              path: "/payments/razorpay/verify",
+              method: "POST",
+              description: "Verify Razorpay payment signature and create final order",
+            },
+          },
           auth: {
             login: {
               path: "/admin/login",
@@ -1064,6 +1264,20 @@ const server = http.createServer(async (req, res) => {
       const body = await parseJsonBody(req);
       const order = await createOrder(body);
       sendSuccess(res, 201, order);
+      return;
+    }
+
+    if (method === "POST" && routePathname === "/payments/razorpay/order") {
+      const body = await parseJsonBody(req);
+      const razorpayOrder = await createRazorpayPaymentOrder(body);
+      sendSuccess(res, 200, razorpayOrder);
+      return;
+    }
+
+    if (method === "POST" && routePathname === "/payments/razorpay/verify") {
+      const body = await parseJsonBody(req);
+      const verifiedPayment = await verifyRazorpayPaymentAndCreateOrder(body);
+      sendSuccess(res, 201, verifiedPayment);
       return;
     }
 

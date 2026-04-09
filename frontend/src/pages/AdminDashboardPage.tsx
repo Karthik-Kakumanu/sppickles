@@ -143,6 +143,9 @@ const AdminDashboardPage = () => {
     const headers = [
       "Order ID",
       "Created At",
+      "Payment Time",
+      "Payment ID",
+      "Payment Status",
       "Status",
       "Customer Name",
       "Phone",
@@ -166,6 +169,9 @@ const AdminDashboardPage = () => {
       const baseColumns = [
         order.id,
         formatDateTime(order.createdAt),
+        formatDateTime(order.paymentTime ?? order.createdAt),
+        order.paymentId || "-",
+        order.paymentStatus || "pending",
         STATUS_META[order.status].label,
         order.customer.name,
         order.customer.phone,
@@ -444,6 +450,8 @@ const AdminDashboardPage = () => {
                         <th className={thClass}>Order ID</th>
                         <th className={thClass}>Customer Name</th>
                         <th className={thClass}>Phone</th>
+                        <th className={thClass}>Payment ID</th>
+                        <th className={thClass}>Payment Time</th>
                         <th className={thClass}>Address</th>
                         <th className={thClass}>Total</th>
                         <th className={thClass}>Date &amp; Time</th>
@@ -453,7 +461,7 @@ const AdminDashboardPage = () => {
                     <tbody>
                       {isLoading ? (
                         <tr className="border-t border-[#e6ece4]">
-                          <td colSpan={7} className="px-6 py-14 text-center">
+                          <td colSpan={9} className="px-6 py-14 text-center">
                             <div className="inline-flex items-center gap-3 rounded-full bg-[#fff3ce] px-5 py-3 text-sm font-semibold text-[#8a651a]">
                               <Loader2 className="h-4 w-4 animate-spin" />
                               Loading orders
@@ -462,7 +470,7 @@ const AdminDashboardPage = () => {
                         </tr>
                       ) : error ? (
                         <tr className="border-t border-[#e6ece4]">
-                          <td colSpan={7} className="px-6 py-14 text-center">
+                          <td colSpan={9} className="px-6 py-14 text-center">
                             <div className="mx-auto max-w-xl rounded-2xl border border-[#ead9a2] bg-[#fff7e3] px-6 py-6">
                               <p className="text-lg font-semibold text-[#8a651a]">Unable to load orders</p>
                               <p className="mt-2 text-sm leading-7 text-[#8a651a]">
@@ -473,7 +481,7 @@ const AdminDashboardPage = () => {
                         </tr>
                       ) : filteredOrders.length === 0 ? (
                         <tr className="border-t border-[#e6ece4]">
-                          <td colSpan={7} className="px-6 py-14 text-center">
+                          <td colSpan={9} className="px-6 py-14 text-center">
                             <div className="theme-card-soft mx-auto max-w-xl rounded-2xl border border-dashed px-6 py-8">
                               <p className="text-theme-heading text-lg font-semibold">No matching orders</p>
                               <p className="mt-2 text-sm leading-7 text-theme-body">
@@ -517,6 +525,14 @@ const AdminDashboardPage = () => {
                                 <td className="px-6 py-5 text-sm font-medium text-theme-heading">
                                   {order.customer.phone}
                                 </td>
+                                <td className="px-6 py-5 text-sm text-theme-body">
+                                  <p className="max-w-[220px] truncate font-semibold text-theme-heading">
+                                    {order.paymentId || "-"}
+                                  </p>
+                                </td>
+                                <td className="px-6 py-5 text-sm text-theme-body">
+                                  {formatDateTime(order.paymentTime ?? order.createdAt)}
+                                </td>
                                 <td className="px-6 py-5">
                                   <p className="max-w-[320px] text-sm leading-6 text-theme-body">
                                     {formatAddress(order)}
@@ -550,7 +566,7 @@ const AdminDashboardPage = () => {
 
                               {isExpanded ? (
                                 <tr className="bg-[#fafcf9]">
-                                  <td colSpan={7} className="px-6 pb-6 pt-0">
+                                  <td colSpan={9} className="px-6 pb-6 pt-0">
                                     <div className="grid gap-4 border-t border-[#e6ece4] pt-6 xl:grid-cols-[minmax(0,1.2fr)_340px]">
                                       <div className="theme-card rounded-[1.5rem] border p-5 shadow-sm">
                                         <div className="flex items-center justify-between gap-4 border-b border-[#e6ece4] pb-4">
@@ -612,6 +628,20 @@ const AdminDashboardPage = () => {
                                         <div className="theme-card rounded-[1.5rem] border p-5 shadow-sm">
                                           <p className="text-theme-heading text-sm font-semibold uppercase tracking-[0.22em]">Totals</p>
                                           <div className="mt-4 space-y-3 text-sm text-theme-body">
+                                            <div className="flex items-center justify-between gap-4">
+                                              <span>Payment ID</span>
+                                              <span className="max-w-[210px] truncate text-right font-semibold text-theme-heading">
+                                                {order.paymentId || "-"}
+                                              </span>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-4">
+                                              <span>Payment Status</span>
+                                              <span className="font-semibold capitalize text-theme-heading">{order.paymentStatus || "pending"}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-4 border-t border-[#e6ece4] pt-3">
+                                              <span className="font-semibold text-theme-heading">Payment Time</span>
+                                              <span className="text-right text-theme-body">{formatDateTime(order.paymentTime ?? order.createdAt)}</span>
+                                            </div>
                                             <div className="flex items-center justify-between gap-4">
                                               <span>Subtotal</span>
                                               <span className="font-semibold text-theme-heading">{formatCurrency(order.subtotal)}</span>

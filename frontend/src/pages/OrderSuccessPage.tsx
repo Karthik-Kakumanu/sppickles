@@ -31,7 +31,7 @@ type OrderSuccessState = {
   orderId: string;
   whatsappUrl?: string;
   checkoutData: CheckoutData;
-  paymentMethod: "bank" | "cod";
+  paymentMethod: "upi" | "bank" | "cod";
   items: OrderSuccessItem[];
 };
 
@@ -44,11 +44,17 @@ const successCopy = {
     deliveryTitle: "Delivery address",
     paymentTitle: "Payment note",
     paymentMessages: {
+      upi: "UPI/Card is selected. Please continue on WhatsApp to complete payment confirmation with the team.",
       bank: "The team can now continue manual payment confirmation or transfer guidance directly with you.",
       cod: "Cash on delivery is selected. Payment is expected when the order reaches you.",
     },
     nextStepsTitle: "What happens next",
     nextSteps: {
+      upi: [
+        "Save the order ID and continue the conversation on WhatsApp.",
+        "The team shares the UPI/Card payment confirmation steps.",
+        "Packing and dispatch follow after confirmation.",
+      ],
       bank: [
         "Save the order ID and continue the conversation on WhatsApp.",
         "The team can confirm payment or transfer guidance after reviewing the order.",
@@ -72,11 +78,17 @@ const successCopy = {
     deliveryTitle: "డెలివరీ చిరునామా",
     paymentTitle: "చెల్లింపు సమాచారం",
     paymentMessages: {
+      upi: "UPI/కార్డ్ ఎంపిక చేయబడింది. చెల్లింపు నిర్ధారణ కోసం టీమ్‌తో వాట్సాప్‌లో కొనసాగండి.",
       bank: "ఇప్పుడు టీమ్ మీతో నేరుగా మాట్లాడి manual payment confirmation లేదా transfer guidance ఇవ్వగలదు.",
       cod: "క్యాష్ ఆన్ డెలివరీ ఎంపిక చేయబడింది. ఆర్డర్ చేరినప్పుడు చెల్లింపు పూర్తవుతుంది.",
     },
     nextStepsTitle: "తరువాత ఏమవుతుంది",
     nextSteps: {
+      upi: [
+        "ఆర్డర్ IDను సేవ్ చేసి వాట్సాప్‌లో కొనసాగండి.",
+        "టీమ్ UPI/కార్డ్ చెల్లింపు నిర్ధారణ దశలను పంచుకుంటుంది.",
+        "నిర్ధారణ తర్వాత ప్యాకింగ్ మరియు పంపిణీ మొదలవుతుంది.",
+      ],
       bank: [
         "ఆర్డర్ IDను సేవ్ చేసి వాట్సాప్‌లో కొనసాగండి.",
         "టీమ్ ఆర్డర్ చూసి చెల్లింపు లేదా transfer guidance ఇస్తుంది.",

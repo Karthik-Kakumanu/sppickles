@@ -80,7 +80,51 @@ Content-Type: application/json
     }
   ],
   "shipping": 50,
-  "paymentMethod": "cod"
+  "paymentMethod": "upi"
+}
+```
+
+### Online Payments (Razorpay)
+
+**Create Razorpay order**
+```
+POST /payments/razorpay/order
+Content-Type: application/json
+
+{
+  "customer": {
+    "name": "John Doe",
+    "phone": "9876543210",
+    "address": "123 Main St",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "country": "IN",
+    "pincode": "400001"
+  },
+  "items": [
+    {
+      "product_id": "pickle_01",
+      "name": "Uppu Pachchalu",
+      "weight": "250g",
+      "quantity": 2,
+      "price": 199
+    }
+  ],
+  "shipping": 50,
+  "paymentMethod": "upi"
+}
+```
+
+**Verify Razorpay payment and create final order**
+```
+POST /payments/razorpay/verify
+Content-Type: application/json
+
+{
+  "razorpay_order_id": "order_xxx",
+  "razorpay_payment_id": "pay_xxx",
+  "razorpay_signature": "signature_xxx",
+  "checkoutPayload": { ...same checkout payload used while creating razorpay order... }
 }
 ```
 
@@ -151,6 +195,9 @@ ENABLE_REQUEST_LOGGING=true
 | `JWT_SECRET` | - | JWT signing secret (min 32 chars in production) |
 | `CORS_ORIGIN` | http://localhost:8080 | Allowed CORS origin |
 | `ENABLE_REQUEST_LOGGING` | true | Enable structured request logging |
+| `RAZORPAY_KEY_ID` | - | Razorpay key ID (live key in production) |
+| `RAZORPAY_KEY_SECRET` | - | Razorpay key secret (keep server-side only) |
+| `RAZORPAY_CURRENCY` | INR | Razorpay currency code |
 | `ADMIN_LOGIN_MAX_ATTEMPTS` | 5 | Max failed login attempts |
 | `ADMIN_LOGIN_WINDOW_MS` | 900000 | Login attempt window (15 min default) |
 | `ADMIN_LOGIN_LOCKOUT_MS` | 1800000 | Lockout duration (30 min default) |
