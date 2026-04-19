@@ -4,6 +4,7 @@ import {
   adminLogout as apiAdminLogout,
   getAdminSession,
   getProductAvailability,
+  useProductsQuery,
   useStockQuery,
 } from "@/lib/api";
 import {
@@ -14,9 +15,11 @@ import {
 } from "@/data/site";
 import { calculateWeightPrice } from "@/lib/pricing";
 import { readStorage, writeStorage } from "@/lib/storage";
+import { resolvePickleImage } from "@/lib/pickleImages";
 
 const STORAGE_KEYS = {
   cart: "sp-traditional-pickles-cart-v1",
+  productsUpdatedAt: "sp-products-updated-at",
 };
 
 type ResolvedCartLine = CartLine & {
@@ -55,6 +58,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   );
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
   const [isAdminReady, setIsAdminReady] = useState(false);
+  const {
+    data: backendProducts = [],
+    isLoading: isProductsLoading,
+    error: productsQueryError,
+    refetch: refetchProducts,
+  } = useProductsQuery();
   const { data: stockMap = new Map(), isLoading, error } = useStockQuery();
 
   useEffect(() => {
@@ -85,15 +94,72 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const productsError = error instanceof Error ? error : null;
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEYS.productsUpdatedAt) {
+        void refetchProducts();
+      }
+    };
+
+    const productChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("sp-products") : null;
+    const handleBroadcast = (event: MessageEvent) => {
+      if (event.data?.type === "products-updated") {
+        void refetchProducts();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("focus", refetchProducts);
+    document.addEventListener("visibilitychange", refetchProducts);
+
+    productChannel?.addEventListener("message", handleBroadcast);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("focus", refetchProducts);
+      document.removeEventListener("visibilitychange", refetchProducts);
+      productChannel?.removeEventListener("message", handleBroadcast);
+      productChannel?.close();
+    };
+  }, [refetchProducts]);
+
+  const productsError = (productsQueryError instanceof Error ? productsQueryError : null) ??
+    (error instanceof Error ? error : null);
+
+  const productsSource = backendProducts.length > 0 ? backendProducts : defaultProducts;
+  const defaultImageLookup = useMemo(
+    () => new Map(defaultProducts.map((product) => [product.name, product.image] as const)),
+    [],
+  );
+
+  const resolveProductImage = (product: ProductRecord) => {
+    const explicitImage = String(product.image ?? "").trim();
+
+    if (explicitImage) {
+      return explicitImage;
+    }
+
+    const catalogImage = defaultImageLookup.get(product.name)?.trim();
+
+    if (catalogImage) {
+      return catalogImage;
+    }
+
+    if (product.category === "pickles") {
+      return resolvePickleImage(product.name);
+    }
+
+    return explicitImage;
+  };
 
   const products = useMemo(
     () =>
-      defaultProducts.map((product) => ({
+      productsSource.map((product) => ({
         ...product,
+        image: resolveProductImage(product),
         isAvailable: getProductAvailability(stockMap, product),
       })),
-    [stockMap],
+    [defaultImageLookup, productsSource, stockMap],
   );
 
   const productMap = useMemo(
@@ -229,7 +295,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       products,
       availableProducts,
       bestSellers,
-      isProductsLoading: isLoading,
+      isProductsLoading: isProductsLoading || isLoading,
       productsError,
       cart,
       cartCount,
@@ -248,6 +314,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       products,
       availableProducts,
       bestSellers,
+      isProductsLoading,
       isLoading,
       productsError,
       cart,

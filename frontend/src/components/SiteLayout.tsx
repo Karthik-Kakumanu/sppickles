@@ -1,10 +1,10 @@
-import { Menu, Phone, ShoppingBag, X } from "lucide-react";
+import { Menu, Phone, X } from "lucide-react";
 import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
+import FloatingBottomNav from "@/components/FloatingBottomNav";
 import SiteFooter from "@/components/SiteFooter";
 import TopBar from "@/components/TopBar";
 import LanguageToggle from "@/components/LanguageToggle";
-import { useStore } from "@/components/StoreProvider";
 import { brand, navigation } from "@/data/site";
 import { NavLink } from "@/components/NavLink";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -13,7 +13,6 @@ import { content as translations } from "@/content/translations";
 const pageWrap = "w-full px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10";
 
 const SiteLayout = () => {
-  const { cartCount } = useStore();
   const { language, setLanguage } = useLanguage();
   const t = translations[language];
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -54,14 +53,6 @@ const SiteLayout = () => {
                   ))}
                 </nav>
 
-                <Link
-                  to="/cart"
-                  className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-[#e8ede8] bg-white px-4 py-2.5 text-[13px] font-bold text-[#2f7a43] shadow-[0_8px_20px_rgba(30,79,46,0.06)] transition duration-300 hover:bg-[#f5faf6]"
-                >
-                  <ShoppingBag className="h-4 w-4" />
-                  <span className="hidden lg:inline">({cartCount})</span>
-                </Link>
-
                 <LanguageToggle />
 
                 <div className="hidden lg:flex flex-col items-end justify-center gap-1.5 shrink-0">
@@ -83,18 +74,6 @@ const SiteLayout = () => {
                 >
                   <Phone className="h-3.5 w-3.5" />
                 </a>
-                <Link
-                  to="/cart"
-                  className="relative inline-flex items-center rounded-full border border-[#e8ede8] bg-white px-3 py-2 text-xs font-bold text-[#2f7a43]"
-                  aria-label={`Cart${cartCount > 0 ? ` (${cartCount} items)` : ""}`}
-                >
-                  <ShoppingBag className="h-3.5 w-3.5" />
-                  {cartCount > 0 ? (
-                    <span className="absolute -right-1 -top-1 text-[12px] font-black leading-none text-[#b42318]">
-                      {cartCount > 99 ? "99+" : cartCount}
-                    </span>
-                  ) : null}
-                </Link>
                 <button
                   type="button"
                   onClick={() => setIsMobileMenuOpen((prev) => !prev)}
@@ -118,7 +97,7 @@ const SiteLayout = () => {
                   }}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     language === "te"
-                      ? "bg-[#2f7a43] text-white"
+                      ? "bg-[#2f7a43] !text-white"
                       : "text-theme-body hover:bg-[#edf5ee]"
                   } font-telugu`}
                   aria-pressed={language === "te"}
@@ -134,7 +113,7 @@ const SiteLayout = () => {
                   }}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     language === "en"
-                      ? "bg-[#2f7a43] text-white"
+                      ? "bg-[#2f7a43] !text-white"
                       : "text-theme-body hover:bg-[#edf5ee]"
                   }`}
                   aria-pressed={language === "en"}
@@ -166,11 +145,12 @@ const SiteLayout = () => {
         </div>
       </header>
 
-      <main className="flex-grow pb-24 md:pb-28">
+      <main className="flex-grow pb-36 md:pb-40">
         <Outlet />
       </main>
 
       <SiteFooter />
+      <FloatingBottomNav />
     </div>
   );
 };

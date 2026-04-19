@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  defaultProducts,
   type OrderCustomer,
   type OrderRecord,
   type ProductCategory,
@@ -10,24 +9,35 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { buildWhatsAppOrderUrl } from "@/lib/order";
 
-const DEFAULT_API_ORIGIN =
-  typeof window !== "undefined" && window.location.hostname !== "localhost"
-    ? window.location.origin
-    : "http://localhost:5000";
+const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
+
+const getDefaultApiBaseUrl = () => {
+  if (typeof window === "undefined") {
+    return "http://localhost:5000/api";
+  }
+
+  return LOCAL_HOSTNAMES.has(window.location.hostname)
+    ? "http://localhost:5000/api"
+    : "/api";
+};
+
+const ensureApiSuffix = (value: string) =>
+  value.endsWith("/api") ? value : `${value}/api`;
+
 const normalizeApiBaseUrl = (baseUrl?: string) => {
   const normalizedBaseUrl = String(baseUrl ?? "")
     .trim()
     .replace(/\/+$/, "");
 
   if (!normalizedBaseUrl) {
-    return `${DEFAULT_API_ORIGIN}/api`;
+    return getDefaultApiBaseUrl();
   }
 
-  return normalizedBaseUrl.endsWith("/api") ? normalizedBaseUrl : `${normalizedBaseUrl}/api`;
+  return ensureApiSuffix(normalizedBaseUrl);
 };
 
 const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
-const LEGACY_API_BASE_URL = API_BASE_URL.endsWith("/api")
+const LEGACY_API_BASE_URL = API_BASE_URL.endsWith("/api") && API_BASE_URL.length > "/api".length
   ? API_BASE_URL.slice(0, -"/api".length)
   : API_BASE_URL;
 const ORDER_STATUS_MAP: Record<string, OrderRecord["status"]> = {
@@ -37,6 +47,50 @@ const ORDER_STATUS_MAP: Record<string, OrderRecord["status"]> = {
   shipped: "delivered",
   delivered: "delivered",
   cancelled: "pending",
+};
+
+const PRODUCTS_UPDATED_AT_KEY = "sp-products-updated-at";
+const COUPONS_UPDATED_AT_KEY = "sp-coupons-updated-at";
+const ADMIN_NEW_ORDER_EVENT = "sp-admin-new-order";
+
+const notifyProductsUpdated = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(PRODUCTS_UPDATED_AT_KEY, String(Date.now()));
+  } catch {
+    // Ignore storage write failures in restricted environments.
+  }
+
+  if (typeof BroadcastChannel !== "undefined") {
+    try {
+      new BroadcastChannel("sp-products").postMessage({ type: "products-updated", at: Date.now() });
+    } catch {
+      // Ignore BroadcastChannel failures.
+    }
+  }
+};
+
+const notifyCouponsUpdated = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(COUPONS_UPDATED_AT_KEY, String(Date.now()));
+  } catch {
+    // Ignore storage write failures in restricted environments.
+  }
+
+  if (typeof BroadcastChannel !== "undefined") {
+    try {
+      new BroadcastChannel("sp-coupons").postMessage({ type: "coupons-updated", at: Date.now() });
+    } catch {
+      // Ignore BroadcastChannel failures.
+    }
+  }
 };
 
 class ApiError extends Error {
@@ -68,6 +122,133 @@ type StockRecord = {
 type StockState = {
   isAvailable: boolean;
   updatedAt: number;
+};
+
+export type AdminDeviceSession = {
+  id: string;
+  adminUserId: string;
+  adminEmail: string;
+  deviceLabel: string;
+  userAgent: string;
+  ipAddress: string;
+  createdAt: string | null;
+  lastSeenAt: string | null;
+  expiresAt: string | null;
+  revokedAt: string | null;
+  isCurrent: boolean;
+};
+
+type ApiProduct = {
+  id: string;
+  name: string;
+  category: ProductCategory;
+  subcategory?: "salt" | "asafoetida" | null;
+  price_per_kg: number;
+  image: string;
+  description: string;
+  customTag?: string | null;
+  custom_tag?: string | null;
+  isAvailable: boolean;
+  isBestSeller?: boolean;
+  isBrahminHeritage?: boolean;
+  isGreenTouch?: boolean;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  deletedAt?: string | null;
+};
+
+type AdminAnalytics = {
+  summary: {
+    totalOrders: number;
+    totalRevenue: number;
+    avgOrderValue: number;
+    inStock: number;
+    outOfStock: number;
+    pending: number;
+    processing: number;
+    delivered: number;
+  };
+  revenueByDay: Array<{ label: string; revenue: number; orders: number }>;
+  topProducts: Array<{ productId: string; name: string; category: ProductCategory; unitsSold: number; revenue: number }>;
+  recentOrders: Array<{
+    id: string;
+    total: number;
+    status: OrderRecord["status"];
+    createdAt: string;
+    customerName: string;
+    customerPhone: string;
+    paymentStatus: string;
+    itemCount: number;
+  }>;
+};
+
+export type CouponDiscountType = "percentage" | "fixed";
+export type CouponScope = "all" | "category" | "product";
+export type CouponCategoryScope = ProductCategory | "salted-pickles" | "tempered-pickles";
+
+export type AdminCoupon = {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  discountType: CouponDiscountType;
+  discountValue: number;
+  appliesTo: CouponScope;
+  targetCategory: CouponCategoryScope | null;
+  targetProductId: string | null;
+  targetProductName: string | null;
+  minOrderAmount: number | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  isActive: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+export type AdminCouponInput = {
+  code: string;
+  title: string;
+  description?: string;
+  discountType: CouponDiscountType;
+  discountValue: number;
+  appliesTo: CouponScope;
+  targetCategory?: CouponCategoryScope | null;
+  targetProductId?: string | null;
+  minOrderAmount?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  isActive?: boolean;
+};
+
+export type AdMediaType = "image" | "video";
+
+export type AdminAd = {
+  id: string;
+  title: string;
+  description: string;
+  mediaType: AdMediaType;
+  mediaUrl: string;
+  ctaText: string | null;
+  ctaUrl: string | null;
+  displayOrder: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  isActive: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+export type AdminAdInput = {
+  title: string;
+  description?: string;
+  mediaType: AdMediaType;
+  mediaUrl: string;
+  ctaText?: string | null;
+  ctaUrl?: string | null;
+  displayOrder?: number;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  isActive?: boolean;
 };
 
 const buildRequestUrl = (baseUrl: string, endpoint: string) =>
@@ -134,12 +315,26 @@ const apiFetch = async <T>(endpoint: string, options: RequestInit = {}) => {
   return payload as T;
 };
 
-const productCrudDisabled = () => {
-  throw new ApiError("Product CRUD is disabled. Products are static on the frontend.", 400);
-};
-
 const normalizeOrderStatus = (status: unknown): OrderRecord["status"] =>
   ORDER_STATUS_MAP[String(status ?? "").trim().toLowerCase()] ?? "pending";
+
+const normalizeProduct = (product: any): ProductRecord => ({
+  id: String(product.id ?? ""),
+  name: String(product.name ?? ""),
+  name_te: product.name_te ? String(product.name_te) : undefined,
+  nameTeluguguTelugu: product.nameTeluguguTelugu ? String(product.nameTeluguguTelugu) : undefined,
+  category: String(product.category ?? "pickles") as ProductCategory,
+  subcategory: product.subcategory ? (String(product.subcategory) as "salt" | "asafoetida") : undefined,
+  price_per_kg: Number(product.price_per_kg ?? 0),
+  image: String(product.image ?? ""),
+  description: String(product.description ?? ""),
+  customTag: product.customTag ?? product.custom_tag ?? null,
+  isAvailable: Boolean(product.isAvailable ?? product.is_available ?? true),
+  isBestSeller: Boolean(product.isBestSeller ?? product.is_best_seller ?? false),
+  isBrahminHeritage: Boolean(product.isBrahminHeritage ?? product.is_brahmin_heritage ?? true),
+  isGreenTouch: Boolean(product.isGreenTouch ?? product.is_green_touch ?? true),
+  deletedAt: product.deletedAt ?? product.deleted_at ?? null,
+});
 
 const normalizeOrder = (order: any): OrderRecord => {
   const customer: OrderCustomer = {
@@ -203,11 +398,52 @@ const normalizeOrder = (order: any): OrderRecord => {
   };
 };
 
-export const getProducts = async (category: ProductCategory | null = null) => {
-  const products = category
-    ? defaultProducts.filter((product) => product.category === category)
-    : defaultProducts;
-  return products;
+const normalizeCoupon = (coupon: any): AdminCoupon => ({
+  id: String(coupon.id ?? ""),
+  code: String(coupon.code ?? ""),
+  title: String(coupon.title ?? ""),
+  description: String(coupon.description ?? ""),
+  discountType: String(coupon.discountType ?? coupon.discount_type ?? "percentage") as CouponDiscountType,
+  discountValue: Number(coupon.discountValue ?? coupon.discount_value ?? 0),
+  appliesTo: String(coupon.appliesTo ?? coupon.applies_to ?? "all") as CouponScope,
+  targetCategory: (coupon.targetCategory ?? coupon.target_category ?? null) as CouponCategoryScope | null,
+  targetProductId: coupon.targetProductId ?? coupon.target_product_id ?? null,
+  targetProductName: coupon.targetProductName ?? coupon.target_product_name ?? null,
+  minOrderAmount:
+    coupon.minOrderAmount ?? coupon.min_order_amount ?? null,
+  startsAt: coupon.startsAt ?? coupon.starts_at ?? null,
+  endsAt: coupon.endsAt ?? coupon.ends_at ?? null,
+  isActive: Boolean(coupon.isActive ?? coupon.is_active ?? true),
+  createdAt: coupon.createdAt ?? coupon.created_at ?? null,
+  updatedAt: coupon.updatedAt ?? coupon.updated_at ?? null,
+});
+
+const normalizeAd = (ad: any): AdminAd => ({
+  id: String(ad.id ?? ""),
+  title: String(ad.title ?? ""),
+  description: String(ad.description ?? ""),
+  mediaType: String(ad.mediaType ?? ad.media_type ?? "image") as AdMediaType,
+  mediaUrl: String(ad.mediaUrl ?? ad.media_url ?? ""),
+  ctaText: ad.ctaText ?? ad.cta_text ?? null,
+  ctaUrl: ad.ctaUrl ?? ad.cta_url ?? null,
+  displayOrder: Number(ad.displayOrder ?? ad.display_order ?? 0),
+  startsAt: ad.startsAt ?? ad.starts_at ?? null,
+  endsAt: ad.endsAt ?? ad.ends_at ?? null,
+  isActive: Boolean(ad.isActive ?? ad.is_active ?? true),
+  createdAt: ad.createdAt ?? ad.created_at ?? null,
+  updatedAt: ad.updatedAt ?? ad.updated_at ?? null,
+});
+
+export const getProducts = async (
+  category: ProductCategory | null = null,
+  includeDeleted = false,
+) => {
+  const products = await apiFetch<ApiProduct[]>(includeDeleted ? "/admin/products/deleted" : "/products");
+  const normalizedProducts = products.map(normalizeProduct);
+
+  return category
+    ? normalizedProducts.filter((product) => product.category === category)
+    : normalizedProducts;
 };
 
 const slugifyProductName = (name: string) =>
@@ -247,9 +483,109 @@ export const getProductAvailability = (
   return product.isAvailable ?? true;
 };
 
-export const createProduct = async () => productCrudDisabled();
-export const updateProduct = async () => productCrudDisabled();
-export const deleteProduct = async () => productCrudDisabled();
+export const createProduct = async (productData: Partial<ProductRecord>) =>
+  apiFetch<ProductRecord>("/products", {
+    method: "POST",
+    body: JSON.stringify(productData),
+  });
+
+export const updateProduct = async (productId: string, productData: Partial<ProductRecord>) =>
+  apiFetch<ProductRecord>(`/products/${String(productId).trim()}`, {
+    method: "PATCH",
+    body: JSON.stringify(productData),
+  });
+
+export const deleteProduct = async (productId: string) =>
+  apiFetch<{ id: string; deleted: boolean }>(`/products/${String(productId).trim()}`, {
+    method: "DELETE",
+  });
+
+export const restoreProduct = async (productId: string) =>
+  apiFetch<ProductRecord>(`/products/${String(productId).trim()}/restore`, {
+    method: "POST",
+  });
+
+export const importProducts = async (products: ProductRecord[]) =>
+  apiFetch<{ imported: number; products: ProductRecord[] }>("/admin/products/import", {
+    method: "POST",
+    body: JSON.stringify({ products }),
+  });
+
+export const getAdminAnalytics = async () => apiFetch<AdminAnalytics>("/admin/analytics");
+
+export const getAdminCoupons = async () => {
+  const coupons = await apiFetch<any[]>("/admin/coupons");
+  return coupons.map(normalizeCoupon);
+};
+
+export const getCoupons = async () => {
+  const coupons = await apiFetch<any[]>("/coupons");
+  return coupons.map(normalizeCoupon);
+};
+
+export const createAdminCoupon = async (couponData: AdminCouponInput) => {
+  const response = await apiFetch<any>("/admin/coupons", {
+    method: "POST",
+    body: JSON.stringify(couponData),
+  });
+
+  const coupon = normalizeCoupon(response);
+  notifyCouponsUpdated();
+  return coupon;
+};
+
+export const updateAdminCoupon = async (couponId: string, couponData: Partial<AdminCouponInput>) => {
+  const response = await apiFetch<any>(`/admin/coupons/${String(couponId).trim()}`, {
+    method: "PATCH",
+    body: JSON.stringify(couponData),
+  });
+
+  const coupon = normalizeCoupon(response);
+  notifyCouponsUpdated();
+  return coupon;
+};
+
+export const deleteAdminCoupon = async (couponId: string) => {
+  const response = await apiFetch<{ id: string; code: string; deleted: boolean }>(`/admin/coupons/${String(couponId).trim()}`, {
+    method: "DELETE",
+  });
+
+  notifyCouponsUpdated();
+  return response;
+};
+
+export const getAdminAds = async () => {
+  const ads = await apiFetch<any[]>("/admin/ads");
+  return ads.map(normalizeAd);
+};
+
+export const getAds = async () => {
+  const ads = await apiFetch<any[]>("/ads");
+  return ads.map(normalizeAd);
+};
+
+export const createAdminAd = async (adData: AdminAdInput) => {
+  const response = await apiFetch<any>("/admin/ads", {
+    method: "POST",
+    body: JSON.stringify(adData),
+  });
+
+  return normalizeAd(response);
+};
+
+export const updateAdminAd = async (adId: string, adData: Partial<AdminAdInput>) => {
+  const response = await apiFetch<any>(`/admin/ads/${String(adId).trim()}`, {
+    method: "PATCH",
+    body: JSON.stringify(adData),
+  });
+
+  return normalizeAd(response);
+};
+
+export const deleteAdminAd = async (adId: string) =>
+  apiFetch<{ id: string; title: string; deleted: boolean }>(`/admin/ads/${String(adId).trim()}`, {
+    method: "DELETE",
+  });
 
 export const getStock = async (): Promise<Map<string, boolean>> => {
   try {
@@ -295,7 +631,8 @@ export type CheckoutOrderPayload = {
   country: string;
   pincode: string;
   shipping: number;
-  paymentMethod?: "upi";
+  couponCode?: string | null;
+  paymentMethod?: "upi" | "cod";
   items: Array<{
     productId: string;
     name: string;
@@ -303,6 +640,11 @@ export type CheckoutOrderPayload = {
     weight: WeightOption;
     price: number;
   }>;
+};
+
+export type AdminManualOrderPayload = CheckoutOrderPayload & {
+  paymentId?: string;
+  paymentStatus?: "captured" | "authorized" | "pending" | "failed";
 };
 
 export const createRazorpayOrder = async (orderData: CheckoutOrderPayload) =>
@@ -324,6 +666,7 @@ export const createRazorpayOrder = async (orderData: CheckoutOrderPayload) =>
         pincode: orderData.pincode,
       },
       shipping: orderData.shipping,
+      couponCode: orderData.couponCode ?? null,
       paymentMethod: orderData.paymentMethod || "upi",
       items: orderData.items.map((item) => ({
         product_id: item.productId,
@@ -374,7 +717,41 @@ export const createOrder = async (orderData: CheckoutOrderPayload) => {
         pincode: orderData.pincode,
       },
       shipping: orderData.shipping,
+      couponCode: orderData.couponCode ?? null,
       paymentMethod: orderData.paymentMethod || "upi",
+      items: orderData.items.map((item) => ({
+        product_id: item.productId,
+        name: item.name,
+        quantity: item.quantity,
+        weight: item.weight,
+        price: item.price,
+      })),
+    }),
+  });
+
+  return normalizeOrder(response);
+};
+
+export const createAdminManualOrder = async (orderData: AdminManualOrderPayload) => {
+  const paymentId = String(orderData.paymentId ?? "").trim();
+
+  const response = await apiFetch<any>("/admin/orders/manual", {
+    method: "POST",
+    body: JSON.stringify({
+      customer: {
+        name: orderData.name,
+        phone: orderData.phone,
+        address: orderData.address,
+        city: orderData.city,
+        state: orderData.state,
+        country: orderData.country,
+        pincode: orderData.pincode,
+      },
+      shipping: orderData.shipping,
+      couponCode: orderData.couponCode ?? null,
+      paymentMethod: orderData.paymentMethod || "upi",
+      ...(paymentId ? { payment_id: paymentId } : {}),
+      payment_status: orderData.paymentStatus || "captured",
       items: orderData.items.map((item) => ({
         product_id: item.productId,
         name: item.name,
@@ -437,11 +814,18 @@ export const getAdminSession = async (): Promise<{ admin: { id: string; email: s
   }
 };
 
-export const useProductsQuery = (category: ProductCategory | null = null) =>
+export const getAdminSessions = async (): Promise<{ sessions: AdminDeviceSession[] }> =>
+  apiFetch<{ sessions: AdminDeviceSession[] }>("/admin/sessions");
+
+export const useProductsQuery = (category: ProductCategory | null = null, includeDeleted = false) =>
   useQuery({
-    queryKey: ["products", category],
-    queryFn: () => getProducts(category),
-    staleTime: Number.POSITIVE_INFINITY,
+    queryKey: ["products", category, includeDeleted],
+    queryFn: () => getProducts(category, includeDeleted),
+    staleTime: 1000 * 5,
+    refetchInterval: 1000 * 15,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
 export const useStockQuery = () =>
@@ -532,6 +916,39 @@ export const useOrdersQuery = () =>
     refetchInterval: 1000 * 30, // Auto-refresh every 30 seconds
   });
 
+export const useCreateManualOrderMutation = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: createAdminManualOrder,
+    onSuccess: (order) => {
+      toast({
+        title: "Manual order added",
+        description: `Order ${order.id} created from admin panel.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(ADMIN_NEW_ORDER_EVENT, {
+            detail: { count: 1, source: "manual", orderId: order.id },
+          }),
+        );
+      }
+
+      return order;
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Manual entry failed",
+        description: error.message || "Unable to create manual order.",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
 export const useUpdateOrderMutation = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -618,13 +1035,24 @@ export const useDeleteOrderMutation = () => {
 };
 
 export const useCreateProductMutation = () => {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: createProduct,
+    mutationFn: (productData: Partial<ProductRecord>) => createProduct(productData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      notifyProductsUpdated();
+      toast({
+        title: "Product saved",
+        description: "The catalog has been updated.",
+      });
+    },
     onError: (error: Error) => {
       toast({
-        title: "Disabled",
+        title: "Save failed",
         description: error.message,
         variant: "destructive",
       });
@@ -633,13 +1061,25 @@ export const useCreateProductMutation = () => {
 };
 
 export const useUpdateProductMutation = () => {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: updateProduct,
+    mutationFn: ({ productId, productData }: { productId: string; productData: Partial<ProductRecord> }) =>
+      updateProduct(productId, productData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      notifyProductsUpdated();
+      toast({
+        title: "Product updated",
+        description: "The catalog changes were saved.",
+      });
+    },
     onError: (error: Error) => {
       toast({
-        title: "Disabled",
+        title: "Update failed",
         description: error.message,
         variant: "destructive",
       });
@@ -648,14 +1088,268 @@ export const useUpdateProductMutation = () => {
 };
 
 export const useDeleteProductMutation = () => {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: deleteProduct,
+    mutationFn: (productId: string) => deleteProduct(productId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      notifyProductsUpdated();
+      toast({
+        title: "Product deleted",
+        description: "The product moved to Deleted products and can be restored.",
+      });
+    },
     onError: (error: Error) => {
       toast({
-        title: "Disabled",
+        title: "Delete failed",
         description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useRestoreProductMutation = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (productId: string) => restoreProduct(productId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      notifyProductsUpdated();
+      toast({
+        title: "Product restored",
+        description: "The deleted product is back in the live catalog.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Restore failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useImportProductsMutation = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (products: ProductRecord[]) => importProducts(products),
+    onSuccess: (_, products) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      notifyProductsUpdated();
+      toast({
+        title: "Catalog imported",
+        description: `${products.length} products were synchronized to the database.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Import failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useAdminAnalyticsQuery = () =>
+  useQuery({
+    queryKey: ["admin-analytics"],
+    queryFn: getAdminAnalytics,
+    staleTime: 0,
+    refetchInterval: 1000 * 20,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
+  });
+
+export const useAdminCouponsQuery = () =>
+  useQuery({
+    queryKey: ["admin-coupons"],
+    queryFn: getAdminCoupons,
+    staleTime: 1000 * 10,
+    refetchInterval: 1000 * 20,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+  });
+
+export const useCreateCouponMutation = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (couponData: AdminCouponInput) => createAdminCoupon(couponData),
+    onSuccess: (coupon) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+      toast({
+        title: "Coupon created",
+        description: `${coupon.code} is now available in the coupon list.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Create failed",
+        description: error.message || "Failed to create coupon.",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useUpdateCouponMutation = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: ({
+      couponId,
+      couponData,
+    }: {
+      couponId: string;
+      couponData: Partial<AdminCouponInput>;
+    }) => updateAdminCoupon(couponId, couponData),
+    onSuccess: (coupon) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+      toast({
+        title: "Coupon updated",
+        description: `${coupon.code} has been updated.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update coupon.",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useDeleteCouponMutation = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (couponId: string) => deleteAdminCoupon(couponId),
+    onSuccess: (coupon) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+      toast({
+        title: "Coupon deleted",
+        description: `${coupon.code} was removed.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete failed",
+        description: error.message || "Failed to delete coupon.",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useAdminAdsQuery = () =>
+  useQuery({
+    queryKey: ["admin-ads"],
+    queryFn: getAdminAds,
+    staleTime: 1000 * 10,
+    refetchInterval: 1000 * 20,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+  });
+
+export const useAdsQuery = () =>
+  useQuery({
+    queryKey: ["storefront-ads"],
+    queryFn: getAds,
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+  });
+
+export const useCreateAdMutation = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (adData: AdminAdInput) => createAdminAd(adData),
+    onSuccess: (ad) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-ads"] });
+      toast({
+        title: "Ad created",
+        description: `${ad.title} is now available in ads list.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Create failed",
+        description: error.message || "Failed to create ad.",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useUpdateAdMutation = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: ({
+      adId,
+      adData,
+    }: {
+      adId: string;
+      adData: Partial<AdminAdInput>;
+    }) => updateAdminAd(adId, adData),
+    onSuccess: (ad) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-ads"] });
+      toast({
+        title: "Ad updated",
+        description: `${ad.title} has been updated.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update ad.",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useDeleteAdMutation = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (adId: string) => deleteAdminAd(adId),
+    onSuccess: (ad) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-ads"] });
+      toast({
+        title: "Ad deleted",
+        description: `${ad.title} was removed.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete failed",
+        description: error.message || "Failed to delete ad.",
         variant: "destructive",
       });
     },

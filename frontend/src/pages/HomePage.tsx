@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { useMemo } from "react";
-import { Globe2, Mail, MapPin, Phone, ShoppingBag } from "lucide-react";
+import { Globe2, Mail, MapPin, Megaphone, Phone, ShoppingBag, TicketPercent } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import ProductCard from "@/components/ProductCard";
+import AdsCarousel from "@/components/AdsCarousel";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -315,6 +316,66 @@ const HomePage = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════
+          ADS CAROUSEL
+      ══════════════════════════════════════ */}
+      <section className={`${pageWrap} py-8 md:py-10`}>
+        <AdsCarousel />
+      </section>
+
+      {/* ══════════════════════════════════════
+          QUICK LINKS: COUPONS + ADS
+      ══════════════════════════════════════ */}
+      <section className={`${pageWrap} py-8 md:py-10`}>
+        <div className="mx-auto max-w-2xl space-y-4 text-center">
+          <Eyebrow variant="gold">{isTe ? "త్వరిత లింకులు" : "Quick Links"}</Eyebrow>
+          <SectionHeading isTelugu={isTe} className="!text-3xl md:!text-4xl">
+            {isTe ? "కూపన్లు మరియు ఆడ్స్ వెంటనే చూడండి" : "Jump To Coupons And Ads"}
+          </SectionHeading>
+          <p className={`text-sm text-theme-body sm:text-base ${isTe ? "font-telugu" : ""}`}>
+            {isTe
+              ? "కొత్త ఆఫర్లు, యాడ్స్ చూడాలంటే ఈ షార్ట్‌కట్స్‌ను ఉపయోగించండి."
+              : "Use these shortcuts to quickly view latest coupons and ads."}
+          </p>
+        </div>
+
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4">
+          <Link
+            to="/coupons"
+            className="group rounded-2xl border border-[#d8e5d8] bg-white p-4 sm:rounded-3xl sm:p-6 shadow-[0_10px_26px_rgba(30,79,46,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-[#bcd4c0] hover:shadow-[0_16px_36px_rgba(30,79,46,0.14)]"
+          >
+            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf5ee] text-[#2f7a43] transition-colors duration-300 group-hover:bg-[#2f7a43] group-hover:text-white sm:h-11 sm:w-11 sm:rounded-2xl">
+              <TicketPercent className="h-4 w-4 sm:h-5 sm:w-5" />
+            </div>
+            <h3 className={`mt-3 font-heading text-xl font-bold text-theme-heading sm:mt-4 sm:text-2xl ${isTe ? "font-telugu" : ""}`}>
+              {isTe ? "కూపన్లు" : "Coupons"}
+            </h3>
+            <p className={`mt-1.5 text-xs leading-5 text-theme-body sm:mt-2 sm:text-sm ${isTe ? "font-telugu" : ""}`}>
+              {isTe
+                ? "అడ్మిన్ జోడించిన అన్ని యాక్టివ్ కూపన్లు ఇక్కడ కనిపిస్తాయి."
+                : "See all active coupons added from admin dashboard."}
+            </p>
+          </Link>
+
+          <Link
+            to="/ads"
+            className="group rounded-2xl border border-[#d8e5d8] bg-white p-4 sm:rounded-3xl sm:p-6 shadow-[0_10px_26px_rgba(30,79,46,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-[#bcd4c0] hover:shadow-[0_16px_36px_rgba(30,79,46,0.14)]"
+          >
+            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf5ee] text-[#2f7a43] transition-colors duration-300 group-hover:bg-[#2f7a43] group-hover:text-white sm:h-11 sm:w-11 sm:rounded-2xl">
+              <Megaphone className="h-4 w-4 sm:h-5 sm:w-5" />
+            </div>
+            <h3 className={`mt-3 font-heading text-xl font-bold text-theme-heading sm:mt-4 sm:text-2xl ${isTe ? "font-telugu" : ""}`}>
+              {isTe ? "ఆడ్స్" : "Ads"}
+            </h3>
+            <p className={`mt-1.5 text-xs leading-5 text-theme-body sm:mt-2 sm:text-sm ${isTe ? "font-telugu" : ""}`}>
+              {isTe
+                ? "అడ్మిన్ యాక్టివ్ చేసిన ప్రోమోషనల్ యాడ్స్‌ను ఇక్కడ చూడండి."
+                : "View active promotional ads managed by admin."}
+            </p>
+          </Link>
         </div>
       </section>
 

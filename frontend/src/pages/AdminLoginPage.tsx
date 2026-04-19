@@ -124,7 +124,8 @@ const AdminLoginPage = () => {
             <button
               type="submit"
               disabled={isSubmitting || !email || !password}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#2f7a43] px-5 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#2f7a43] px-5 text-sm font-semibold !text-white shadow-[0_16px_32px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
             >
               {isSubmitting ? "Logging in..." : "Login"}
               {!isSubmitting ? <ArrowRight className="h-4 w-4" /> : null}

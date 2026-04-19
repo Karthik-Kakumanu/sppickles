@@ -17,7 +17,7 @@ const FloatingWhatsappButton = () => {
       className="fixed bottom-5 right-4 z-[70] md:bottom-8 md:right-8"
     >
       <div className="animate-whatsapp-pulse inline-flex items-center gap-3 rounded-full border border-[#cfe0cf] bg-white px-4 py-3 shadow-[0_20px_46px_rgba(30,79,46,0.18)]">
-        <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#2f7a43] text-white shadow-[0_14px_28px_rgba(47,122,67,0.24)]">
+        <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#2f7a43] !text-white shadow-[0_14px_28px_rgba(47,122,67,0.24)]">
           <WhatsAppLogo className="h-[22px] w-[22px]" />
         </div>
         <div className="hidden text-left md:block">

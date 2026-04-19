@@ -1,4 +1,4 @@
-import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import jwt from "jsonwebtoken";
 import { sendError } from "./http.js";
 
@@ -126,7 +126,7 @@ export const verifyAdminToken = (req) => {
 
 export const setAdminSessionCookie = (res, token) => {
   const isProduction = process.env.NODE_ENV === "production";
-  const maxAgeSeconds = 8 * 60 * 60;
+  const maxAgeSeconds = 10 * 365 * 24 * 60 * 60;
 
   res.setHeader(
     "Set-Cookie",
@@ -189,15 +189,15 @@ export const verifyPassword = (password, storedHash) => {
   return safeCompare(password, storedHash);
 };
 
-export const signAdminToken = (adminUser) =>
+export const signAdminToken = (adminUser, sessionId = randomUUID()) =>
   jwt.sign(
     {
       sub: adminUser.id,
       email: adminUser.email,
       role: "admin",
+      jti: sessionId,
     },
     getJwtSecret(),
-    { expiresIn: "8h" },
   );
 
 export const requireAdmin = (req, res) => {

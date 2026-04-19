@@ -9,6 +9,8 @@ import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useNavigate } from "react-router-dom";
 import { ProgressiveImage } from "@/components/LazyImage";
+import { defaultProducts } from "@/data/site";
+import { resolvePickleImage } from "@/lib/pickleImages";
 
 type ProductCardProps = {
   product: ProductRecord;
@@ -27,6 +29,19 @@ const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const quantity = Math.max(1, parseInt(quantityStr, 10) || 1);
+  const fallbackImage = useMemo(() => {
+    const exactMatch = defaultProducts.find((item) => item.name === product.name);
+
+    if (exactMatch?.image) {
+      return exactMatch.image;
+    }
+
+    if (product.category === "pickles") {
+      return resolvePickleImage(product.name);
+    }
+
+    return "";
+  }, [product.category, product.name]);
 
   // Mock stock levels (in production, this would come from backend)
   const stockLevels: Record<string, number> = {
@@ -171,6 +186,7 @@ const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }
           src={product.image}
           alt={displayName}
           className="aspect-[4/3.2] w-full object-cover object-center"
+          fallbackSrc={fallbackImage}
           loading="lazy"
           fetchPriority="auto"
         />

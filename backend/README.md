@@ -181,9 +181,16 @@ Create a `.env` file based on `.env.example`:
 ```env
 NODE_ENV=development
 PORT=5000
+DATABASE_URL=postgres://username:password@localhost:5432/sppickles
+CORS_ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:5173
 JWT_SECRET=your-super-secret-jwt-key-min-32-characters
-CORS_ORIGIN=http://localhost:8080
 ENABLE_REQUEST_LOGGING=true
+RAZORPAY_MODE=auto
+RAZORPAY_TEST_KEY_ID=rzp_test_xxxxxxxxxxxxx
+RAZORPAY_TEST_KEY_SECRET=replace-with-your-razorpay-test-secret
+RAZORPAY_LIVE_KEY_ID=rzp_live_xxxxxxxxxxxxx
+RAZORPAY_LIVE_KEY_SECRET=replace-with-your-razorpay-live-secret
+RAZORPAY_CURRENCY=INR
 ```
 
 ## Environment Variables
@@ -192,11 +199,18 @@ ENABLE_REQUEST_LOGGING=true
 |----------|---------|-------------|
 | `NODE_ENV` | development | Environment (development/production) |
 | `PORT` | 5000 | Server port |
+| `DATABASE_URL` | - | PostgreSQL connection string |
+| `CORS_ALLOWED_ORIGINS` | - | Comma-separated list of allowed origins |
+| `CORS_ORIGIN` | http://localhost:8080 | Fallback single allowed origin |
 | `JWT_SECRET` | - | JWT signing secret (min 32 chars in production) |
-| `CORS_ORIGIN` | http://localhost:8080 | Allowed CORS origin |
 | `ENABLE_REQUEST_LOGGING` | true | Enable structured request logging |
-| `RAZORPAY_KEY_ID` | - | Razorpay key ID (live key in production) |
-| `RAZORPAY_KEY_SECRET` | - | Razorpay key secret (keep server-side only) |
+| `RAZORPAY_MODE` | auto | Razorpay credential mode (`auto`, `test`, `live`) |
+| `RAZORPAY_TEST_KEY_ID` | - | Razorpay test key ID |
+| `RAZORPAY_TEST_KEY_SECRET` | - | Razorpay test key secret |
+| `RAZORPAY_LIVE_KEY_ID` | - | Razorpay live key ID |
+| `RAZORPAY_LIVE_KEY_SECRET` | - | Razorpay live key secret |
+| `RAZORPAY_KEY_ID` | - | Legacy fallback key ID |
+| `RAZORPAY_KEY_SECRET` | - | Legacy fallback key secret |
 | `RAZORPAY_CURRENCY` | INR | Razorpay currency code |
 | `ADMIN_LOGIN_MAX_ATTEMPTS` | 5 | Max failed login attempts |
 | `ADMIN_LOGIN_WINDOW_MS` | 900000 | Login attempt window (15 min default) |

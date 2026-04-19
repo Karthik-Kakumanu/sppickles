@@ -15,15 +15,20 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { content } from "@/content/translations";
 
 const AboutPage = lazy(() => import("./pages/AboutPage"));
-const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
+const AdminAdsPage = lazy(() => import("./pages/AdminAdsPage"));
+const AdminCouponsPage = lazy(() => import("./pages/AdminCouponsPage"));
+const AdminOrdersPage = lazy(() => import("./pages/AdminOrdersPage"));
 const AdminProducts = lazy(() => import("./pages/AdminProducts"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const CouponsPage = lazy(() => import("./pages/CouponsPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const HomePage = lazy(() => import("./pages/HomePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OrderSuccessPage = lazy(() => import("./pages/OrderSuccessPage"));
+const AdsPage = lazy(() => import("./pages/AdsPage"));
 const PaymentPage = lazy(() => import("./pages/PaymentPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
@@ -115,6 +120,8 @@ const App = () => {
                 <Route path="/products/fryums" element={<ProductsPage initialFilter="fryums" />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/coupons" element={<CouponsPage />} />
+                <Route path="/ads" element={<AdsPage />} />
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/order-success" element={<OrderSuccessPage />} />
                 <Route path="/about" element={<AboutPage />} />
@@ -130,10 +137,12 @@ const App = () => {
               <Route path="/fryums" element={<Navigate to="/products/fryums" replace />} />
               <Route path="/special" element={<Navigate to="/products" replace />} />
               <Route path="/admin/login" element={<AdminLoginPage />} />
-              <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
               <Route path="/admin/products" element={<AdminProducts />} />
-              <Route path="/admin/orders" element={<AdminDashboardPage />} />
-              <Route path="/admin" element={<Navigate to="/admin/orders" replace />} />
+              <Route path="/admin/orders" element={<AdminOrdersPage />} />
+              <Route path="/admin/ads" element={<AdminAdsPage />} />
+              <Route path="/admin/coupons" element={<AdminCouponsPage />} />
+              <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+              <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

@@ -250,7 +250,7 @@ const OrderSuccessPage = () => {
           <div className="flex flex-col gap-4 sm:flex-row">
             <button
               onClick={handleWhatsApp}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-8 py-4 font-semibold text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-8 py-4 font-semibold !text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] sm:w-auto"
             >
               <MessageCircle className="h-5 w-5" />
               {t.chat}

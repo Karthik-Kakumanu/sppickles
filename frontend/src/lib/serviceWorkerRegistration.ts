@@ -44,13 +44,21 @@ export async function registerServiceWorker() {
  * Unregister service worker (for debugging)
  */
 export async function unregisterServiceWorker() {
-  if (!("serviceWorker" in navigator)) return;
+  if (typeof window === "undefined") return;
 
   try {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    for (const registration of registrations) {
-      await registration.unregister();
-      console.log("[SW] Unregistered");
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+        console.log("[SW] Unregistered");
+      }
+    }
+
+    if ("caches" in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+      console.log("[SW] Cleared caches");
     }
   } catch (error) {
     console.error("[SW] Unregistration failed:", error);

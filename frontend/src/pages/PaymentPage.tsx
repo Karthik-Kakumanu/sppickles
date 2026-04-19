@@ -1,12 +1,17 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AlertCircle, ArrowRight, CreditCard, Loader2 } from "lucide-react";
 import {
+  createOrder,
   createRazorpayOrder,
+  getCoupons,
   verifyRazorpayPayment,
   type CheckoutOrderPayload,
+  type AdminCoupon,
 } from "@/lib/api";
 import { formatCurrency } from "@/lib/pricing";
+import { getCouponBreakdown } from "@/lib/couponPricing";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -14,7 +19,7 @@ import { content } from "@/content/translations";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 
-type PaymentMethod = "upi";
+type PaymentMethod = "upi" | "cod";
 
 type CheckoutData = {
   name: string;
@@ -26,6 +31,8 @@ type CheckoutData = {
   pincode: string;
   shipping: number;
   subtotal: number;
+  discountAmount?: number;
+  couponCode?: string | null;
 };
 
 type OrderPreviewItem = {
@@ -34,6 +41,23 @@ type OrderPreviewItem = {
   weight: string;
   quantity: number;
   totalPrice: number;
+};
+
+type CartLineForCoupon = {
+  key: string;
+  productId: string;
+  totalPrice: number;
+  product: {
+    category: string;
+    subcategory?: "salt" | "asafoetida";
+  };
+};
+
+type DisplayPreviewItem = OrderPreviewItem & {
+  originalTotalPrice: number;
+  discountedTotalPrice: number;
+  discountAmount: number;
+  isDiscounted: boolean;
 };
 
 type RazorpaySuccessResponse = {
@@ -100,6 +124,8 @@ const paymentCopy = {
     bankTitle: "UPI / Card",
     bankBody:
       "UPI and card payments are supported for this order.",
+    codTitle: "Cash on Delivery",
+    codBody: "Place the order now and pay when the order is delivered.",
     backWarningTitle: "Important",
     backWarningBody:
       "Do not press back or refresh until payment is confirmed. Closing this step early can interrupt payment verification.",
@@ -117,11 +143,36 @@ const paymentCopy = {
     bankTitle: "UPI / కార్డ్",
     bankBody:
       "ఈ ఆర్డర్‌కు UPI మరియు కార్డ్ చెల్లింపులు అందుబాటులో ఉన్నాయి.",
+    codTitle: "డెలివరీ సమయంలో చెల్లింపు",
+    codBody: "ఇప్పుడే ఆర్డర్ పెట్టండి, డెలివరీ సమయంలో చెల్లించండి.",
     backWarningTitle: "ముఖ్యం",
     backWarningBody:
       "చెల్లింపు నిర్ధారణ అయ్యే వరకు వెనక్కి వెళ్లకండి లేదా refresh చేయకండి. మధ్యలో ఆపితే payment verification అంతరాయం కలగవచ్చు.",
     confirm: "ఆర్డర్ నిర్ధారించండి",
     back: "చెక్‌అవుట్‌కి తిరుగు",
+  },
+} as const;
+
+const paymentUiCopy = {
+  en: {
+    checkoutUnavailable: "Razorpay checkout is unavailable.",
+    cancelled: "Payment was cancelled.",
+    confirmError: "Unable to confirm the order.",
+    itemCouponApplied: "Coupon applied to this item",
+    subtotal: "Subtotal",
+    shipping: "Shipping",
+    couponDiscount: "Coupon discount",
+    couponHelp: "Coupon discounts apply only to eligible items. Shipping stays unchanged.",
+  },
+  te: {
+    checkoutUnavailable: "Razorpay checkout అందుబాటులో లేదు.",
+    cancelled: "చెల్లింపు రద్దు చేయబడింది.",
+    confirmError: "ఆర్డర్ నిర్ధారణ చేయలేకపోయాం.",
+    itemCouponApplied: "ఈ అంశానికి కూపన్ అమలైంది",
+    subtotal: "ఉప మొత్తం",
+    shipping: "షిప్పింగ్",
+    couponDiscount: "కూపన్ తగ్గింపు",
+    couponHelp: "కూపన్ తగ్గింపు వర్తించే ఉత్పత్తులకే వర్తిస్తుంది. షిప్పింగ్ యథాతథంగా ఉంటుంది.",
   },
 } as const;
 
@@ -132,9 +183,19 @@ const PaymentPage = () => {
   const { language } = useLanguage();
   const t = content[language];
   const copy = paymentCopy[language];
+  const ui = paymentUiCopy[language];
+  const { data: coupons = [] } = useQuery({
+    queryKey: ["payment-coupons"],
+    queryFn: getCoupons,
+    staleTime: 0,
+    refetchInterval: 2_000,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
+  });
 
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("upi");
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("cod");
   const [errorMessage, setErrorMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -157,10 +218,6 @@ const PaymentPage = () => {
     });
   }, []);
 
-  if (!checkoutData) {
-    return null;
-  }
-
   const previewItems: OrderPreviewItem[] = cart.map((line) => ({
     key: line.key,
     name: line.product.name,
@@ -169,12 +226,57 @@ const PaymentPage = () => {
     totalPrice: line.totalPrice,
   }));
 
-  const total = checkoutData.subtotal + checkoutData.shipping;
+  const couponCode = String(checkoutData?.couponCode ?? "").trim().toUpperCase();
+  const appliedCoupon = useMemo(
+    () => coupons.find((coupon: AdminCoupon) => coupon.code === couponCode) ?? null,
+    [couponCode, coupons],
+  );
+
+  const couponSummary = useMemo(() => {
+    if (!appliedCoupon) {
+      return null;
+    }
+
+    const couponCart: CartLineForCoupon[] = cart.map((line) => ({
+      key: line.key,
+      productId: line.productId,
+      totalPrice: line.totalPrice,
+      product: {
+        category: line.product.category,
+        subcategory: line.product.subcategory,
+      },
+    }));
+
+    return getCouponBreakdown(appliedCoupon, couponCart);
+  }, [appliedCoupon, cart]);
+
+  const displayItems: DisplayPreviewItem[] = useMemo(
+    () =>
+      previewItems.map((item) => {
+        const breakdownItem = couponSummary?.lineBreakdown.find((line) => line.key === item.key);
+
+        return {
+          ...item,
+          originalTotalPrice: item.totalPrice,
+          discountedTotalPrice: breakdownItem?.adjustedTotalPrice ?? item.totalPrice,
+          discountAmount: breakdownItem?.discountAmount ?? 0,
+          isDiscounted: Boolean(breakdownItem?.isEligible),
+        };
+      }),
+    [couponSummary, previewItems],
+  );
+
+  const discountAmount = Math.max(0, Number(checkoutData?.discountAmount ?? 0));
+  const total = Math.max(0, Number(checkoutData?.subtotal ?? 0) + Number(checkoutData?.shipping ?? 0) - discountAmount);
+
+  if (!checkoutData) {
+    return null;
+  }
 
   const openRazorpayCheckout = (options: RazorpayOptions) =>
     new Promise<RazorpaySuccessResponse>((resolve, reject) => {
       if (!window.Razorpay) {
-        reject(new Error("Razorpay checkout is unavailable."));
+        reject(new Error(ui.checkoutUnavailable));
         return;
       }
 
@@ -182,7 +284,7 @@ const PaymentPage = () => {
         ...options,
         handler: (response) => resolve(response),
         modal: {
-          ondismiss: () => reject(new Error("Payment was cancelled.")),
+          ondismiss: () => reject(new Error(ui.cancelled)),
         },
       });
 
@@ -210,6 +312,7 @@ const PaymentPage = () => {
         country: checkoutData.country,
         pincode: checkoutData.pincode,
         shipping: checkoutData.shipping,
+        couponCode: checkoutData.couponCode ?? null,
         paymentMethod: selectedPayment,
         items: cart.map((line) => ({
           productId: line.productId,
@@ -219,6 +322,26 @@ const PaymentPage = () => {
           price: line.price,
         })),
       };
+
+      if (selectedPayment === "cod") {
+        const order = await createOrder(orderPayload);
+
+        clearCart();
+        sessionStorage.removeItem("checkoutData");
+
+        navigate("/order-success", {
+          state: {
+            orderId: order.id,
+            whatsappUrl: order.whatsappUrl,
+            checkoutData,
+            paymentMethod: selectedPayment,
+            items: previewItems,
+          },
+          replace: true,
+        });
+
+        return;
+      }
 
       const razorpayOrder = await createRazorpayOrder(orderPayload);
       await loadRazorpayScript();
@@ -265,7 +388,7 @@ const PaymentPage = () => {
         replace: true,
       });
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to confirm the order.");
+      setErrorMessage(error instanceof Error ? error.message : ui.confirmError);
       setIsProcessing(false);
     }
   };
@@ -340,6 +463,38 @@ const PaymentPage = () => {
             </div>
           </label>
 
+          <label className={getOptionClassName("cod")}>
+            <div className="flex items-start gap-4">
+              <input
+                type="radio"
+                name="payment"
+                value="cod"
+                checked={selectedPayment === "cod"}
+                onChange={(event) => setSelectedPayment(event.target.value as PaymentMethod)}
+                className="mt-1 h-4 w-4 accent-[#2f7a43]"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf5ee]">
+                    <CreditCard className="h-5 w-5 text-[#2f7a43]" />
+                  </div>
+                  <div>
+                    <p className={`font-semibold text-theme-heading ${language === "te" ? "font-telugu" : ""}`}>
+                      {copy.codTitle}
+                    </p>
+                    <p
+                      className={`mt-1 text-sm text-theme-body ${
+                        language === "te" ? "font-telugu" : ""
+                      }`}
+                    >
+                      {copy.codBody}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </label>
+
           <div className="rounded-2xl border border-[#d9644c]/35 bg-[#fff4f1] px-4 py-4">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#c14f3a]">
               {copy.backWarningTitle}
@@ -360,7 +515,7 @@ const PaymentPage = () => {
             <button
               type="submit"
               disabled={isProcessing}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-6 py-4 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-6 py-4 text-sm font-semibold !text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {isProcessing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -385,30 +540,57 @@ const PaymentPage = () => {
           </h2>
 
           <div className="mt-8 max-h-96 space-y-4 overflow-y-auto border-b border-[#d8e5d8] pb-8">
-            {previewItems.map((item) => (
+            {displayItems.map((item) => (
               <div key={item.key} className="flex justify-between gap-4 text-sm">
                 <div className="min-w-0">
                   <p className="font-semibold text-theme-heading">{item.name}</p>
                   <p className="mt-1 text-theme-body">
                     {item.weight} x {item.quantity}
                   </p>
+                  {item.isDiscounted ? (
+                    <p className="mt-1 text-xs font-medium text-[#1f6a3b]">
+                      {ui.itemCouponApplied}
+                    </p>
+                  ) : null}
                 </div>
-                <p className="price-figure font-semibold text-theme-heading">
-                  {formatCurrency(item.totalPrice)}
-                </p>
+                <div className="text-right">
+                  {item.isDiscounted ? (
+                    <>
+                      <p className="price-figure text-xs text-theme-body line-through">
+                        {formatCurrency(item.originalTotalPrice)}
+                      </p>
+                      <p className="price-figure font-semibold text-[#1f6a3b]">
+                        {formatCurrency(item.discountedTotalPrice)}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="price-figure font-semibold text-theme-heading">
+                      {formatCurrency(item.originalTotalPrice)}
+                    </p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
 
           <div className="mt-8 space-y-3">
             <div className="flex justify-between text-sm text-theme-body">
-              <span>{language === "te" ? "ఉప మొత్తం" : "Subtotal"}</span>
+              <span>{ui.subtotal}</span>
               <span className="price-figure">{formatCurrency(checkoutData.subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm text-theme-body">
-              <span>{language === "te" ? "షిప్పింగ్" : "Shipping"}</span>
+              <span>{ui.shipping}</span>
               <span className="price-figure">{formatCurrency(checkoutData.shipping)}</span>
             </div>
+            {discountAmount > 0 ? (
+              <div className="flex justify-between text-sm text-[#1f6a3b]">
+                <span>{ui.couponDiscount}</span>
+                <span className="price-figure">- {formatCurrency(discountAmount)}</span>
+              </div>
+            ) : null}
+            <p className="text-xs leading-6 text-theme-body-soft">
+              {ui.couponHelp}
+            </p>
             <div className="border-t border-[#d8e5d8] pt-3">
               <div className="flex justify-between font-heading text-2xl font-bold text-theme-heading">
                 <span>{t.checkout.total}</span>

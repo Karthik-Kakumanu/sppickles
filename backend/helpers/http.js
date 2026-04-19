@@ -1,13 +1,68 @@
 const DEFAULT_BODY_LIMIT = 1_000_000;
 
-const getAllowedOrigin = () => {
-  if (process.env.CORS_ORIGIN) {
-    return process.env.CORS_ORIGIN;
+const normalizeOrigin = (value) => String(value ?? "").trim().replace(/\/+$/, "");
+
+const isRenderOrigin = (origin) => {
+  try {
+    const parsedUrl = new URL(origin);
+    return parsedUrl.protocol === "https:" && parsedUrl.hostname.endsWith(".onrender.com");
+  } catch {
+    return false;
+  }
+};
+
+const parseAllowedOrigins = (value) =>
+  String(value ?? "")
+    .split(",")
+    .map(normalizeOrigin)
+    .filter(Boolean);
+
+const getAllowedOrigins = () => {
+  const explicitOrigins = parseAllowedOrigins(process.env.CORS_ALLOWED_ORIGINS);
+
+  if (explicitOrigins.length > 0) {
+    return explicitOrigins;
+  }
+
+  const singleOrigin = normalizeOrigin(process.env.CORS_ORIGIN);
+
+  if (singleOrigin) {
+    return [singleOrigin];
   }
 
   return process.env.NODE_ENV === "production"
-    ? "https://sppickles.com"
-    : "http://localhost:8080";
+    ? ["https://sppickles.com", "https://www.sppickles.com"]
+    : ["http://localhost:8080", "http://127.0.0.1:8080", "http://localhost:5173"];
+};
+
+const appendVaryHeader = (res, headerName) => {
+  const currentValue = String(res.getHeader("Vary") ?? "").trim();
+
+  if (!currentValue) {
+    res.setHeader("Vary", headerName);
+    return;
+  }
+
+  const existing = currentValue.split(",").map((item) => item.trim().toLowerCase());
+
+  if (!existing.includes(headerName.toLowerCase())) {
+    res.setHeader("Vary", `${currentValue}, ${headerName}`);
+  }
+};
+
+const resolveAllowedOrigin = (req) => {
+  const requestOrigin = normalizeOrigin(req?.headers?.origin);
+  const allowedOrigins = getAllowedOrigins();
+
+  if (!requestOrigin) {
+    return allowedOrigins[0] ?? "";
+  }
+
+  if (allowedOrigins.includes(requestOrigin) || isRenderOrigin(requestOrigin)) {
+    return requestOrigin;
+  }
+
+  return allowedOrigins[0] ?? "";
 };
 
 const getSecurityHeaders = () => ({
@@ -26,8 +81,14 @@ export const setSecurityHeaders = (res) => {
   });
 };
 
-export const setCorsHeaders = (res) => {
-  res.setHeader("Access-Control-Allow-Origin", getAllowedOrigin());
+export const setCorsHeaders = (res, req = res.__request) => {
+  const allowedOrigin = resolveAllowedOrigin(req);
+
+  if (allowedOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  }
+
+  appendVaryHeader(res, "Origin");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Request-ID");
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -36,7 +97,8 @@ export const setCorsHeaders = (res) => {
 
 export const handleCors = (req, res) => {
   setSecurityHeaders(res);
-  setCorsHeaders(res);
+  res.__request = req;
+  setCorsHeaders(res, req);
 
   if (req.method === "OPTIONS") {
     res.writeHead(204);

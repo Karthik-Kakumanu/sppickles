@@ -198,7 +198,7 @@ const CartPage = () => {
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
               <Link
                 to="/products"
-                className="inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-7 py-3.5 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(47,122,67,0.25)] transition-all duration-200 hover:bg-[#28683a] hover:shadow-[0_20px_44px_rgba(47,122,67,0.32)] active:scale-[0.97] sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-7 py-3.5 text-sm font-semibold !text-white shadow-[0_16px_36px_rgba(47,122,67,0.25)] transition-all duration-200 hover:bg-[#28683a] hover:shadow-[0_20px_44px_rgba(47,122,67,0.32)] active:scale-[0.97] sm:w-auto"
                 style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
               >
                 <span style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}>
@@ -345,7 +345,7 @@ const CartPage = () => {
                   {/* FIX ✅ — same belt-and-suspenders colour fix as above */}
                   <Link
                     to="/checkout"
-                    className="inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(47,122,67,0.22)] transition-all duration-200 hover:bg-[#28683a] hover:shadow-[0_20px_44px_rgba(47,122,67,0.30)] active:scale-[0.97] sm:px-6 sm:py-4"
+                    className="inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-5 py-3.5 text-sm font-semibold !text-white shadow-[0_16px_36px_rgba(47,122,67,0.22)] transition-all duration-200 hover:bg-[#28683a] hover:shadow-[0_20px_44px_rgba(47,122,67,0.30)] active:scale-[0.97] sm:px-6 sm:py-4"
                     style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
                   >
                     <span style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}>

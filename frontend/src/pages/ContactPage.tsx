@@ -154,7 +154,7 @@ const ContactPage = () => {
                 rel="noreferrer"
                 className="flex items-start gap-3 rounded-2xl border border-[#d8e5d8] bg-white px-5 py-4 transition hover:bg-[#edf5ee]"
               >
-                <span className="mt-0.5 inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#2f7a43] text-white shadow-[0_0_0_1px_rgba(47,122,67,0.14)]">
+                <span className="mt-0.5 inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#2f7a43] !text-white shadow-[0_0_0_1px_rgba(47,122,67,0.14)]">
                   <WhatsAppLogo className="h-[18px] w-[18px]" />
                 </span>
                 <div>
@@ -320,7 +320,7 @@ const ContactPage = () => {
 
               <button
                 type="submit"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-6 py-4 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a]"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-6 py-4 text-sm font-semibold !text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a]"
               >
                 <SendHorizonal className="h-4 w-4" />
                 {t.submit}

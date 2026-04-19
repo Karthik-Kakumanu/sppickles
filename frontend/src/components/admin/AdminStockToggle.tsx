@@ -214,9 +214,14 @@ export const AdminStockToggle = () => {
             onClick={() => setCategoryFilter(filterItem.key as typeof categoryFilter)}
             className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:py-2 sm:text-sm ${
               categoryFilter === filterItem.key
-                ? "border-[#2f7a43] bg-[#2f7a43] text-white"
+                ? "border-[#2f7a43] bg-[#2f7a43] !text-white"
                 : "border-[#d8e5d8] bg-white text-theme-body hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading"
             }`}
+            style={
+              categoryFilter === filterItem.key
+                ? { color: "#ffffff", WebkitTextFillColor: "#ffffff" }
+                : undefined
+            }
           >
             {filterItem.label}
           </button>

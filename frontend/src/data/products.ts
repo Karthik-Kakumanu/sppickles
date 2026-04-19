@@ -16,10 +16,12 @@ export type ProductRecord = {
   price_per_kg: number;
   image: string;
   description: string;
+  customTag?: string | null;
   isAvailable?: boolean;
   isBestSeller?: boolean;
   isBrahminHeritage?: boolean;
   isGreenTouch?: boolean;
+  deletedAt?: string | null;
 };
 
 type CatalogSeed = {
@@ -145,6 +147,7 @@ const pickleNameTelugu: Record<string, string> = {
   "Minapindi Vadiyalu": "మినపిండి వడియాలు",
   "Biyyapu Rava Vadiyalu": "బియ్యపు రవ్వ వడియాలు",
   "Goruchikkudu Vadiyalu": "గోరుచిక్కుడు వడియాలు",
+  "Traditional Chilli Fryum": "ట్రెడిషనల్ చిల్లీ ఫ్రైయం",
 };
 
 const catalogSeed: CatalogSeed[] = [
@@ -219,6 +222,7 @@ const catalogSeed: CatalogSeed[] = [
   { id: 69, name: "Biyyapu Rava Vadiyalu", category: "fryums", price: 650 },
   { id: 70, name: "Goruchikkudu Vadiyalu", category: "fryums", price: 850 },
   { id: 71, name: "Kaya Avakaya", category: "pickles", subcategory: "asafoetida", price: 750 },
+  { id: 72, name: "Traditional Chilli Fryum", category: "fryums", price: 950 },
 ];
 
 const slugify = (value: string) =>
@@ -473,6 +477,7 @@ const uploadedProductImageByName: Record<string, string> = {
   "Minapindi Vadiyalu": localProductImage("fryums/minapindi-vadiyalu.jpg"),
   "Biyyapu Rava Vadiyalu": localProductImage("fryums/biyyapu-rava.jpg"),
   "Goruchikkudu Vadiyalu": localProductImage("fryums/goruchikkudu-vadiyalu.jpg"),
+  "Traditional Chilli Fryum": localProductImage("fryums/challa-mirchi.jpg"),
 };
 
 const resolveProductImage = (name: string, category: ProductCategory) => {

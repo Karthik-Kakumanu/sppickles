@@ -13,6 +13,7 @@ interface LazyImageProps {
   sizes?: string;
   srcSet?: string;
   onLoad?: () => void;
+  onError?: () => void;
 }
 
 /**
@@ -33,6 +34,7 @@ export function LazyImage({
   sizes,
   srcSet,
   onLoad,
+  onError,
 }: LazyImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -45,6 +47,7 @@ export function LazyImage({
 
   const handleError = () => {
     setError(true);
+    onError?.();
   };
 
   return (
@@ -75,6 +78,7 @@ export function ProgressiveImage({
   src: highQualitySrc,
   placeholder: lowQualitySrc,
   placeholderSrc,
+  fallbackSrc,
   alt,
   className = "",
   loading = "lazy",
@@ -83,13 +87,23 @@ export function ProgressiveImage({
   src: string;
   placeholder?: string;
   placeholderSrc?: string;
+  fallbackSrc?: string;
   alt: string;
   className?: string;
   loading?: "eager" | "lazy";
   fetchPriority?: "high" | "low" | "auto";
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(highQualitySrc);
   const resolvedPlaceholder = lowQualitySrc ?? placeholderSrc;
+
+  const handleImageError = () => {
+    if (fallbackSrc && currentSrc !== fallbackSrc) {
+      setCurrentSrc(fallbackSrc);
+      setIsLoaded(false);
+      return;
+    }
+  };
 
   return (
     <div className="relative overflow-hidden">
@@ -110,13 +124,14 @@ export function ProgressiveImage({
 
       {/* High-quality image */}
       <LazyImage
-        src={highQualitySrc}
+        src={currentSrc}
         alt={alt}
         className={className}
         placeholder={resolvedPlaceholder}
         loading={loading}
         fetchPriority={fetchPriority}
         onLoad={() => setIsLoaded(true)}
+        onError={handleImageError}
       />
     </div>
   );

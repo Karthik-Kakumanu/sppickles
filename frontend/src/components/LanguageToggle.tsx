@@ -18,7 +18,7 @@ const LanguageToggle = () => {
         onClick={() => setLanguage("te")}
         className={`rounded-full px-3.5 py-2 text-sm font-semibold transition ${
           language === "te"
-            ? "bg-[#2f7a43] text-white shadow-[0_10px_24px_rgba(47,122,67,0.2)]"
+            ? "bg-[#2f7a43] !text-white shadow-[0_10px_24px_rgba(47,122,67,0.2)]"
             : "text-theme-body hover:bg-[#edf5ee] hover:text-theme-heading"
         } font-telugu`}
         aria-pressed={language === "te"}
@@ -30,7 +30,7 @@ const LanguageToggle = () => {
         onClick={() => setLanguage("en")}
         className={`rounded-full px-3.5 py-2 text-sm font-semibold transition ${
           language === "en"
-            ? "bg-[#2f7a43] text-white shadow-[0_10px_24px_rgba(47,122,67,0.2)]"
+            ? "bg-[#2f7a43] !text-white shadow-[0_10px_24px_rgba(47,122,67,0.2)]"
             : "text-theme-body hover:bg-[#edf5ee] hover:text-theme-heading"
         }`}
         aria-pressed={language === "en"}

@@ -115,7 +115,7 @@ const SiteFooter = () => {
                 rel="noreferrer"
                 className="flex items-start gap-3 transition hover:text-[#2f7a43]"
               >
-                <span className="mt-0.5 inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#2f7a43] text-white shadow-[0_0_0_1px_rgba(47,122,67,0.18),0_8px_18px_rgba(47,122,67,0.12)]">
+                <span className="mt-0.5 inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#2f7a43] !text-white shadow-[0_0_0_1px_rgba(47,122,67,0.18),0_8px_18px_rgba(47,122,67,0.12)]">
                   <WhatsAppLogo className="h-[22px] w-[22px]" />
                 </span>
                 <span className="font-medium">{brand.whatsappDisplay}</span>

@@ -1,8 +1,11 @@
-import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { AlertCircle, ArrowRight, ShoppingBag } from "lucide-react";
 import { calculateShippingByWeight, getRegionByState, validatePincode } from "@/lib/pincode";
 import { formatCurrency, getWeightMultiplier } from "@/lib/pricing";
+import { getEligibleSubtotalForCoupon } from "@/lib/couponPricing";
+import { getCoupons, type AdminCoupon } from "@/lib/api";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -95,6 +98,45 @@ const checkoutPageCopy = {
   },
 } as const;
 
+const checkoutUiCopy = {
+  en: {
+    couponLabel: "Coupon",
+    viewCoupons: "View coupons",
+    couponInputPlaceholder: "Enter coupon code",
+    apply: "Apply",
+    remove: "Remove",
+    appliedPrefix: "Applied:",
+    activeCoupons: (count: number) => `${count} active coupon${count === 1 ? "" : "s"} available.`,
+    couponHelp: "Coupon discounts apply only to eligible items. Shipping is never discounted.",
+    couponDiscount: "Coupon discount",
+    enterCoupon: "Enter a coupon code.",
+    invalidCoupon: "Coupon code is invalid or inactive.",
+    minOrderRequired: (amount: number) => `Minimum order ${formatCurrency(amount)} required for this coupon.`,
+    notApplicable: "This coupon does not apply to the selected products.",
+    appliedSuccess: (code: string) => `Coupon ${code} applied successfully.`,
+    removedSuccess: "Coupon removed.",
+    subtotal: "Subtotal",
+  },
+  te: {
+    couponLabel: "కూపన్",
+    viewCoupons: "కూపన్లు చూడండి",
+    couponInputPlaceholder: "కూపన్ కోడ్ నమోదు చేయండి",
+    apply: "అమలు చేయండి",
+    remove: "తొలగించండి",
+    appliedPrefix: "అమలులో ఉంది:",
+    activeCoupons: (count: number) => `${count} యాక్టివ్ కూపన్${count === 1 ? "" : "లు"} అందుబాటులో ఉన్నాయి.`,
+    couponHelp: "కూపన్ తగ్గింపు వర్తించే ఉత్పత్తులకే వర్తిస్తుంది. షిప్పింగ్‌పై తగ్గింపు ఉండదు.",
+    couponDiscount: "కూపన్ తగ్గింపు",
+    enterCoupon: "కూపన్ కోడ్ నమోదు చేయండి.",
+    invalidCoupon: "కూపన్ కోడ్ చెల్లదు లేదా యాక్టివ్‌లో లేదు.",
+    minOrderRequired: (amount: number) => `ఈ కూపన్‌కి కనీస ఆర్డర్ ${formatCurrency(amount)} అవసరం.`,
+    notApplicable: "ఈ కూపన్ ఎంచుకున్న ఉత్పత్తులకు వర్తించదు.",
+    appliedSuccess: (code: string) => `${code} కూపన్ విజయవంతంగా అమలైంది.`,
+    removedSuccess: "కూపన్ తొలగించబడింది.",
+    subtotal: "ఉప మొత్తం",
+  },
+} as const;
+
 type CheckoutForm = {
   name: string;
   phone: string;
@@ -115,14 +157,77 @@ const defaultForm: CheckoutForm = {
   pincode: "",
 };
 
+const isCouponActiveNow = (coupon: AdminCoupon) => {
+  const now = Date.now();
+  const startsAt = coupon.startsAt ? new Date(coupon.startsAt).getTime() : null;
+  const endsAt = coupon.endsAt ? new Date(coupon.endsAt).getTime() : null;
+
+  if (startsAt !== null && Number.isFinite(startsAt) && now < startsAt) {
+    return false;
+  }
+
+  if (endsAt !== null && Number.isFinite(endsAt) && now > endsAt) {
+    return false;
+  }
+
+  return coupon.isActive;
+};
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cart, subtotal } = useStore();
   const { language } = useLanguage();
   const t = content[language];
   const copy = checkoutPageCopy[language];
+  const ui = checkoutUiCopy[language];
   const [form, setForm] = useState<CheckoutForm>(defaultForm);
   const [errorMessage, setErrorMessage] = useState("");
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
+  const [couponMessage, setCouponMessage] = useState("");
+
+  const { data: coupons = [], refetch: refetchCoupons } = useQuery({
+    queryKey: ["storefront-coupons"],
+    queryFn: getCoupons,
+    staleTime: 0,
+    refetchInterval: 2_000,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
+  });
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === "sp-coupons-updated-at") {
+        void refetchCoupons();
+      }
+    };
+
+    const couponChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("sp-coupons") : null;
+    const handleBroadcast = (event: MessageEvent) => {
+      if (event.data?.type === "coupons-updated") {
+        void refetchCoupons();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    couponChannel?.addEventListener("message", handleBroadcast);
+
+    const couponEvents = typeof window !== "undefined" ? new EventSource("/api/coupon-events", { withCredentials: true }) : null;
+    const handleServerEvent = () => {
+      void refetchCoupons();
+    };
+
+    couponEvents?.addEventListener("coupon-update", handleServerEvent);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      couponChannel?.removeEventListener("message", handleBroadcast);
+      couponChannel?.close();
+      couponEvents?.removeEventListener("coupon-update", handleServerEvent);
+      couponEvents?.close();
+    };
+  }, [refetchCoupons]);
 
   const sanitizedPhone = form.phone.replace(/\D/g, "").slice(0, 10);
   const sanitizedPincode = form.pincode.replace(/\D/g, "").slice(0, 6);
@@ -137,7 +242,36 @@ const CheckoutPage = () => {
     form.country === "IN" && regionInfo
       ? calculateShippingByWeight(regionInfo.shippingRatePerKg, totalWeightKg)
       : 0;
-  const total = subtotal + shipping;
+  const activeCoupons = useMemo(() => coupons.filter(isCouponActiveNow), [coupons]);
+  const appliedCoupon = useMemo(
+    () => activeCoupons.find((coupon) => coupon.code === appliedCouponCode) ?? null,
+    [activeCoupons, appliedCouponCode],
+  );
+
+  const discountAmount = useMemo(() => {
+    if (!appliedCoupon) {
+      return 0;
+    }
+
+    if (appliedCoupon.minOrderAmount !== null && subtotal < Number(appliedCoupon.minOrderAmount)) {
+      return 0;
+    }
+
+    const eligibleSubtotal = getEligibleSubtotalForCoupon(appliedCoupon, cart);
+
+    if (eligibleSubtotal <= 0) {
+      return 0;
+    }
+
+    let discount =
+      appliedCoupon.discountType === "percentage"
+        ? Math.round((eligibleSubtotal * Number(appliedCoupon.discountValue)) / 100)
+        : Math.round(Number(appliedCoupon.discountValue));
+
+    return Math.max(0, Math.min(discount, eligibleSubtotal));
+  }, [appliedCoupon, cart, subtotal]);
+
+  const total = Math.max(0, subtotal + shipping - discountAmount);
 
   const orderPreview = useMemo(
     () =>
@@ -215,6 +349,46 @@ const CheckoutPage = () => {
       setForm((current) => ({ ...current, [field]: value }));
     };
 
+  const handleApplyCoupon = () => {
+    const normalizedCode = couponInput.trim().toUpperCase();
+
+    if (!normalizedCode) {
+      setCouponMessage(ui.enterCoupon);
+      return;
+    }
+
+    const coupon = activeCoupons.find((item) => item.code === normalizedCode);
+
+    if (!coupon) {
+      setCouponMessage(ui.invalidCoupon);
+      setAppliedCouponCode(null);
+      return;
+    }
+
+    if (coupon.minOrderAmount !== null && subtotal < Number(coupon.minOrderAmount)) {
+      setCouponMessage(ui.minOrderRequired(Number(coupon.minOrderAmount)));
+      setAppliedCouponCode(null);
+      return;
+    }
+
+    const eligibleSubtotal = getEligibleSubtotalForCoupon(coupon, cart);
+
+    if (eligibleSubtotal <= 0) {
+      setCouponMessage(ui.notApplicable);
+      setAppliedCouponCode(null);
+      return;
+    }
+
+    setAppliedCouponCode(coupon.code);
+    setCouponMessage(ui.appliedSuccess(coupon.code));
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCouponCode(null);
+    setCouponInput("");
+    setCouponMessage(ui.removedSuccess);
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage("");
@@ -271,6 +445,8 @@ const CheckoutPage = () => {
       pincode: sanitizedPincode,
       shipping,
       subtotal,
+      discountAmount,
+      couponCode: appliedCoupon?.code ?? null,
     };
 
     sessionStorage.setItem("checkoutData", JSON.stringify(checkoutData));
@@ -417,6 +593,60 @@ const CheckoutPage = () => {
               </label>
             )}
 
+            <div className="rounded-[1.4rem] border border-[#d8e5d8] bg-[#f8fbf8] p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-theme-body-soft">{ui.couponLabel}</p>
+                <Link
+                  to="/coupons"
+                  className="inline-flex items-center rounded-full border border-[#d8e5d8] bg-white px-3 py-1.5 text-xs font-semibold text-[#2f7a43] transition hover:bg-[#edf5ee]"
+                >
+                  {ui.viewCoupons}
+                </Link>
+              </div>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                  type="text"
+                  value={couponInput}
+                  onChange={(event) => setCouponInput(event.target.value.toUpperCase())}
+                  placeholder={ui.couponInputPlaceholder}
+                  className={`${inputClassName} flex-1 bg-white uppercase`}
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  className="inline-flex items-center justify-center rounded-full bg-[#2f7a43] px-5 py-3 text-sm font-semibold !text-white transition hover:bg-[#28683a]"
+                >
+                  {ui.apply}
+                </button>
+                {appliedCoupon ? (
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-5 py-3 text-sm font-semibold text-theme-body transition hover:bg-[#edf5ee]"
+                  >
+                    {ui.remove}
+                  </button>
+                ) : null}
+              </div>
+
+              {appliedCoupon ? (
+                <p className="mt-3 text-sm font-semibold text-[#1f6a3b]">
+                  {ui.appliedPrefix} {appliedCoupon.code}
+                </p>
+              ) : null}
+
+              {coupons.length > 0 ? (
+                <p className="mt-2 text-xs text-theme-body-soft">
+                  {ui.activeCoupons(coupons.filter(isCouponActiveNow).length)}
+                </p>
+              ) : null}
+
+              {couponMessage ? <p className="mt-2 text-sm text-theme-body">{couponMessage}</p> : null}
+              <p className="mt-2 text-xs leading-6 text-theme-body-soft">
+                {ui.couponHelp}
+              </p>
+            </div>
+
             <div className="rounded-[1.4rem] border border-[#d8e5d8] bg-white p-2.5 sm:p-3">
               <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -486,7 +716,7 @@ const CheckoutPage = () => {
             <button
               type="submit"
               disabled={cart.length === 0}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-6 sm:py-4"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-5 py-3.5 text-sm font-semibold !text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-6 sm:py-4"
               style={{ color: "#ffffff" }}
             >
               {isBulkOrder ? <WhatsAppLogo className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
@@ -512,7 +742,8 @@ const CheckoutPage = () => {
               <p className="mt-4 text-base text-theme-body">{t.cart.emptyTitle}</p>
               <Link
                 to="/products"
-                className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#28683a]"
+                className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-5 py-3.5 text-sm font-semibold !text-white transition hover:bg-[#28683a]"
+                style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
               >
                 {t.cart.browseProducts}
               </Link>
@@ -537,7 +768,7 @@ const CheckoutPage = () => {
 
               <div className="mt-6 space-y-3 sm:mt-8">
                 <div className="flex justify-between text-sm text-theme-body">
-                  <span>{language === "te" ? "ఉప మొత్తం" : "Subtotal"}</span>
+                  <span>{ui.subtotal}</span>
                   <span className="price-figure">{formatCurrency(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-theme-body">
@@ -554,6 +785,12 @@ const CheckoutPage = () => {
                         : copy.pendingShipping}
                   </span>
                 </div>
+                {discountAmount > 0 ? (
+                  <div className="flex justify-between text-sm text-[#1f6a3b]">
+                    <span>{ui.couponDiscount}</span>
+                    <span className="price-figure">- {formatCurrency(discountAmount)}</span>
+                  </div>
+                ) : null}
                 <div className="border-t border-[#d8e5d8] pt-3">
                   <div className="flex justify-between font-heading text-xl font-bold text-theme-heading sm:text-2xl">
                     <span>{t.checkout.total}</span>
