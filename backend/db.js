@@ -154,6 +154,12 @@ const initializeSchema = async () => {
       razorpay_payment_id TEXT,
       payment_status TEXT NOT NULL DEFAULT 'pending',
       payment_captured_at TIMESTAMP,
+      cancelled_at TIMESTAMP,
+      cancellation_reason TEXT,
+      refund_id TEXT,
+      refund_status TEXT,
+      refund_amount INTEGER NOT NULL DEFAULT 0,
+      refunded_at TIMESTAMP,
       status TEXT NOT NULL DEFAULT 'pending',
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
@@ -162,6 +168,12 @@ const initializeSchema = async () => {
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_payment_id TEXT;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending';
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_captured_at TIMESTAMP;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMP;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS refund_id TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS refund_status TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS refund_amount INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS refunded_at TIMESTAMP;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT;
 

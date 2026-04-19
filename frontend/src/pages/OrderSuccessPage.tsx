@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, CheckCircle2, Copy, Home, MessageCircle, Phone } from "lucide-react";
+import { ArrowRight, CheckCircle2, Copy, Home, MessageCircle, Phone, ShieldAlert } from "lucide-react";
 import { formatCurrency } from "@/lib/pricing";
 import Seo from "@/components/Seo";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -43,6 +43,14 @@ const successCopy = {
       "The order has been captured successfully. The customer can now continue to WhatsApp, keep the order ID safe, and wait for the next delivery or payment update.",
     deliveryTitle: "Delivery address",
     paymentTitle: "Payment note",
+    cancellationTitle: "Cancellation window",
+    cancellationBody: "You can cancel this order within 6 hours of purchase. After that, the order is locked for packing and delivery.",
+    reminderTitle: "Important reminder",
+    reminderBody:
+      "To cancel later, keep both Order ID and checkout phone number ready. Copy the Order ID now and save it with your phone number.",
+    refundNoteTitle: "Refund note for prepaid orders",
+    refundNoteBody:
+      "If a paid order is cancelled, refund is initiated immediately. Razorpay/payment charges may apply as per gateway policy, and the remaining eligible amount is usually credited within 1 working day (bank timelines may vary).",
     paymentMessages: {
       upi: "UPI/Card is selected. Please continue on WhatsApp to complete payment confirmation with the team.",
       bank: "The team can now continue manual payment confirmation or transfer guidance directly with you.",
@@ -77,6 +85,14 @@ const successCopy = {
       "ఆర్డర్ విజయవంతంగా నమోదైంది. ఇప్పుడు కస్టమర్ వాట్సాప్‌లో కొనసాగవచ్చు, ఆర్డర్ IDని భద్రపరచుకోవచ్చు, తరువాతి డెలివరీ లేదా చెల్లింపు అప్‌డేట్ కోసం వేచి ఉండవచ్చు.",
     deliveryTitle: "డెలివరీ చిరునామా",
     paymentTitle: "చెల్లింపు సమాచారం",
+    cancellationTitle: "రద్దు గడువు",
+    cancellationBody: "కొనుగోలు చేసిన 6 గంటలలోపు మాత్రమే ఈ ఆర్డర్‌ను రద్దు చేయవచ్చు. ఆ తర్వాత ప్యాకింగ్ మరియు డెలివరీ కోసం ఆర్డర్ లాక్ అవుతుంది.",
+    reminderTitle: "ముఖ్యమైన గుర్తింపు",
+    reminderBody:
+      "తర్వాత రద్దు చేయాలంటే Order ID మరియు checkout phone number రెండూ అవసరం. Order IDను ఇప్పుడే కాపీ చేసి ఫోన్ నంబర్‌తో సేవ్ చేసుకోండి.",
+    refundNoteTitle: "ప్రీపెయిడ్ ఆర్డర్ల రీఫండ్ గమనిక",
+    refundNoteBody:
+      "చెల్లింపు చేసిన ఆర్డర్ రద్దైతే రీఫండ్ వెంటనే ప్రారంభమవుతుంది. Razorpay/payment charges పాలసీ ప్రకారం వర్తించవచ్చు; మిగిలిన అర్హమైన మొత్తం సాధారణంగా 1 working day లో జమ అవుతుంది (bank timelines మారవచ్చు).",
     paymentMessages: {
       upi: "UPI/కార్డ్ ఎంపిక చేయబడింది. చెల్లింపు నిర్ధారణ కోసం టీమ్‌తో వాట్సాప్‌లో కొనసాగండి.",
       bank: "ఇప్పుడు టీమ్ మీతో నేరుగా మాట్లాడి manual payment confirmation లేదా transfer guidance ఇవ్వగలదు.",
@@ -144,6 +160,15 @@ const OrderSuccessPage = () => {
     }
   };
 
+  const handleCancelOrder = () => {
+    navigate("/cancel-order", {
+      state: {
+        orderId: orderData.orderId,
+        phone: orderData.checkoutData.phone,
+      },
+    });
+  };
+
   return (
     <main className="overflow-hidden bg-[var(--color-bg-primary)]">
       <Seo
@@ -199,6 +224,13 @@ const OrderSuccessPage = () => {
                 <Copy className="h-5 w-5" />
               </button>
             </div>
+
+            <div className="mt-5 rounded-2xl border border-[#e7cf91] bg-[#fff9eb] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a651a]">{t.reminderTitle}</p>
+              <p className={`mt-2 text-sm leading-7 text-theme-body ${language === "te" ? "font-telugu" : ""}`}>
+                {t.reminderBody}
+              </p>
+            </div>
           </div>
 
           <div className="section-shell px-7 py-8">
@@ -225,6 +257,26 @@ const OrderSuccessPage = () => {
             >
               {t.paymentMessages[orderData.paymentMethod]}
             </p>
+          </div>
+
+          <div className="section-shell border border-[#e7cf91] bg-[linear-gradient(180deg,#fff9eb_0%,#fffdf6_100%)] px-7 py-8">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1c9] text-[#8a651a]">
+                <ShieldAlert className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="font-heading text-2xl font-semibold text-theme-heading">{t.cancellationTitle}</h2>
+                <p className={`mt-3 text-sm leading-7 text-theme-body ${language === "te" ? "font-telugu" : ""}`}>
+                  {t.cancellationBody}
+                </p>
+                <div className="mt-4 rounded-xl border border-[#f0dfb1] bg-white/70 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a651a]">{t.refundNoteTitle}</p>
+                  <p className={`mt-2 text-sm leading-7 text-theme-body ${language === "te" ? "font-telugu" : ""}`}>
+                    {t.refundNoteBody}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="section-shell px-7 py-8">
@@ -254,6 +306,13 @@ const OrderSuccessPage = () => {
             >
               <MessageCircle className="h-5 w-5" />
               {t.chat}
+            </button>
+            <button
+              onClick={handleCancelOrder}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#e7cf91] bg-[#fffaf0] px-8 py-4 font-semibold text-[#8a651a] transition hover:bg-[#fff4db] sm:w-auto"
+            >
+              <ShieldAlert className="h-5 w-5" />
+              {language === "te" ? "ఆర్డర్ రద్దు చేయండి" : "Cancel order"}
             </button>
             <button
               onClick={() => navigate("/products")}

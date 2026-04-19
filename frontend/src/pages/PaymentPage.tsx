@@ -11,7 +11,7 @@ import {
   type AdminCoupon,
 } from "@/lib/api";
 import { formatCurrency } from "@/lib/pricing";
-import { getCouponBreakdown } from "@/lib/couponPricing";
+import { getCouponBreakdown, getEligibleSubtotalForCoupon } from "@/lib/couponPricing";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -179,7 +179,7 @@ const paymentUiCopy = {
 const PaymentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { cart, clearCart } = useStore();
+  const { cart, subtotal: cartSubtotal, clearCart } = useStore();
   const { language } = useLanguage();
   const t = content[language];
   const copy = paymentCopy[language];
@@ -250,6 +250,8 @@ const PaymentPage = () => {
     return getCouponBreakdown(appliedCoupon, couponCart);
   }, [appliedCoupon, cart]);
 
+  const couponValidationPending = Boolean(checkoutData?.couponCode) && coupons.length === 0;
+
   const displayItems: DisplayPreviewItem[] = useMemo(
     () =>
       previewItems.map((item) => {
@@ -299,8 +301,40 @@ const PaymentPage = () => {
       return;
     }
 
+    if (couponValidationPending) {
+      setErrorMessage("Validating coupon, please wait and try again.");
+      return;
+    }
+
+    const hasInvalidCartValues = cart.some((line) => {
+      const quantity = Number(line.quantity);
+      const unitPrice = Number(line.price);
+      return !Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(unitPrice) || unitPrice <= 0;
+    });
+
+    if (hasInvalidCartValues) {
+      setErrorMessage("One or more cart items has invalid pricing. Please go back to cart and refresh item quantities.");
+      return;
+    }
+
     setIsProcessing(true);
     setErrorMessage("");
+
+    if (appliedCoupon) {
+      if (appliedCoupon.minOrderAmount !== null && cartSubtotal < Number(appliedCoupon.minOrderAmount)) {
+        setErrorMessage(`Minimum order ${formatCurrency(Number(appliedCoupon.minOrderAmount))} required for this coupon.`);
+        setIsProcessing(false);
+        return;
+      }
+
+      const eligibleSubtotal = getEligibleSubtotalForCoupon(appliedCoupon, cart);
+
+      if (eligibleSubtotal <= 0) {
+        setErrorMessage("This coupon does not apply to the current cart.");
+        setIsProcessing(false);
+        return;
+      }
+    }
 
     try {
       const orderPayload: CheckoutOrderPayload = {
@@ -312,15 +346,20 @@ const PaymentPage = () => {
         country: checkoutData.country,
         pincode: checkoutData.pincode,
         shipping: checkoutData.shipping,
-        couponCode: checkoutData.couponCode ?? null,
+        couponCode: appliedCoupon?.code ?? null,
         paymentMethod: selectedPayment,
-        items: cart.map((line) => ({
-          productId: line.productId,
-          name: line.product.name,
-          quantity: line.quantity,
-          weight: line.weight,
-          price: line.price,
-        })),
+        items: cart.map((line) => {
+          const fallbackUnitPrice = Math.round(line.totalPrice / Math.max(1, Number(line.quantity) || 1));
+          const unitPrice = Number.isFinite(Number(line.price)) ? Number(line.price) : fallbackUnitPrice;
+
+          return {
+            productId: line.productId,
+            name: line.product.name,
+            quantity: line.quantity,
+            weight: line.weight,
+            price: unitPrice,
+          };
+        }),
       };
 
       if (selectedPayment === "cod") {
@@ -514,7 +553,7 @@ const PaymentPage = () => {
           <div className="flex flex-col gap-3 pt-4 sm:flex-row">
             <button
               type="submit"
-              disabled={isProcessing}
+              disabled={isProcessing || couponValidationPending}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#2f7a43] px-6 py-4 text-sm font-semibold !text-white shadow-[0_18px_38px_rgba(47,122,67,0.22)] transition hover:bg-[#28683a] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {isProcessing ? (

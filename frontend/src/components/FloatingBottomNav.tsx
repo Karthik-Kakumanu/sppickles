@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Gift, Home, Megaphone, ShoppingBag } from "lucide-react";
+import { Gift, Home, Megaphone, ShoppingBag, XCircle } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -36,6 +36,12 @@ const getItems = (isTelugu: boolean): BottomNavItem[] => [
     to: "/cart",
     icon: ShoppingBag,
     isActive: (pathname) => pathname.startsWith("/cart") || pathname.startsWith("/checkout") || pathname.startsWith("/payment"),
+  },
+  {
+    label: isTelugu ? "రద్దు" : "Cancel",
+    to: "/cancel-order",
+    icon: XCircle,
+    isActive: (pathname) => pathname.startsWith("/cancel-order"),
   },
 ];
 
@@ -98,7 +104,7 @@ export default function FloatingBottomNav() {
 
   return (
     <div className="fixed bottom-3 left-1/2 z-50 w-[min(96vw,900px)] -translate-x-1/2 px-2 pb-[calc(env(safe-area-inset-bottom)+0.25rem)]">
-      <nav className="grid grid-cols-4 items-center gap-1 rounded-[1.6rem] border border-[#d8e5d8] bg-white/95 p-2 shadow-[0_20px_50px_rgba(30,79,46,0.18)] backdrop-blur-xl">
+      <nav className="grid grid-cols-5 items-center gap-1 rounded-[1.6rem] border border-[#d8e5d8] bg-white/95 p-2 shadow-[0_20px_50px_rgba(30,79,46,0.18)] backdrop-blur-xl">
         {items.map((item) => {
           const Icon = item.icon;
           const active = item.isActive(location.pathname);

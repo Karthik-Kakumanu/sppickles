@@ -6,10 +6,39 @@ import {
   type ProductRecord,
   type WeightOption,
 } from "@/data/site";
+import { productCatalog } from "@/data/products";
 import { useToast } from "@/hooks/use-toast";
 import { buildWhatsAppOrderUrl } from "@/lib/order";
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
+
+const isLocalHostname = (hostname: string) => LOCAL_HOSTNAMES.has(String(hostname).trim().toLowerCase());
+
+const isUnsafeRuntimeApiBaseUrl = (baseUrl: string) => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const currentHost = window.location.hostname;
+  const currentProtocol = window.location.protocol;
+  const isCurrentHostLocal = isLocalHostname(currentHost);
+
+  try {
+    const parsed = new URL(baseUrl);
+
+    if (!isCurrentHostLocal && isLocalHostname(parsed.hostname)) {
+      return true;
+    }
+
+    if (currentProtocol === "https:" && parsed.protocol === "http:") {
+      return true;
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+};
 
 const getDefaultApiBaseUrl = () => {
   if (typeof window === "undefined") {
@@ -33,7 +62,36 @@ const normalizeApiBaseUrl = (baseUrl?: string) => {
     return getDefaultApiBaseUrl();
   }
 
+  if (isUnsafeRuntimeApiBaseUrl(normalizedBaseUrl)) {
+    return "/api";
+  }
+
   return ensureApiSuffix(normalizedBaseUrl);
+};
+
+const productImageFallbackByName = new Map(
+  productCatalog.map((product) => [product.name.trim().toLowerCase(), product.image]),
+);
+
+const normalizeProductImageUrl = (image: unknown, name: unknown) => {
+  const imageUrl = String(image ?? "").trim();
+
+  if (!imageUrl) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(imageUrl);
+
+    if (!isLocalHostname(parsed.hostname)) {
+      return imageUrl;
+    }
+  } catch {
+    return imageUrl;
+  }
+
+  const nameKey = String(name ?? "").trim().toLowerCase();
+  return productImageFallbackByName.get(nameKey) ?? imageUrl;
 };
 
 const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
@@ -46,7 +104,7 @@ const ORDER_STATUS_MAP: Record<string, OrderRecord["status"]> = {
   processing: "processing",
   shipped: "delivered",
   delivered: "delivered",
-  cancelled: "pending",
+  cancelled: "cancelled",
 };
 
 const PRODUCTS_UPDATED_AT_KEY = "sp-products-updated-at";
@@ -167,6 +225,7 @@ type AdminAnalytics = {
     pending: number;
     processing: number;
     delivered: number;
+    cancelled: number;
   };
   revenueByDay: Array<{ label: string; revenue: number; orders: number }>;
   topProducts: Array<{ productId: string; name: string; category: ProductCategory; unitsSold: number; revenue: number }>;
@@ -326,7 +385,7 @@ const normalizeProduct = (product: any): ProductRecord => ({
   category: String(product.category ?? "pickles") as ProductCategory,
   subcategory: product.subcategory ? (String(product.subcategory) as "salt" | "asafoetida") : undefined,
   price_per_kg: Number(product.price_per_kg ?? 0),
-  image: String(product.image ?? ""),
+  image: normalizeProductImageUrl(product.image, product.name),
   description: String(product.description ?? ""),
   customTag: product.customTag ?? product.custom_tag ?? null,
   isAvailable: Boolean(product.isAvailable ?? product.is_available ?? true),
@@ -381,6 +440,13 @@ const normalizeOrder = (order: any): OrderRecord => {
         order.created_at ??
         new Date().toISOString(),
     ),
+      cancelledAt: order.cancelledAt ?? order.cancelled_at ?? null,
+      cancellationReason: order.cancellationReason ?? order.cancellation_reason ?? null,
+      refundId: order.refundId ?? order.refund_id ?? null,
+      refundStatus: order.refundStatus ?? order.refund_status ?? null,
+      refundAmount: Number(order.refundAmount ?? order.refund_amount ?? 0),
+      refundedAt: order.refundedAt ?? order.refunded_at ?? null,
+      cancelEligibleUntil: String(order.cancelEligibleUntil ?? order.cancel_eligible_until ?? order.cancelEligibleUntil ?? ""),
     status: normalizeOrderStatus(order.status),
     createdAt: String(order.createdAt ?? order.created_at ?? new Date().toISOString()),
     whatsappUrl:
@@ -488,6 +554,27 @@ export const createProduct = async (productData: Partial<ProductRecord>) =>
     method: "POST",
     body: JSON.stringify(productData),
   });
+
+export const cancelOrder = async (orderId: string, phone: string, reason?: string) => {
+  const response = await apiFetch<any>(`/orders/${orderId}/cancel`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ phone, reason }),
+  });
+
+  return normalizeOrder(response);
+};
+
+export const refundCancelledOrder = async (orderId: string) => {
+  const response = await apiFetch<any>(`/admin/orders/${orderId}/refund`, {
+    method: "POST",
+  });
+
+  return normalizeOrder(response);
+};
 
 export const updateProduct = async (productId: string, productData: Partial<ProductRecord>) =>
   apiFetch<ProductRecord>(`/products/${String(productId).trim()}`, {
@@ -799,6 +886,24 @@ export const adminLogin = async (email: string, password: string) => {
 
   return response;
 };
+
+export const requestAdminPasswordResetOtp = async (mobile: string) =>
+  apiFetch<{ eligible: boolean; expiresInSeconds: number; devOtp?: string }>(
+    "/admin/password-reset/request-otp",
+    {
+      method: "POST",
+      body: JSON.stringify({ mobile }),
+    },
+  );
+
+export const confirmAdminPasswordResetOtp = async (mobile: string, otp: string, newPassword: string) =>
+  apiFetch<{ passwordUpdated: boolean; sessionsRevoked: boolean }>(
+    "/admin/password-reset/confirm",
+    {
+      method: "POST",
+      body: JSON.stringify({ mobile, otp, newPassword }),
+    },
+  );
 
 export const adminLogout = () => {
   return apiFetch<{ loggedOut: boolean }>("/admin/logout", {

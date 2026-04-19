@@ -23,7 +23,7 @@ export type StoreFilter =
   | "salted-pickles"
   | "tempered-pickles";
 
-export type OrderStatus = "pending" | "processing" | "delivered";
+export type OrderStatus = "pending" | "processing" | "delivered" | "cancelled";
 
 export type CartLine = {
   productId: string;
@@ -63,6 +63,13 @@ export type OrderRecord = {
   paymentStatus?: string;
   paymentId?: string;
   paymentTime?: string;
+  cancelledAt?: string | null;
+  cancellationReason?: string | null;
+  refundId?: string | null;
+  refundStatus?: string | null;
+  refundAmount?: number;
+  refundedAt?: string | null;
+  cancelEligibleUntil?: string;
   status: OrderStatus;
   createdAt: string;
   whatsappUrl: string;

@@ -102,6 +102,12 @@ const AdminDashboardPage = () => {
       tone: "border-[#b4dec3] bg-[#e9f8ef] text-[#1e6b43]",
     },
     {
+      label: "Cancelled",
+      value: summary?.cancelled ?? 0,
+      icon: Package,
+      tone: "border-[#f0c8bf] bg-[#fff0eb] text-[#b64d39]",
+    },
+    {
       label: "Out of stock",
       value: summary?.outOfStock ?? 0,
       icon: TrendingDown,

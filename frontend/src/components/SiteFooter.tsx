@@ -100,6 +100,9 @@ const SiteFooter = () => {
                   {t.layout.nav[item.to]}
                 </Link>
               ))}
+              <Link to="/cancel-order" className="transition hover:text-[#956d00] font-medium">
+                {language === "te" ? "ఆర్డర్ రద్దు" : "Cancel Order"}
+              </Link>
             </div>
           </div>
 

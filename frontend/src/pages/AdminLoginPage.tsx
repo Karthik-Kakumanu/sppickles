@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { AlertCircle, ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
@@ -113,6 +113,15 @@ const AdminLoginPage = () => {
                 </button>
               </div>
             </label>
+
+            <div className="flex justify-end">
+              <Link
+                to="/admin/forgot-password"
+                className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2f7a43] transition hover:text-[#28683a]"
+              >
+                Forgot password?
+              </Link>
+            </div>
 
             {error ? (
               <div className="flex items-start gap-2 rounded-xl border border-[#d9644c]/30 bg-[#fff4f1] px-3 py-3 text-sm text-[#b84c39]">

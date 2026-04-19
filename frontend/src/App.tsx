@@ -16,6 +16,7 @@ import { content } from "@/content/translations";
 
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
+const AdminForgotPasswordPage = lazy(() => import("./pages/AdminForgotPasswordPage"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const AdminAdsPage = lazy(() => import("./pages/AdminAdsPage"));
 const AdminCouponsPage = lazy(() => import("./pages/AdminCouponsPage"));
@@ -25,6 +26,7 @@ const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const CouponsPage = lazy(() => import("./pages/CouponsPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
+const CancelOrderPage = lazy(() => import("./pages/CancelOrderPage"));
 const HomePage = lazy(() => import("./pages/HomePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OrderSuccessPage = lazy(() => import("./pages/OrderSuccessPage"));
@@ -124,6 +126,7 @@ const App = () => {
                 <Route path="/ads" element={<AdsPage />} />
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/order-success" element={<OrderSuccessPage />} />
+                <Route path="/cancel-order" element={<CancelOrderPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
@@ -137,6 +140,7 @@ const App = () => {
               <Route path="/fryums" element={<Navigate to="/products/fryums" replace />} />
               <Route path="/special" element={<Navigate to="/products" replace />} />
               <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route path="/admin/forgot-password" element={<AdminForgotPasswordPage />} />
               <Route path="/admin/products" element={<AdminProducts />} />
               <Route path="/admin/orders" element={<AdminOrdersPage />} />
               <Route path="/admin/ads" element={<AdminAdsPage />} />

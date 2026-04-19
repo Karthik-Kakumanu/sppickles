@@ -1,5 +1,5 @@
 import http from "node:http";
-import { createHmac, randomUUID } from "node:crypto";
+import { createHmac, randomInt, randomUUID } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFile, stat } from "node:fs/promises";
@@ -8,7 +8,6 @@ import { pool } from "./db.js";
 import {
   clearAdminSessionCookie,
   hashPassword,
-  requireAdmin,
   setAdminSessionCookie,
   signAdminToken,
   verifyAdminToken,
@@ -42,9 +41,9 @@ const ORDER_STATUS_ALIASES = {
   processing: "processing",
   shipped: "delivered",
   delivered: "delivered",
-  cancelled: "pending",
+  cancelled: "cancelled",
 };
-const VALID_ORDER_STATUSES = new Set(["pending", "processing", "delivered"]);
+const VALID_ORDER_STATUSES = new Set(["pending", "processing", "delivered", "cancelled"]);
 const VALID_PRODUCT_CATEGORIES = new Set(["pickles", "powders", "fryums"]);
 const VALID_PRODUCT_SUBCATEGORIES = new Set(["salt", "asafoetida"]);
 const VALID_COUPON_DISCOUNT_TYPES = new Set(["percentage", "fixed"]);
@@ -57,11 +56,29 @@ const VALID_COUPON_CATEGORY_SCOPES = new Set([
   "tempered-pickles",
 ]);
 const VALID_AD_MEDIA_TYPES = new Set(["image", "video"]);
+const ORDER_CANCEL_WINDOW_MS = 6 * 60 * 60 * 1000;
 const DUMMY_ADMIN_PASSWORD_HASH = hashPassword("sp-pickles-dummy-password");
 const ADMIN_LOGIN_MAX_ATTEMPTS = Number(process.env.ADMIN_LOGIN_MAX_ATTEMPTS || 5);
 const ADMIN_LOGIN_WINDOW_MS = Number(process.env.ADMIN_LOGIN_WINDOW_MS || 15 * 60 * 1000);
 const ADMIN_LOGIN_LOCKOUT_MS = Number(process.env.ADMIN_LOGIN_LOCKOUT_MS || 30 * 60 * 1000);
 const ADMIN_SESSION_IDLE_TIMEOUT_MINUTES = Number(process.env.ADMIN_SESSION_IDLE_TIMEOUT_MINUTES || 30);
+const ADMIN_PASSWORD_RESET_ALLOWED_PHONE = String(
+  process.env.ADMIN_PASSWORD_RESET_ALLOWED_PHONE || "+91 79813 70664",
+)
+  .replace(/\D/g, "")
+  .replace(/^91/, "");
+const ADMIN_PASSWORD_RESET_OTP_TTL_MS = Number(process.env.ADMIN_PASSWORD_RESET_OTP_TTL_MS || 10 * 60 * 1000);
+const ADMIN_PASSWORD_RESET_OTP_MAX_ATTEMPTS = Number(process.env.ADMIN_PASSWORD_RESET_OTP_MAX_ATTEMPTS || 5);
+const OTP_PROVIDER = String(process.env.OTP_PROVIDER || "none").trim().toLowerCase();
+const FAST2SMS_API_KEY = String(process.env.FAST2SMS_API_KEY || "").trim();
+const FAST2SMS_ENDPOINT = String(process.env.FAST2SMS_ENDPOINT || "https://www.fast2sms.com/dev/bulkV2").trim();
+const FAST2SMS_ROUTE = String(process.env.FAST2SMS_ROUTE || "otp").trim().toLowerCase();
+const FAST2SMS_SENDER_ID = String(process.env.FAST2SMS_SENDER_ID || "").trim();
+const FAST2SMS_TEMPLATE_ID = String(process.env.FAST2SMS_TEMPLATE_ID || "").trim();
+const FAST2SMS_ENTITY_ID = String(process.env.FAST2SMS_ENTITY_ID || "").trim();
+const FAST2SMS_MESSAGE_TEMPLATE = String(
+  process.env.FAST2SMS_MESSAGE_TEMPLATE || "Your SP Pickles admin OTP is {{OTP}}. It is valid for 10 minutes.",
+).trim();
 const RAZORPAY_MODE = String(process.env.RAZORPAY_MODE ?? "auto").trim().toLowerCase();
 const RAZORPAY_KEY_ID = String(process.env.RAZORPAY_KEY_ID ?? "").trim();
 const RAZORPAY_KEY_SECRET = String(process.env.RAZORPAY_KEY_SECRET ?? "").trim();
@@ -72,6 +89,278 @@ const RAZORPAY_TEST_KEY_SECRET = String(process.env.RAZORPAY_TEST_KEY_SECRET ?? 
 const RAZORPAY_CURRENCY = String(process.env.RAZORPAY_CURRENCY ?? "INR").trim().toUpperCase();
 const adminLoginAttempts = new Map();
 const couponEventClients = new Set();
+const adminPasswordResetOtps = new Map();
+
+const normalizeIndianMobile = (value) => {
+  const digitsOnly = String(value ?? "").replace(/\D/g, "");
+
+  if (digitsOnly.length < 10) {
+    return null;
+  }
+
+  const lastTenDigits = digitsOnly.slice(-10);
+  return `+91${lastTenDigits}`;
+};
+
+const isEligibleAdminResetMobile = (mobileNumber) => {
+  const normalizedMobile = normalizeIndianMobile(mobileNumber);
+
+  if (!normalizedMobile) {
+    return false;
+  }
+
+  const normalizedDigits = normalizedMobile.replace(/^\+91/, "");
+  return normalizedDigits === ADMIN_PASSWORD_RESET_ALLOWED_PHONE;
+};
+
+const maskMobileNumber = (mobileNumber) => {
+  const normalized = normalizeIndianMobile(mobileNumber);
+
+  if (!normalized) {
+    return "";
+  }
+
+  const localNumber = normalized.replace(/^\+91/, "");
+  return `+91******${localNumber.slice(-4)}`;
+};
+
+const generateSixDigitOtp = () => String(randomInt(0, 1_000_000)).padStart(6, "0");
+
+const getIndianMobileDigits = (mobileNumber) => {
+  const normalized = normalizeIndianMobile(mobileNumber);
+
+  if (!normalized) {
+    return null;
+  }
+
+  return normalized.replace(/^\+91/, "");
+};
+
+const sendFast2SmsOtp = async (mobileNumber, otp) => {
+  if (!FAST2SMS_API_KEY) {
+    throw new Error("FAST2SMS_API_KEY is missing.");
+  }
+
+  const phoneDigits = getIndianMobileDigits(mobileNumber);
+
+  if (!phoneDigits) {
+    throw new Error("Invalid recipient mobile number.");
+  }
+
+  const body = new URLSearchParams();
+  body.set("numbers", phoneDigits);
+
+  if (FAST2SMS_ROUTE === "dlt") {
+    body.set("route", "dlt");
+
+    if (FAST2SMS_SENDER_ID) {
+      body.set("sender_id", FAST2SMS_SENDER_ID);
+    }
+
+    if (FAST2SMS_TEMPLATE_ID) {
+      body.set("template_id", FAST2SMS_TEMPLATE_ID);
+    }
+
+    if (FAST2SMS_ENTITY_ID) {
+      body.set("entity_id", FAST2SMS_ENTITY_ID);
+    }
+
+    body.set("message", FAST2SMS_MESSAGE_TEMPLATE.replace(/\{\{OTP\}\}/g, otp));
+  } else {
+    body.set("route", "otp");
+    body.set("variables_values", otp);
+    body.set("flash", "0");
+
+    if (FAST2SMS_SENDER_ID) {
+      body.set("sender_id", FAST2SMS_SENDER_ID);
+    }
+  }
+
+  const response = await fetch(FAST2SMS_ENDPOINT, {
+    method: "POST",
+    headers: {
+      authorization: FAST2SMS_API_KEY,
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    body: body.toString(),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  const isSuccess =
+    response.ok &&
+    (payload?.return === true || payload?.status_code === 200 || payload?.request_id || payload?.message?.includes("SMS"));
+
+  if (!isSuccess) {
+    throw new Error(`Fast2SMS request failed with status ${response.status}.`);
+  }
+
+  return payload;
+};
+
+const sendPasswordResetOtp = async (mobileNumber, otp) => {
+  if (OTP_PROVIDER === "fast2sms") {
+    return sendFast2SmsOtp(mobileNumber, otp);
+  }
+
+  return null;
+};
+
+const getAdminUsersForPasswordReset = async () => {
+  const result = await pool.query(
+    `
+      select id, email
+      from admin_users
+      order by created_at asc
+    `,
+  );
+
+  return result.rows;
+};
+
+const requestAdminPasswordResetOtp = async (body) => {
+  if (!isPlainObject(body)) {
+    throw { statusCode: 400, message: "Request body must be a JSON object." };
+  }
+
+  const mobile = normalizeIndianMobile(body.mobile);
+
+  if (!mobile) {
+    throw { statusCode: 400, message: "Valid Indian mobile number is required." };
+  }
+
+  if (!isEligibleAdminResetMobile(mobile)) {
+    throw { statusCode: 403, message: "This mobile number is not eligible for admin password reset." };
+  }
+
+  const adminUsers = await getAdminUsersForPasswordReset();
+
+  if (!adminUsers || adminUsers.length === 0) {
+    throw { statusCode: 404, message: "No admin account found." };
+  }
+
+  const otp = generateSixDigitOtp();
+  const expiresAt = Date.now() + ADMIN_PASSWORD_RESET_OTP_TTL_MS;
+
+  adminPasswordResetOtps.set(mobile, {
+    otp,
+    adminUserIds: adminUsers.map((adminUser) => String(adminUser.id)),
+    expiresAt,
+    attempts: 0,
+  });
+
+  try {
+    await sendPasswordResetOtp(mobile, otp);
+  } catch (error) {
+    adminPasswordResetOtps.delete(mobile);
+    throw {
+      statusCode: 502,
+      message: "Failed to deliver OTP SMS. Check Fast2SMS configuration and try again.",
+      details: { cause: error instanceof Error ? error.message : "Unknown provider error" },
+    };
+  }
+
+  log("info", "Generated admin password reset OTP", {
+    mobile: maskMobileNumber(mobile),
+    expiresAt: new Date(expiresAt).toISOString(),
+    otpPreview: NODE_ENV === "production" ? "hidden" : otp,
+  });
+
+  const response = {
+    eligible: true,
+    expiresInSeconds: Math.floor(ADMIN_PASSWORD_RESET_OTP_TTL_MS / 1000),
+  };
+
+  if (NODE_ENV !== "production" && OTP_PROVIDER !== "fast2sms") {
+    response.devOtp = otp;
+  }
+
+  return response;
+};
+
+const resetAdminPasswordWithOtp = async (body) => {
+  if (!isPlainObject(body)) {
+    throw { statusCode: 400, message: "Request body must be a JSON object." };
+  }
+
+  const mobile = normalizeIndianMobile(body.mobile);
+  const otp = String(body.otp ?? "").trim();
+  const newPassword = String(body.newPassword ?? "");
+
+  if (!mobile) {
+    throw { statusCode: 400, message: "Valid Indian mobile number is required." };
+  }
+
+  if (!isEligibleAdminResetMobile(mobile)) {
+    throw { statusCode: 403, message: "This mobile number is not eligible for admin password reset." };
+  }
+
+  if (!/^\d{6}$/.test(otp)) {
+    throw { statusCode: 400, message: "A valid 6-digit OTP is required." };
+  }
+
+  if (newPassword.length < 6) {
+    throw { statusCode: 400, message: "New password must be at least 6 characters." };
+  }
+
+  const otpRecord = adminPasswordResetOtps.get(mobile);
+
+  if (!otpRecord || Date.now() > otpRecord.expiresAt) {
+    adminPasswordResetOtps.delete(mobile);
+    throw { statusCode: 410, message: "OTP expired. Request a new OTP." };
+  }
+
+  if (otpRecord.attempts >= ADMIN_PASSWORD_RESET_OTP_MAX_ATTEMPTS) {
+    adminPasswordResetOtps.delete(mobile);
+    throw { statusCode: 429, message: "Too many OTP attempts. Request a new OTP." };
+  }
+
+  if (otpRecord.otp !== otp) {
+    otpRecord.attempts += 1;
+    adminPasswordResetOtps.set(mobile, otpRecord);
+    throw { statusCode: 401, message: "Invalid OTP." };
+  }
+
+  const adminUserIds = Array.isArray(otpRecord.adminUserIds)
+    ? otpRecord.adminUserIds.map((id) => String(id).trim()).filter(Boolean)
+    : [];
+
+  if (adminUserIds.length === 0) {
+    throw { statusCode: 404, message: "Admin account not found." };
+  }
+
+  const nextPasswordHash = hashPassword(newPassword);
+  const updatedAdminResult = await pool.query(
+    `
+      update admin_users
+      set password_hash = $2
+      where id::text = any($1::text[])
+      returning id, email
+    `,
+    [adminUserIds, nextPasswordHash],
+  );
+
+  if (updatedAdminResult.rowCount === 0) {
+    throw { statusCode: 404, message: "Admin account not found." };
+  }
+
+  await pool.query(
+    `
+      update admin_sessions
+      set revoked_at = CURRENT_TIMESTAMP
+      where admin_user_id::text = any($1::text[]) and revoked_at is null
+    `,
+    [adminUserIds],
+  );
+
+  adminPasswordResetOtps.delete(mobile);
+
+  return {
+    passwordUpdated: true,
+    sessionsRevoked: true,
+    updatedAdminCount: updatedAdminResult.rowCount,
+  };
+};
 
 const inferRazorpayModeFromKey = (keyId) => {
   if (keyId.startsWith("rzp_live_")) {
@@ -415,6 +704,18 @@ const isPlainObject = (value) =>
 
 const normalizeOrderStatus = (value, fallback = "pending") =>
   ORDER_STATUS_ALIASES[String(value ?? "").trim().toLowerCase()] ?? fallback;
+
+const normalizeCustomerPhone = (value) => String(value ?? "").replace(/\D/g, "").slice(-10);
+
+const isWithinOrderCancelWindow = (createdAt) => {
+  const createdAtMs = Date.parse(String(createdAt ?? ""));
+
+  if (!Number.isFinite(createdAtMs)) {
+    return false;
+  }
+
+  return Date.now() - createdAtMs <= ORDER_CANCEL_WINDOW_MS;
+};
 
 const normalizeApiPathname = (pathname) => {
   if (pathname === API_PREFIX) {
@@ -1582,7 +1883,7 @@ const getAdminAnalytics = async () => {
   const statusCounts = statusResult.rows.reduce((accumulator, row) => {
     accumulator[normalizeOrderStatus(row.status)] = Number(row.count ?? 0);
     return accumulator;
-  }, { pending: 0, processing: 0, delivered: 0 });
+  }, { pending: 0, processing: 0, delivered: 0, cancelled: 0 });
 
   const revenueByDay = revenueResult.rows.map((row) => ({
     label: new Date(row.day).toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
@@ -1608,6 +1909,7 @@ const getAdminAnalytics = async () => {
       pending: Number(statusCounts.pending ?? 0),
       processing: Number(statusCounts.processing ?? 0),
       delivered: Number(statusCounts.delivered ?? 0),
+      cancelled: Number(statusCounts.cancelled ?? 0),
     },
     revenueByDay,
     topProducts,
@@ -1971,6 +2273,10 @@ const resolveCouponDiscount = async (payload, subtotal) => {
 
   let eligibleSubtotal = subtotal;
 
+  if (!Number.isFinite(eligibleSubtotal)) {
+    throw { statusCode: 400, message: "Unable to apply coupon due to invalid cart totals." };
+  }
+
   if (coupon.appliesTo === "category") {
     eligibleSubtotal = payload.items.reduce((sum, item) => {
       const productMeta = productMetaById.get(item.productId);
@@ -1996,16 +2302,32 @@ const resolveCouponDiscount = async (payload, subtotal) => {
     throw { statusCode: 400, message: "Coupon is not applicable to items in this cart." };
   }
 
+  const couponDiscountValue = Number(coupon.discountValue);
+
+  if (!Number.isFinite(couponDiscountValue)) {
+    throw { statusCode: 400, message: "Coupon configuration is invalid. Please remove the coupon and retry." };
+  }
+
   let discountAmount =
     coupon.discountType === "percentage"
-      ? Math.round((eligibleSubtotal * Number(coupon.discountValue)) / 100)
-      : Math.round(Number(coupon.discountValue));
+      ? Math.round((eligibleSubtotal * couponDiscountValue) / 100)
+      : Math.round(couponDiscountValue);
 
   if (coupon.maxDiscountAmount !== null) {
-    discountAmount = Math.min(discountAmount, Math.round(Number(coupon.maxDiscountAmount)));
+    const maxDiscountAmount = Number(coupon.maxDiscountAmount);
+
+    if (!Number.isFinite(maxDiscountAmount)) {
+      throw { statusCode: 400, message: "Coupon configuration is invalid. Please remove the coupon and retry." };
+    }
+
+    discountAmount = Math.min(discountAmount, Math.round(maxDiscountAmount));
   }
 
   discountAmount = Math.max(0, Math.min(discountAmount, eligibleSubtotal));
+
+  if (!Number.isFinite(discountAmount)) {
+    throw { statusCode: 400, message: "Unable to apply coupon due to invalid discount value." };
+  }
 
   return {
     couponCode: coupon.code,
@@ -2015,8 +2337,22 @@ const resolveCouponDiscount = async (payload, subtotal) => {
 
 const buildOrderTotals = async (payload) => {
   const subtotal = payload.items.reduce((sum, item) => sum + item.totalPrice, 0);
+
+  if (!Number.isFinite(subtotal)) {
+    throw { statusCode: 400, message: "Order subtotal is invalid." };
+  }
+
   const { couponCode, discountAmount } = await resolveCouponDiscount(payload, subtotal);
+
+  if (!Number.isFinite(discountAmount)) {
+    throw { statusCode: 400, message: "Order discount is invalid." };
+  }
+
   const total = Math.max(0, subtotal + payload.shipping - discountAmount);
+
+  if (!Number.isFinite(total)) {
+    throw { statusCode: 400, message: "Order total is invalid." };
+  }
 
   if (total <= 0) {
     throw { statusCode: 400, message: "Order total must be greater than zero after discount." };
@@ -2081,6 +2417,15 @@ const serializeOrderRows = (rows) => {
         paymentStatus: row.payment_status,
         paymentId: row.razorpay_payment_id,
         paymentTime: row.payment_captured_at ?? row.created_at,
+        cancelledAt: row.cancelled_at ?? null,
+        cancellationReason: row.cancellation_reason ?? null,
+        refundId: row.refund_id ?? null,
+        refundStatus: row.refund_status ?? null,
+        refundAmount: Number(row.refund_amount ?? 0),
+        refundedAt: row.refunded_at ?? null,
+        cancelEligibleUntil: Number.isFinite(Date.parse(String(row.created_at ?? "")))
+          ? new Date(Date.parse(String(row.created_at ?? "")) + ORDER_CANCEL_WINDOW_MS).toISOString()
+          : null,
         status: normalizeOrderStatus(row.status),
         createdAt: row.created_at,
       });
@@ -2498,7 +2843,9 @@ const updateOrderStatus = async (orderId, body) => {
   const result = await pool.query(
     `
       update orders
-      set status = $2
+      set
+        status = $2,
+        cancelled_at = case when $2 = 'cancelled' then coalesce(cancelled_at, CURRENT_TIMESTAMP) else cancelled_at end
       where id = $1
       returning id
     `,
@@ -2508,6 +2855,114 @@ const updateOrderStatus = async (orderId, body) => {
   if (result.rowCount === 0) {
     throw { statusCode: 404, message: "Order not found." };
   }
+
+  return getOrderById(orderId);
+};
+
+const cancelOrderByCustomer = async (orderId, body) => {
+  if (!isPlainObject(body)) {
+    throw { statusCode: 400, message: "Request body must be a JSON object." };
+  }
+
+  const customerPhone = normalizeCustomerPhone(body.phone ?? body.customerPhone ?? body.mobile);
+  const cancellationReason = String(body.reason ?? body.cancellationReason ?? "").trim().slice(0, 500) || null;
+
+  if (customerPhone.length !== 10) {
+    throw { statusCode: 400, message: "A valid 10-digit phone number is required." };
+  }
+
+  const result = await pool.query(
+    `
+      select id, customer_phone, status, created_at
+      from orders
+      where id = $1
+      limit 1
+    `,
+    [orderId],
+  );
+
+  if (result.rowCount === 0) {
+    throw { statusCode: 404, message: "Order not found." };
+  }
+
+  const order = result.rows[0];
+
+  if (normalizeCustomerPhone(order.customer_phone) !== customerPhone) {
+    throw { statusCode: 403, message: "Phone number does not match this order." };
+  }
+
+  if (normalizeOrderStatus(order.status) === "cancelled") {
+    return getOrderById(orderId);
+  }
+
+  if (!isWithinOrderCancelWindow(order.created_at)) {
+    throw { statusCode: 403, message: "Cancellation is only available within 6 hours of purchase." };
+  }
+
+  await pool.query(
+    `
+      update orders
+      set
+        status = 'cancelled',
+        cancelled_at = coalesce(cancelled_at, CURRENT_TIMESTAMP),
+        cancellation_reason = coalesce($2, cancellation_reason),
+        payment_status = case
+          when payment_status in ('captured', 'authorized', 'refunded') then payment_status
+          else 'cancelled'
+        end
+      where id = $1
+    `,
+    [orderId, cancellationReason],
+  );
+
+  return getOrderById(orderId);
+};
+
+const refundCancelledOrder = async (orderId) => {
+  assertRazorpayConfigured();
+
+  const order = await getOrderById(orderId);
+
+  if (normalizeOrderStatus(order.status) !== "cancelled") {
+    throw { statusCode: 400, message: "Only cancelled orders can be refunded." };
+  }
+
+  if (!order.paymentId) {
+    throw { statusCode: 400, message: "This order does not have a Razorpay payment to refund." };
+  }
+
+  const paymentStatus = String(order.paymentStatus ?? "").toLowerCase();
+
+  if (!["captured", "authorized", "refunded"].includes(paymentStatus)) {
+    throw { statusCode: 400, message: "Only captured or authorized Razorpay payments can be refunded." };
+  }
+
+  if (["refunded", "refund_initiated"].includes(String(order.refundStatus ?? "").toLowerCase()) || String(order.paymentStatus ?? "").toLowerCase() === "refunded") {
+    return order;
+  }
+
+  const refundAmount = Math.max(Number(order.total ?? 0), 0) * 100;
+  const refund = await razorpayClient.payments.refund(order.paymentId, {
+    amount: refundAmount,
+    notes: {
+      order_id: order.id,
+      customer_phone: order.customer?.phone ?? "",
+    },
+  });
+
+  await pool.query(
+    `
+      update orders
+      set
+        refund_id = $2,
+        refund_status = $3,
+        refund_amount = $4,
+        refunded_at = CURRENT_TIMESTAMP,
+        payment_status = 'refunded'
+      where id = $1
+    `,
+    [orderId, String(refund.id ?? ""), String(refund.status ?? "initiated"), Math.round(refundAmount / 100)],
+  );
 
   return getOrderById(orderId);
 };
@@ -2640,6 +3095,26 @@ const getAdminSession = (req) => {
     email: String(payload.email ?? ""),
     sessionId,
   };
+};
+
+const requireActiveAdminSession = async (req, res) => {
+  const admin = getAdminSession(req);
+
+  if (!admin) {
+    sendError(res, 401, "Admin session required.");
+    return null;
+  }
+
+  const currentSession = await ensureAdminSessionRow(req, admin, admin.sessionId);
+
+  if (!currentSession) {
+    clearAdminSessionCookie(res);
+    sendError(res, 401, "Admin session expired. Please login again.");
+    return null;
+  }
+
+  await touchAdminSession(admin.sessionId);
+  return admin;
 };
 
 const ensureAdminSessionRow = async (req, admin, sessionId) => {
@@ -2795,6 +3270,7 @@ const listAdminSessions = async (adminUserId, currentSessionId = null) => {
 
 const handleError = (res, error, requestId) => {
   const errorId = randomUUID();
+  const isProduction = NODE_ENV === "production";
   
   if (error?.statusCode) {
     log("warn", "API error", {
@@ -2819,8 +3295,22 @@ const handleError = (res, error, requestId) => {
     error: error?.message || String(error),
     stack: error?.stack,
   });
-  
-  sendError(res, 500, "Internal server error.", { errorId });
+
+  if (isProduction) {
+    sendError(res, 500, "Internal server error.", { errorId });
+    return;
+  }
+
+  sendError(
+    res,
+    500,
+    error?.message || "Internal server error.",
+    {
+      errorId,
+      errorCode: error?.code || null,
+      errorName: error?.name || null,
+    },
+  );
 };
 
 const server = http.createServer(async (req, res) => {
@@ -3102,7 +3592,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === "GET" && routePathname === "/admin/products/deleted") {
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3119,7 +3609,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3147,7 +3637,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3157,7 +3647,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === "POST" && routePathname === "/products") {
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3168,7 +3658,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === "POST" && routePathname === "/admin/products/import") {
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3184,7 +3674,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === "GET" && routePathname === "/admin/analytics") {
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3194,7 +3684,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (routePathname === "/admin/coupons") {
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3217,7 +3707,7 @@ const server = http.createServer(async (req, res) => {
 
     const couponRoute = matchRoute(routePathname, "/admin/coupons/:coupon_id");
     if (couponRoute) {
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3245,7 +3735,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (routePathname === "/admin/ads") {
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3268,7 +3758,7 @@ const server = http.createServer(async (req, res) => {
 
     const adRoute = matchRoute(routePathname, "/admin/ads/:ad_id");
     if (adRoute) {
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3302,7 +3792,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3319,8 +3809,21 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    const cancelOrderRoute = matchRoute(routePathname, "/orders/:order_id/cancel");
+    if (cancelOrderRoute) {
+      if (method !== "POST") {
+        sendError(res, 405, "Method not allowed.");
+        return;
+      }
+
+      const body = await parseJsonBody(req);
+      const order = await cancelOrderByCustomer(cancelOrderRoute.order_id, body);
+      sendSuccess(res, 200, order, "Order cancelled successfully.");
+      return;
+    }
+
     if (method === "POST" && routePathname === "/admin/orders/manual") {
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3351,7 +3854,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3361,8 +3864,24 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    const orderRefundRoute = matchRoute(routePathname, "/admin/orders/:order_id/refund");
+    if (orderRefundRoute) {
+      if (method !== "POST") {
+        sendError(res, 405, "Method not allowed.");
+        return;
+      }
+
+      if (!(await requireActiveAdminSession(req, res))) {
+        return;
+      }
+
+      const refundedOrder = await refundCancelledOrder(orderRefundRoute.order_id);
+      sendSuccess(res, 200, refundedOrder, "Refund initiated successfully.");
+      return;
+    }
+
     if (method === "GET" && routePathname === "/orders") {
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3392,7 +3911,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      if (!requireAdmin(req, res)) {
+      if (!(await requireActiveAdminSession(req, res))) {
         return;
       }
 
@@ -3412,6 +3931,21 @@ const server = http.createServer(async (req, res) => {
       const login = await loginAdmin(body, req);
       setAdminSessionCookie(res, login.token);
       sendSuccess(res, 200, { admin: login.admin }, "Login successful.");
+      return;
+    }
+
+    if (method === "POST" && routePathname === "/admin/password-reset/request-otp") {
+      const body = await parseJsonBody(req);
+      const response = await requestAdminPasswordResetOtp(body);
+      sendSuccess(res, 200, response, "OTP sent successfully.");
+      return;
+    }
+
+    if (method === "POST" && routePathname === "/admin/password-reset/confirm") {
+      const body = await parseJsonBody(req);
+      const response = await resetAdminPasswordWithOtp(body);
+      clearAdminSessionCookie(res);
+      sendSuccess(res, 200, response, "Password reset successful.");
       return;
     }
 

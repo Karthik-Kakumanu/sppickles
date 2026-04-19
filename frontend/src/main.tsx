@@ -13,10 +13,9 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>,
 );
 
-// Keep behavior deterministic across environments.
-// Enable service worker only when explicitly requested.
-const shouldEnableServiceWorker =
-  import.meta.env.PROD && import.meta.env.VITE_ENABLE_SERVICE_WORKER === "true";
+// Install prompt is intentionally disabled for this project.
+// Keep service workers unregistered in every environment.
+const shouldEnableServiceWorker = false;
 
 if (shouldEnableServiceWorker) {
   registerServiceWorker().catch((err) =>

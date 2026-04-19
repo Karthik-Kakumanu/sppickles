@@ -2,6 +2,7 @@ import { type FormEvent, Fragment, useDeferredValue, useMemo, useState } from "r
 import { Navigate } from "react-router-dom";
 import {
   Clock,
+  AlertTriangle,
   FileSpreadsheet,
   Loader2,
   PlusCircle,
@@ -24,11 +25,12 @@ import {
   useOrdersQuery,
   useProductsQuery,
   useUpdateOrderMutation,
+  refundCancelledOrder,
 } from "@/lib/api";
 import { calculateWeightPrice, formatCurrency } from "@/lib/pricing";
 import { resolvePickleImage } from "@/lib/pickleImages";
 
-const ORDER_STATUSES: OrderStatus[] = ["pending", "processing", "delivered"];
+const ORDER_STATUSES: OrderStatus[] = ["pending", "processing", "delivered", "cancelled"];
 
 const STATUS_META: Record<
   OrderStatus,
@@ -55,10 +57,56 @@ const STATUS_META: Record<
     count: "text-[#1e6b43]",
     panel: "border-[#b4dec3] bg-[linear-gradient(145deg,#f9fefb_0%,#e8f7ef_100%)]",
   },
+  cancelled: {
+    label: "Cancelled",
+    badge: "border-[#f0c8bf] bg-[#fff0eb] text-[#b64d39]",
+    select: "border-[#f0c8bf] bg-[#fff8f5] text-[#b64d39]",
+    count: "text-[#b64d39]",
+    panel: "border-[#f0c8bf] bg-[linear-gradient(145deg,#fffaf8_0%,#fff0eb_100%)]",
+  },
 };
 
 const formatDateTime = (value: string) =>
   new Date(value).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+
+const resolveCapturedAmount = (order: OrderRecord) => {
+  const status = String(order.paymentStatus ?? "").toLowerCase();
+  if (status === "captured" || status === "refunded") {
+    return Number(order.total ?? 0);
+  }
+  return 0;
+};
+
+const resolveRefundedAmount = (order: OrderRecord) => {
+  if (Number.isFinite(Number(order.refundAmount))) {
+    return Number(order.refundAmount);
+  }
+
+  const status = String(order.paymentStatus ?? "").toLowerCase();
+  if (status === "refunded") {
+    return Number(order.total ?? 0);
+  }
+
+  return 0;
+};
+
+const paymentStatusBadgeClass = (paymentStatus?: string) => {
+  const status = String(paymentStatus ?? "pending").toLowerCase();
+
+  if (status === "refunded") {
+    return "border-[#bde2cd] bg-[#edf8f1] text-[#1f7a4d]";
+  }
+
+  if (status === "captured") {
+    return "border-[#b4dec3] bg-[#e9f8ef] text-[#1e6b43]";
+  }
+
+  if (status === "failed") {
+    return "border-[#f0c8bf] bg-[#fff0eb] text-[#b64d39]";
+  }
+
+  return "border-[#ead9a2] bg-[#fff7df] text-[#8a651a]";
+};
 
 const thClass = "px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.22em] text-theme-body-soft";
 
@@ -174,6 +222,7 @@ const AdminOrdersPage = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [refundingId, setRefundingId] = useState<string | null>(null);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualOrder, setManualOrder] = useState(emptyManualOrder);
   const [manualItems, setManualItems] = useState<ManualOrderItem[]>([]);
@@ -183,7 +232,7 @@ const AdminOrdersPage = () => {
   const deferredSearchQuery = useDeferredValue(searchQuery.trim().toLowerCase());
 
   const metrics = useMemo(() => {
-    const counts = { pending: 0, processing: 0, delivered: 0 } as Record<OrderStatus, number>;
+    const counts = { pending: 0, processing: 0, delivered: 0, cancelled: 0 } as Record<OrderStatus, number>;
     let revenue = 0;
 
     for (const order of orders) {
@@ -352,6 +401,33 @@ const AdminOrdersPage = () => {
     }
   };
 
+  const handleRefundOrder = async (orderId: string) => {
+    const confirmed = window.confirm(`Refund order ${orderId} through Razorpay? This should only be used for cancelled paid orders.`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setRefundingId(orderId);
+
+    try {
+      await refundCancelledOrder(orderId);
+      await refetch();
+      toast({
+        title: "Refund initiated",
+        description: `Refund started for ${orderId}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Refund failed",
+        description: error instanceof Error ? error.message : "Unable to start the refund.",
+        variant: "destructive",
+      });
+    } finally {
+      setRefundingId(null);
+    }
+  };
+
   const handleAddProductToBasket = (product: ProductRecord) => {
     const defaultPicker = productPickerState[product.id] ?? { quantity: "1", weight: "500g" as WeightOption };
     const nextItem = createBasketItem(product);
@@ -500,6 +576,14 @@ const AdminOrdersPage = () => {
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-theme-body">
                       Track and update orders.
                     </p>
+                        <div className="mt-4 rounded-[1.2rem] border border-[#e7cf91] bg-[#fff9eb] px-4 py-3 text-sm leading-6 text-theme-body">
+                          <div className="flex items-start gap-3">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#8a651a]" />
+                            <p>
+                              Customers can cancel within 6 hours of purchase. Cancelled orders stay visible here and can be refunded from the order card.
+                            </p>
+                          </div>
+                        </div>
 
                     <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
                       <div className="rounded-[1.15rem] border border-[#ead9a2] bg-[linear-gradient(145deg,#fffdfa_0%,#fff5db_100%)] p-3 shadow-[0_10px_22px_rgba(30,79,46,0.08)]">
@@ -1042,6 +1126,12 @@ const AdminOrdersPage = () => {
                   ) : (
                     filteredOrders.map((order) => (
                       <div key={`mobile-${order.id}`} className="rounded-2xl border border-[#e7eee7] bg-white p-4 shadow-sm">
+                        {(() => {
+                          const capturedAmount = resolveCapturedAmount(order);
+                          const refundedAmount = resolveRefundedAmount(order);
+
+                          return (
+                            <>
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-theme-heading">{order.id}</p>
@@ -1061,6 +1151,23 @@ const AdminOrdersPage = () => {
                         <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[#eaf1ea] bg-[#f8fbf8] px-3 py-2">
                           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-body-soft">Total</span>
                           <span className="text-sm font-semibold text-theme-heading">{formatCurrency(order.total)}</span>
+                        </div>
+
+                        <div className="mt-3 rounded-xl border border-[#eaf1ea] bg-[#fcfdfb] px-3 py-2">
+                          <div className="flex items-center justify-between gap-3 text-xs text-theme-body">
+                            <span>Captured amount</span>
+                            <span className="font-semibold text-theme-heading">{formatCurrency(capturedAmount)}</span>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between gap-3 text-xs text-theme-body">
+                            <span>Refunded amount</span>
+                            <span className="font-semibold text-theme-heading">{formatCurrency(refundedAmount)}</span>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between gap-3">
+                            <span className="text-xs text-theme-body">Payment status</span>
+                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${paymentStatusBadgeClass(order.paymentStatus)}`}>
+                              {order.paymentStatus ?? "pending"}
+                            </span>
+                          </div>
                         </div>
 
                         <div className="mt-3">
@@ -1094,6 +1201,16 @@ const AdminOrdersPage = () => {
                           >
                             {deletingId === order.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                           </button>
+                          {order.status === "cancelled" && order.paymentStatus !== "refunded" ? (
+                            <button
+                              type="button"
+                              onClick={() => handleRefundOrder(order.id)}
+                              disabled={refundingId === order.id}
+                              className="inline-flex items-center justify-center rounded-full border border-[#ead9a2] bg-[#fffaf0] px-3 py-2 text-xs font-semibold text-[#8a651a] transition hover:bg-[#fff4db] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {refundingId === order.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <span>Refund</span>}
+                            </button>
+                          ) : null}
                         </div>
 
                         {expandedId === order.id ? (
@@ -1108,6 +1225,9 @@ const AdminOrdersPage = () => {
                             ))}
                           </div>
                         ) : null}
+                            </>
+                          );
+                        })()}
                       </div>
                     ))
                   )}
@@ -1154,6 +1274,12 @@ const AdminOrdersPage = () => {
                       ) : (
                         filteredOrders.map((order) => (
                           <Fragment key={order.id}>
+                            {(() => {
+                              const capturedAmount = resolveCapturedAmount(order);
+                              const refundedAmount = resolveRefundedAmount(order);
+
+                              return (
+                                <>
                             <tr className="border-t border-[#edf1ec] hover:bg-[#fafdf9]">
                               <td className="px-6 py-4">
                                 <div className="font-semibold text-theme-heading">{order.id}</div>
@@ -1163,8 +1289,13 @@ const AdminOrdersPage = () => {
                                 <div className="font-semibold text-theme-heading">{order.customer.name}</div>
                                 <div className="text-xs text-theme-body-soft">{order.customer.phone}</div>
                               </td>
-                              <td className="px-6 py-4 font-semibold text-theme-heading">
-                                {formatCurrency(order.total)}
+                              <td className="px-6 py-4">
+                                <div className="font-semibold text-theme-heading">{formatCurrency(order.total)}</div>
+                                <div className="mt-1 text-xs text-theme-body-soft">Captured: {formatCurrency(capturedAmount)}</div>
+                                <div className="text-xs text-theme-body-soft">Refunded: {formatCurrency(refundedAmount)}</div>
+                                <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${paymentStatusBadgeClass(order.paymentStatus)}`}>
+                                  {order.paymentStatus ?? "pending"}
+                                </span>
                               </td>
                               <td className="px-6 py-4">
                                 <select
@@ -1198,12 +1329,36 @@ const AdminOrdersPage = () => {
                                   >
                                     {deletingId === order.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                                   </button>
+                                  {order.status === "cancelled" && order.paymentStatus !== "refunded" ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRefundOrder(order.id)}
+                                      disabled={refundingId === order.id}
+                                      className="rounded-full border border-[#ead9a2] bg-[#fffaf0] px-3 py-2 text-xs font-semibold text-[#8a651a] transition hover:bg-[#fff4db] disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                      {refundingId === order.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Refund"}
+                                    </button>
+                                  ) : null}
                                 </div>
                               </td>
                             </tr>
                             {expandedId === order.id ? (
                               <tr>
                                 <td colSpan={6} className="bg-[#fbfdfb] px-6 py-5">
+                                  <div className="mb-4 grid gap-3 sm:grid-cols-3">
+                                    <div className="rounded-2xl border border-[#e4eee4] bg-white p-4">
+                                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-theme-body-soft">Captured amount</p>
+                                      <p className="mt-1 text-base font-semibold text-theme-heading">{formatCurrency(capturedAmount)}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-[#e4eee4] bg-white p-4">
+                                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-theme-body-soft">Refunded amount</p>
+                                      <p className="mt-1 text-base font-semibold text-theme-heading">{formatCurrency(refundedAmount)}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-[#e4eee4] bg-white p-4">
+                                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-theme-body-soft">Refund status</p>
+                                      <p className="mt-1 text-base font-semibold text-theme-heading">{order.refundStatus ?? "not_refunded"}</p>
+                                    </div>
+                                  </div>
                                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                                     {order.items.map((item) => (
                                       <div key={`${order.id}-${item.productId}`} className="rounded-2xl border border-[#e4eee4] bg-white p-4">
@@ -1217,6 +1372,9 @@ const AdminOrdersPage = () => {
                                 </td>
                               </tr>
                             ) : null}
+                                </>
+                              );
+                            })()}
                           </Fragment>
                         ))
                       )}
