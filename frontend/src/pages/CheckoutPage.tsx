@@ -12,6 +12,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import WhatsAppLogo from "@/components/WhatsAppLogo";
 import { content } from "@/content/translations";
 import { brand } from "@/data/site";
+import { getDynamicProductName } from "@/lib/translation";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 const inputClassName =
@@ -277,12 +278,12 @@ const CheckoutPage = () => {
     () =>
       cart.map((line) => ({
         key: line.key,
-        name: line.product.name,
+        name: getDynamicProductName(line.product, language),
         weight: line.weight,
         quantity: line.quantity,
         totalPrice: line.totalPrice,
       })),
-    [cart],
+    [cart, language],
   );
 
   const mapQuery = [form.address, form.city, form.state, sanitizedPincode]
@@ -313,7 +314,7 @@ const CheckoutPage = () => {
       language === "te" ? "కార్ట్‌లోని ఉత్పత్తులు:" : "Products in cart:",
       ...cart.map(
         (line) =>
-          `- ${line.product.name} (${line.weight}) x ${line.quantity} = ${formatCurrency(line.totalPrice)}`,
+          `- ${getDynamicProductName(line.product, language)} (${line.weight}) x ${line.quantity} = ${formatCurrency(line.totalPrice)}`,
       ),
       "",
       `- ${language === "te" ? "మొత్తం బరువు" : "Total weight"}: ${totalWeightKg.toFixed(2)} kg`,

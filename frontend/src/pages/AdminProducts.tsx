@@ -108,29 +108,6 @@ const resolveAdminProductImage = (product: ProductRecord, imageLookup: Map<strin
   return "";
 };
 
-const resolveFormImage = (
-  name: string,
-  category: ProductCategory,
-  imageLookup: Map<string, string>,
-) => {
-  const normalizedName = name.trim();
-
-  if (!normalizedName) {
-    return "";
-  }
-
-  const exactImage = imageLookup.get(normalizedName)?.trim();
-  if (exactImage) {
-    return exactImage;
-  }
-
-  if (category === "pickles") {
-    return resolvePickleImage(normalizedName);
-  }
-
-  return "";
-};
-
 export function AdminProducts() {
   const { data: products = [], isLoading, isFetching } = useProductsQuery();
   const { data: deletedProducts = [], isLoading: isDeletedLoading, isFetching: isDeletedFetching } = useProductsQuery(null, true);
@@ -146,6 +123,7 @@ export function AdminProducts() {
   const [catalogFilter, setCatalogFilter] = useState<CatalogFilter>("all");
   const [form, setForm] = useState<ProductFormState>(emptyForm());
   const [previewAspectRatio, setPreviewAspectRatio] = useState<number | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const imageLookup = useMemo(() => buildImageLookup(defaultProducts), []);
 
   const isSaving =
@@ -201,11 +179,14 @@ export function AdminProducts() {
     return counts;
   }, [filteredProducts]);
 
+  const productPreviewImage = form.image.trim();
+
   const handleReset = () => {
     setForm(emptyForm());
     setEditingId(null);
     setShowForm(false);
     setPreviewAspectRatio(null);
+    setIsUploading(false);
   };
 
   const handleEdit = (product: ProductRecord) => {
@@ -234,10 +215,15 @@ export function AdminProducts() {
     await restoreMutation.mutateAsync(product.id);
   };
 
+  const handleRemoveImage = () => {
+    setForm((current) => ({ ...current, image: "" }));
+    setPreviewAspectRatio(null);
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const finalImage = form.image.trim() || resolveFormImage(form.name, form.category, imageLookup);
+    const finalImage = productPreviewImage.trim();
 
     if (!finalImage) {
       window.alert("Please upload a product image from your device before saving.");
@@ -259,19 +245,27 @@ export function AdminProducts() {
     }
 
     handleReset();
+    window.location.reload();
   };
 
-  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    if (!file) return;
 
-    if (!file) {
+    if (file.size > 5 * 1024 * 1024) {
+      window.alert("File is too large! Please upload an image under 5MB.");
       return;
     }
 
+    setIsUploading(true);
     const reader = new FileReader();
-    reader.onload = () => {
-      setForm((current) => ({ ...current, image: String(reader.result ?? "") }));
+    
+    reader.onloadend = () => {
+      setForm((current) => ({ ...current, image: reader.result as string }));
+      setPreviewAspectRatio(null);
+      setIsUploading(false);
     };
+    
     reader.readAsDataURL(file);
   };
 
@@ -508,9 +502,13 @@ export function AdminProducts() {
                         onChange={handleFileUpload}
                         className="block w-full rounded-xl border border-dashed border-[#d8e5d8] bg-[#fbfdfb] px-4 py-3 text-sm text-theme-body file:mr-4 file:rounded-full file:border-0 file:bg-[#1f7a4d] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:border-[#bfd2c1]"
                       />
-                      <p className="text-xs text-theme-body-soft">
-                        Image upload is device-only. URL entry is disabled for consistency.
-                      </p>
+                      {isUploading ? (
+                        <p className="text-xs font-semibold text-[#1f7a4d]">Processing image...</p>
+                      ) : (
+                        <p className="text-xs text-theme-body-soft">
+                          Select an image from your device.
+                        </p>
+                      )}
                     </label>
                   </div>
 
@@ -542,30 +540,40 @@ export function AdminProducts() {
                     <label className="block space-y-2">
                       <span className="text-xs font-bold uppercase tracking-[0.18em] text-theme-body-soft">Description</span>
                       <textarea
-                        required
                         rows={8}
                         value={form.description}
                         onChange={(event) =>
                           setForm((current) => ({ ...current, description: event.target.value }))
                         }
                         className="w-full rounded-xl border border-[#d8e5d8] bg-white px-4 py-3 text-sm text-theme-heading outline-none transition focus:border-[#1f7a4d] focus:ring-2 focus:ring-[#1f7a4d]/15"
-                        placeholder="Write a clear product description, benefits, and usage notes."
+                        placeholder="Write a clear product description, benefits, and usage notes. (Optional)"
                       />
                     </label>
 
                     <div className="overflow-hidden rounded-[1.3rem] border border-[#d8e5d8] bg-[#f8fbf8]">
-                      <div className="flex items-center gap-3 border-b border-[#e1ebe1] px-4 py-3">
-                        <ImagePlus className="h-4 w-4 text-theme-body-soft" />
-                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-theme-body-soft">Preview</p>
+                      <div className="flex items-center justify-between gap-3 border-b border-[#e1ebe1] px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <ImagePlus className="h-4 w-4 text-theme-body-soft" />
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-theme-body-soft">Preview</p>
+                        </div>
+                        {productPreviewImage ? (
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="rounded-full border border-[#f0c8bf] bg-[#fff4f1] px-3 py-1 text-[11px] font-semibold text-[#b64d39] transition hover:bg-[#ffe9e2]"
+                          >
+                            Clear image
+                          </button>
+                        ) : null}
                       </div>
                       <div className="p-3">
-                        {form.image || resolveFormImage(form.name, form.category, imageLookup) ? (
+                        {productPreviewImage ? (
                           <div
                             className="overflow-hidden rounded-[1rem] border border-[#e5eee5] bg-white"
                             style={{ aspectRatio: previewAspectRatio ? `${previewAspectRatio}` : "4 / 3" }}
                           >
                             <img
-                              src={form.image || resolveFormImage(form.name, form.category, imageLookup)}
+                              src={productPreviewImage}
                               alt={form.name || "Product preview"}
                               className="h-full w-full object-contain"
                               onLoad={(event) => {
@@ -578,7 +586,7 @@ export function AdminProducts() {
                           </div>
                         ) : (
                           <div className="flex h-48 items-center justify-center rounded-[1rem] border border-dashed border-[#d8e5d8] bg-white text-sm text-theme-body-soft">
-                            Upload or paste an image source to preview it here.
+                            Upload an image from your device to preview it here.
                           </div>
                         )}
                       </div>
@@ -596,17 +604,17 @@ export function AdminProducts() {
                   </button>
                   <button
                     type="submit"
-                    disabled={isSaving}
+                    disabled={isSaving || isUploading}
                     className="inline-flex items-center justify-center gap-2 rounded-full bg-[linear-gradient(180deg,#1f7a4d_0%,#165b38_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(31,122,77,0.24)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                    {isSaving || isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                     {editingId ? "Save changes" : "Create product"}
                   </button>
                 </div>
               </form>
             ) : null}
 
-            {isLoading || isFetching ? (
+            {isLoading ? (
               <div className="rounded-[1.5rem] border border-[#d8e5d8] bg-white/85 p-6 text-center text-sm font-semibold text-theme-body shadow-sm">
                 Loading products...
               </div>
@@ -795,27 +803,64 @@ export function AdminProducts() {
                             />
                           ) : null}
 
-                          <label className="block space-y-2">
-                            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-theme-body-soft">
-                              Upload image
-                            </span>
+                          <div className="space-y-2 rounded-2xl border border-[#d8e5d8] bg-white p-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-theme-body-soft">
+                                Product image
+                              </span>
+                              {productPreviewImage ? (
+                                <button
+                                  type="button"
+                                  onClick={handleRemoveImage}
+                                  className="rounded-full border border-[#f0c8bf] bg-[#fff4f1] px-3 py-1 text-[11px] font-semibold text-[#b64d39] transition hover:bg-[#ffe9e2]"
+                                >
+                                  Clear image
+                                </button>
+                              ) : null}
+                            </div>
+
+                            {productPreviewImage ? (
+                              <div
+                                className="overflow-hidden rounded-xl border border-[#e5eee5] bg-[#fbfdfb]"
+                                style={{ aspectRatio: previewAspectRatio ? `${previewAspectRatio}` : "4 / 3" }}
+                              >
+                                <img
+                                  src={productPreviewImage}
+                                  alt={form.name || "Product preview"}
+                                  className="h-full w-full object-contain"
+                                  onLoad={(event) => {
+                                    const img = event.currentTarget;
+                                    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                                      setPreviewAspectRatio(img.naturalWidth / img.naturalHeight);
+                                    }
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex h-36 items-center justify-center rounded-xl border border-dashed border-[#d8e5d8] bg-[#fbfdfb] text-center text-xs font-semibold text-theme-body-soft">
+                                Upload a replacement image before saving.
+                              </div>
+                            )}
+
                             <input
                               type="file"
                               accept="image/*"
                               onChange={handleFileUpload}
                               className="block w-full rounded-xl border border-dashed border-[#d8e5d8] bg-white px-3 py-2 text-xs text-theme-body file:mr-3 file:rounded-full file:border-0 file:bg-[#1f7a4d] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
                             />
-                          </label>
+                            {isUploading ? (
+                              <p className="mt-2 text-xs font-semibold text-[#1f7a4d]">Processing image...</p>
+                            ) : null}
+                          </div>
 
                           <textarea
-                            required
                             rows={4}
                             value={form.description}
                             onChange={(event) =>
                               setForm((current) => ({ ...current, description: event.target.value }))
                             }
                             className="w-full rounded-xl border border-[#d8e5d8] bg-white px-3 py-2 text-sm text-theme-heading outline-none transition focus:border-[#1f7a4d]"
-                            placeholder="Description"
+                            placeholder="Description (optional)"
                           />
 
                           <div className="flex items-center justify-end gap-2">
@@ -828,11 +873,11 @@ export function AdminProducts() {
                             </button>
                             <button
                               type="submit"
-                              disabled={isSaving}
+                              disabled={isSaving || isUploading}
                               className="inline-flex items-center justify-center gap-2 rounded-full bg-[linear-gradient(180deg,#1f7a4d_0%,#165b38_100%)] px-4 py-2 text-sm font-semibold !text-white"
                               style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
                             >
-                              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                              {isSaving || isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                               Save changes
                             </button>
                           </div>
@@ -859,7 +904,7 @@ export function AdminProducts() {
                 </p>
               </div>
 
-              {isDeletedLoading || isDeletedFetching ? (
+              {isDeletedLoading ? (
                 <div className="rounded-[1.2rem] border border-dashed border-[#d8e5d8] bg-[#fbfdfb] p-5 text-center text-sm text-theme-body-soft">
                   Loading deleted products...
                 </div>

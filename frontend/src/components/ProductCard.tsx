@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { ProgressiveImage } from "@/components/LazyImage";
 import { defaultProducts } from "@/data/site";
 import { resolvePickleImage } from "@/lib/pickleImages";
+import { getDynamicProductName, translateDynamicText } from "@/lib/translation";
 
 type ProductCardProps = {
   product: ProductRecord;
@@ -49,7 +50,7 @@ const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }
     "product-2-usiri-thokku": 3,
     "product-3-gongura-salt": 12,
   };
-  
+
   const stockLevel = stockLevels[product.slug || `product-${product.id}`] || 15;
   const isLowStock = stockLevel <= 5 && isAvailable;
 
@@ -66,7 +67,8 @@ const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }
     [product.price_per_kg, weight],
   );
 
-  const displayName = language === "te" ? (product.name_te ?? product.name) : product.name;
+  const displayName = getDynamicProductName(product, language);
+  const displayCustomTag = translateDynamicText(product.customTag ?? "", language);
 
   const shortTagline =
     product.category === "pickles"
@@ -193,27 +195,39 @@ const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
 
         <AnimatePresence>
-          {product.isBestSeller && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8, y: -4 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 30, delay: 0.1 }}
-              className="absolute right-3.5 top-3.5 z-20 flex items-center gap-1.5
-                rounded-full border border-[#ffc4c4] bg-[#fff0f0]/95 backdrop-blur-md px-2.5 py-1 shadow-sm
-                animate-pulse"
-            >
-              <motion.span 
-                className="relative flex h-1.5 w-1.5 shrink-0"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#d01515] opacity-70" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#d01515]" />
-              </motion.span>
-              <span className="text-[9px] font-black uppercase tracking-[0.18em] text-[#9a1111]">
-                {featuredCopy.bestSeller}
-              </span>
-            </motion.span>
+          {(product.isBestSeller || displayCustomTag) && (
+            <div className="absolute right-3.5 top-3.5 z-20 flex max-w-[72%] flex-col items-end gap-1.5">
+              {product.isBestSeller && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30, delay: 0.1 }}
+                  className="flex items-center gap-1.5 rounded-full border border-[#ffc4c4] bg-[#fff0f0]/95 px-2.5 py-1 shadow-sm backdrop-blur-md animate-pulse"
+                >
+                  <motion.span
+                    className="relative flex h-1.5 w-1.5 shrink-0"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#d01515] opacity-70" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#d01515]" />
+                  </motion.span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.18em] text-[#9a1111]">
+                    {featuredCopy.bestSeller}
+                  </span>
+                </motion.span>
+              )}
+              {displayCustomTag ? (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.92, y: -3 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 28, delay: 0.08 }}
+                  className={`max-w-full truncate rounded-full border border-[#efd37f] bg-[#fff7dc]/95 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-[#73540c] shadow-sm backdrop-blur-md ${language === "te" ? "font-telugu tracking-normal" : ""}`}
+                >
+                  {displayCustomTag}
+                </motion.span>
+              ) : null}
+            </div>
           )}
         </AnimatePresence>
 
@@ -225,7 +239,7 @@ const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }
             </span>
           )}
           {isAvailable && isLowStock && (
-            <motion.span 
+            <motion.span
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
               className="flex items-center gap-1 rounded-full bg-[#ff9800]/90 backdrop-blur-md px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-white shadow-sm"
@@ -479,7 +493,7 @@ const ProductCard = ({ product, index = 0, isAvailable = true, compact = false }
               >
                 <h3 className="text-lg font-bold text-theme-heading mb-4">{displayName}</h3>
                 <p className="text-sm text-theme-body mb-4">{categoryCopy.label}</p>
-                
+
                 <div className="space-y-4">
                   {/* Quick weight selector */}
                   <div>

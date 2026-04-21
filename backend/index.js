@@ -56,6 +56,10 @@ const VALID_COUPON_CATEGORY_SCOPES = new Set([
   "tempered-pickles",
 ]);
 const VALID_AD_MEDIA_TYPES = new Set(["image", "video"]);
+const MEDIA_JSON_BODY_LIMIT_BYTES = Math.max(
+  1_000_000,
+  Number(process.env.MEDIA_JSON_BODY_LIMIT_BYTES || 50_000_000),
+);
 const ORDER_CANCEL_WINDOW_MS = 6 * 60 * 60 * 1000;
 const DUMMY_ADMIN_PASSWORD_HASH = hashPassword("sp-pickles-dummy-password");
 const ADMIN_LOGIN_MAX_ATTEMPTS = Number(process.env.ADMIN_LOGIN_MAX_ATTEMPTS || 5);
@@ -831,9 +835,7 @@ const normalizeProductPayload = (body, { fallbackId = null } = {}) => {
     throw { statusCode: 400, message: "Product image is required." };
   }
 
-  if (!description) {
-    throw { statusCode: 400, message: "Product description is required." };
-  }
+  // Allow empty description (no error thrown)
 
   return {
     id: id || buildProductId(name),
@@ -3614,7 +3616,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (method === "PATCH") {
-        const body = await parseJsonBody(req);
+        const body = await parseJsonBody(req, { limit: MEDIA_JSON_BODY_LIMIT_BYTES });
         const product = await updateProduct(productRoute.product_id, body);
         sendSuccess(res, 200, product, "Product updated successfully.");
         return;
@@ -3651,7 +3653,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const body = await parseJsonBody(req);
+      const body = await parseJsonBody(req, { limit: MEDIA_JSON_BODY_LIMIT_BYTES });
       const product = await createProduct(body);
       sendSuccess(res, 201, product, "Product created successfully.");
       return;
@@ -3746,7 +3748,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (method === "POST") {
-        const body = await parseJsonBody(req);
+        const body = await parseJsonBody(req, { limit: MEDIA_JSON_BODY_LIMIT_BYTES });
         const ad = await createAd(body);
         sendSuccess(res, 201, ad, "Ad created successfully.");
         return;
@@ -3769,7 +3771,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (method === "PATCH") {
-        const body = await parseJsonBody(req);
+        const body = await parseJsonBody(req, { limit: MEDIA_JSON_BODY_LIMIT_BYTES });
         const ad = await updateAd(adRoute.ad_id, body);
         sendSuccess(res, 200, ad, "Ad updated successfully.");
         return;

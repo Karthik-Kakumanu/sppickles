@@ -3,11 +3,14 @@ import { Leaf, ShieldCheck } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import SectionTitle from "@/components/SectionTitle";
 import SectionWrapper from "@/components/SectionWrapper";
+import { useLanguage } from "@/components/LanguageProvider";
 import { useStore } from "@/components/StoreProvider";
 import { formatCurrency } from "@/lib/pricing";
+import { getDynamicProductName } from "@/lib/translation";
 
 const FeaturedPicklesShowcase = () => {
   const { availableProducts } = useStore();
+  const { language } = useLanguage();
 
   const featuredPickles = availableProducts
     .filter((product) => product.category === "pickles")
@@ -126,10 +129,10 @@ const FeaturedPicklesShowcase = () => {
                 </div>
 
                 <div className="mt-5 space-y-3">
-                  <h3 className="line-clamp-2 font-heading text-xl font-semibold text-theme-contrast">
-                    {product.name}
-                  </h3>
-                  {product.nameTeluguguTelugu ? (
+	                  <h3 className="line-clamp-2 font-heading text-xl font-semibold text-theme-contrast">
+	                    {getDynamicProductName(product, language)}
+	                  </h3>
+	                  {language !== "te" && product.nameTeluguguTelugu ? (
                     <p className="font-telugu line-clamp-1 text-sm font-medium leading-[1.8] text-south-red">
                       {product.nameTeluguguTelugu}
                     </p>

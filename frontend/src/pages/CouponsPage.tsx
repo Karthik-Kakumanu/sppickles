@@ -5,6 +5,7 @@ import { BadgePercent, Ticket } from "lucide-react";
 import Seo from "@/components/Seo";
 import { useLanguage } from "@/components/LanguageProvider";
 import { getCoupons, type AdminCoupon } from "@/lib/api";
+import { translateDynamicText } from "@/lib/translation";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 
@@ -86,6 +87,7 @@ const formatCategoryLabel = (
 const getApplicabilityText = (
   coupon: AdminCoupon,
   copy: (typeof couponsCopy)["en"] | (typeof couponsCopy)["te"],
+  language: "en" | "te",
 ) => {
   if (coupon.appliesTo === "all") {
     return copy.appliesAll;
@@ -95,7 +97,8 @@ const getApplicabilityText = (
     return `${copy.appliesCategory}: ${formatCategoryLabel(coupon.targetCategory, copy)}`;
   }
 
-  return `${copy.appliesProduct}: ${coupon.targetProductName || coupon.targetProductId || copy.selectedProduct}`;
+  const targetName = coupon.targetProductName || coupon.targetProductId || copy.selectedProduct;
+  return `${copy.appliesProduct}: ${translateDynamicText(targetName, language)}`;
 };
 
 const formatValidityText = (
@@ -216,10 +219,14 @@ export default function CouponsPage() {
                   <BadgePercent className="h-3.5 w-3.5" />
                   {formatDiscount(coupon.discountType, coupon.discountValue)}
                 </p>
-                <p className="mt-3 text-lg font-bold text-theme-heading">{coupon.title}</p>
-                <p className="mt-1 text-sm text-theme-body">{coupon.description || copy.fallbackDescription}</p>
+                <p className="mt-3 text-lg font-bold text-theme-heading">
+                  {translateDynamicText(coupon.title, language)}
+                </p>
+                <p className="mt-1 text-sm text-theme-body">
+                  {coupon.description ? translateDynamicText(coupon.description, language) : copy.fallbackDescription}
+                </p>
                 <div className="mt-3 rounded-xl border border-[#e8ede8] bg-[#fcfdfb] px-3 py-2 text-xs text-theme-body">
-                  <p className="font-semibold text-theme-heading">{getApplicabilityText(coupon, copy)}</p>
+                  <p className="font-semibold text-theme-heading">{getApplicabilityText(coupon, copy, language)}</p>
                   {coupon.minOrderAmount !== null ? (
                     <p className="mt-1">{copy.minOrder}: ₹{Math.round(Number(coupon.minOrderAmount))}</p>
                   ) : null}

@@ -49,6 +49,7 @@ const fieldClass =
 
 const mediaFrameClass =
   "flex min-h-[11rem] max-h-[26rem] items-center justify-center overflow-hidden rounded-lg border border-[#e6efe7] bg-[#f8fcf9] p-2 sm:p-3";
+const MAX_AD_MEDIA_FILE_SIZE_BYTES = 35 * 1024 * 1024;
 
 const toDateInput = (value: string | null) => {
   if (!value) return "";
@@ -240,6 +241,26 @@ const AdminAdsPage = () => {
     const file = event.target.files?.[0];
 
     if (!file) return;
+
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      toast({
+        title: "Unsupported file",
+        description: "Upload an image or video file.",
+        variant: "destructive",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_AD_MEDIA_FILE_SIZE_BYTES) {
+      toast({
+        title: "File too large",
+        description: "Please upload a video under 35 MB so it can save quickly.",
+        variant: "destructive",
+      });
+      event.target.value = "";
+      return;
+    }
 
     const inferredMediaType: AdMediaType = file.type.startsWith("video/") ? "video" : "image";
 
@@ -447,8 +468,12 @@ const AdminAdsPage = () => {
                           <video
                             src={form.mediaUrl}
                             className="max-h-[24rem] w-full rounded-md bg-black object-contain"
+                            autoPlay
+                            muted
+                            playsInline
+                            loop
                             controls
-                            preload="metadata"
+                            preload="auto"
                           />
                         )}
                       </div>
@@ -579,8 +604,12 @@ const AdminAdsPage = () => {
                           <video
                             src={ad.mediaUrl}
                             className="max-h-[24rem] w-full rounded-md bg-black object-contain"
+                            autoPlay
+                            muted
+                            playsInline
+                            loop
                             controls
-                            preload="metadata"
+                            preload="auto"
                           />
                         )}
                       </div>

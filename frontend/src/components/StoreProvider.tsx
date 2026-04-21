@@ -95,6 +95,48 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
+    if (!adminEmail) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const verifyAdminSession = async () => {
+      const session = await getAdminSession();
+
+      if (!isMounted) {
+        return;
+      }
+
+      setAdminEmail(session?.admin.email ?? null);
+    };
+
+    const handleFocus = () => {
+      void verifyAdminSession();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void verifyAdminSession();
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      void verifyAdminSession();
+    }, 5_000);
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [adminEmail]);
+
+  useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
       if (event.key === STORAGE_KEYS.productsUpdatedAt) {
         void refetchProducts();
@@ -286,8 +328,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logoutAdmin = async () => {
-    await apiAdminLogout();
-    setAdminEmail(null);
+    try {
+      await apiAdminLogout();
+    } finally {
+      setAdminEmail(null);
+    }
   };
 
   const value = useMemo<StoreContextValue>(

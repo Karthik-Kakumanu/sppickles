@@ -1,32 +1,53 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { useLanguage } from "@/components/LanguageProvider";
 import { useAdsQuery } from "@/lib/api";
-
-interface Ad {
-  id: string;
-  title: string;
-  description: string;
-  media_type: "image" | "video";
-  media_url: string;
-  cta_text?: string;
-  cta_url?: string;
-  is_active: boolean;
-}
+import { translateDynamicText } from "@/lib/translation";
 
 const AdsCarousel = () => {
-  const { data: ads = [], isLoading } = useAdsQuery();
+  const { data: ads = [], isLoading, refetch } = useAdsQuery();
+  const { language } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [autoPlayActive, setAutoPlayActive] = useState(true);
+  const activeAds = useMemo(() => ads.filter((ad) => ad.isActive), [ads]);
 
   useEffect(() => {
-    if (!autoPlayActive || ads.length === 0) return;
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === "sp-ads-updated-at") {
+        void refetch();
+      }
+    };
+
+    const adsChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("sp-ads") : null;
+    const handleBroadcast = (event: MessageEvent) => {
+      if (event.data?.type === "ads-updated") {
+        void refetch();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    adsChannel?.addEventListener("message", handleBroadcast);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      adsChannel?.removeEventListener("message", handleBroadcast);
+      adsChannel?.close();
+    };
+  }, [refetch]);
+
+  useEffect(() => {
+    if (!autoPlayActive || activeAds.length === 0) return;
 
     const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % ads.length);
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % activeAds.length);
     }, 5000); // Change ad every 5 seconds
 
     return () => clearInterval(timer);
-  }, [autoPlayActive, ads.length]);
+  }, [activeAds.length, autoPlayActive]);
+
+  useEffect(() => {
+    setCurrentIndex((current) => (activeAds.length > 0 ? Math.min(current, activeAds.length - 1) : 0));
+  }, [activeAds.length]);
 
   if (isLoading) {
     return (
@@ -34,21 +55,21 @@ const AdsCarousel = () => {
     );
   }
 
-  if (ads.length === 0) {
+  if (activeAds.length === 0) {
     return null;
   }
 
-  const currentAd = ads[currentIndex];
+  const currentAd = activeAds[currentIndex] ?? activeAds[0];
 
   const goToPrevious = () => {
     setAutoPlayActive(false);
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + ads.length) % ads.length);
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + activeAds.length) % activeAds.length);
     setTimeout(() => setAutoPlayActive(true), 5000);
   };
 
   const goToNext = () => {
     setAutoPlayActive(false);
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % ads.length);
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % activeAds.length);
     setTimeout(() => setAutoPlayActive(true), 5000);
   };
 
@@ -56,18 +77,21 @@ const AdsCarousel = () => {
     <div className="relative w-full overflow-hidden rounded-[1.5rem] border border-[#d8e5d8] bg-white shadow-[0_14px_36px_rgba(18,54,34,0.08)]">
       {/* Ad Container */}
       <div className="relative aspect-video w-full bg-gradient-to-br from-[#f7f2e8] to-[#efe7d7] overflow-hidden">
-        {currentAd.media_type === "image" ? (
+        {currentAd.mediaType === "image" ? (
           <img
-            src={currentAd.media_url}
-            alt={currentAd.title}
+            src={currentAd.mediaUrl}
+            alt={translateDynamicText(currentAd.title, language)}
             className="h-full w-full object-cover transition-opacity duration-500"
           />
         ) : (
           <video
-            src={currentAd.media_url}
+            src={currentAd.mediaUrl}
             controls
             autoPlay
+            muted
+            playsInline
             loop
+            preload="auto"
             className="h-full w-full object-cover"
           />
         )}
@@ -76,23 +100,25 @@ const AdsCarousel = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-6 sm:p-8">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#e8d4a8]">
-              Promotion
+              {language === "te" ? "ప్రచారం" : "Promotion"}
             </p>
-            <h2 className="mt-2 text-2xl sm:text-3xl font-bold text-white">{currentAd.title}</h2>
+            <h2 className="mt-2 text-2xl sm:text-3xl font-bold text-white">
+              {translateDynamicText(currentAd.title, language)}
+            </h2>
             {currentAd.description && (
               <p className="mt-2 text-sm text-gray-200 max-w-xl leading-relaxed">
-                {currentAd.description}
+                {translateDynamicText(currentAd.description, language)}
               </p>
             )}
 
-            {currentAd.cta_url && currentAd.cta_text && (
+            {currentAd.ctaUrl && currentAd.ctaText && (
               <a
-                href={currentAd.cta_url}
+                href={currentAd.ctaUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#2f7a43] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#1f7a4d] shadow-lg"
               >
-                {currentAd.cta_text}
+                {translateDynamicText(currentAd.ctaText, language)}
                 <ExternalLink className="h-4 w-4" />
               </a>
             )}
@@ -101,7 +127,7 @@ const AdsCarousel = () => {
       </div>
 
       {/* Navigation Arrows */}
-      {ads.length > 1 && (
+      {activeAds.length > 1 && (
         <>
           <button
             onClick={goToPrevious}
@@ -122,11 +148,11 @@ const AdsCarousel = () => {
       )}
 
       {/* Dots Indicator */}
-      {ads.length > 1 && (
+      {activeAds.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2">
-          {ads.map((_, index) => (
+          {activeAds.map((ad, index) => (
             <button
-              key={`dot-${index}`}
+              key={`dot-${ad.id}`}
               onClick={() => {
                 setAutoPlayActive(false);
                 setCurrentIndex(index);

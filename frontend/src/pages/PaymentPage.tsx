@@ -16,6 +16,7 @@ import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { content } from "@/content/translations";
+import { getDynamicProductName } from "@/lib/translation";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 
@@ -220,7 +221,7 @@ const PaymentPage = () => {
 
   const previewItems: OrderPreviewItem[] = cart.map((line) => ({
     key: line.key,
-    name: line.product.name,
+    name: getDynamicProductName(line.product, language),
     weight: line.weight,
     quantity: line.quantity,
     totalPrice: line.totalPrice,

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { type ProductRecord } from "@/data/site";
 import { type FilterOptions } from "@/components/FilterPanel";
+import { translateDynamicText } from "@/lib/translation";
 
 export function useSearchFilter(
   products: ProductRecord[],
@@ -16,12 +17,16 @@ export function useSearchFilter(
       filtered = filtered.filter((product) => {
         const name = product.name.toLowerCase();
         const nameTe = product.name_te?.toLowerCase() || "";
+        const legacyNameTe = product.nameTeluguguTelugu?.toLowerCase() || "";
+        const dynamicNameTe = translateDynamicText(product.name, "te").toLowerCase();
         const category = product.category.toLowerCase();
         const subcategory = product.subcategory?.toLowerCase() || "";
 
         return (
           name.includes(query) ||
           nameTe.includes(query) ||
+          legacyNameTe.includes(query) ||
+          dynamicNameTe.includes(query) ||
           category.includes(query) ||
           subcategory.includes(query)
         );

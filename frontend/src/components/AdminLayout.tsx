@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -491,7 +492,15 @@ export function AdminLayout({ title, children }: AdminLayoutProps) {
                       )}
                     </div>
 
-                    <div className="border-t border-[#dfd3bd] px-4 py-3">
+                    <div className="space-y-2 border-t border-[#dfd3bd] px-4 py-3">
+                      <Link
+                        to="/admin/forgot-password?mode=change"
+                        onClick={() => setIsDeviceMenuOpen(false)}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#d9d2c2] bg-white px-4 py-3 text-sm font-semibold text-theme-heading shadow-sm transition hover:border-[#c9b995] hover:bg-[#fff8e8]"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                        Change password
+                      </Link>
                       <button
                         type="button"
                         onClick={handleLogout}
@@ -558,7 +567,15 @@ export function AdminLayout({ title, children }: AdminLayoutProps) {
                 })}
               </div>
 
-              <div className="border-t border-[#dfd3bd] px-4 py-4">
+              <div className="space-y-2 border-t border-[#dfd3bd] px-4 py-4">
+                <Link
+                  to="/admin/forgot-password?mode=change"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#d9d2c2] bg-white/85 px-4 py-3 text-sm font-semibold text-theme-heading shadow-sm"
+                >
+                  <KeyRound className="h-4 w-4" />
+                  Change password
+                </Link>
                 <button
                   type="button"
                   onClick={handleLogout}

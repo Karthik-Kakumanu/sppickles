@@ -109,6 +109,7 @@ const ORDER_STATUS_MAP: Record<string, OrderRecord["status"]> = {
 
 const PRODUCTS_UPDATED_AT_KEY = "sp-products-updated-at";
 const COUPONS_UPDATED_AT_KEY = "sp-coupons-updated-at";
+const ADS_UPDATED_AT_KEY = "sp-ads-updated-at";
 const ADMIN_NEW_ORDER_EVENT = "sp-admin-new-order";
 
 const notifyProductsUpdated = () => {
@@ -145,6 +146,26 @@ const notifyCouponsUpdated = () => {
   if (typeof BroadcastChannel !== "undefined") {
     try {
       new BroadcastChannel("sp-coupons").postMessage({ type: "coupons-updated", at: Date.now() });
+    } catch {
+      // Ignore BroadcastChannel failures.
+    }
+  }
+};
+
+const notifyAdsUpdated = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(ADS_UPDATED_AT_KEY, String(Date.now()));
+  } catch {
+    // Ignore storage write failures in restricted environments.
+  }
+
+  if (typeof BroadcastChannel !== "undefined") {
+    try {
+      new BroadcastChannel("sp-ads").postMessage({ type: "ads-updated", at: Date.now() });
     } catch {
       // Ignore BroadcastChannel failures.
     }
@@ -657,6 +678,7 @@ export const createAdminAd = async (adData: AdminAdInput) => {
     body: JSON.stringify(adData),
   });
 
+  notifyAdsUpdated();
   return normalizeAd(response);
 };
 
@@ -666,13 +688,18 @@ export const updateAdminAd = async (adId: string, adData: Partial<AdminAdInput>)
     body: JSON.stringify(adData),
   });
 
+  notifyAdsUpdated();
   return normalizeAd(response);
 };
 
-export const deleteAdminAd = async (adId: string) =>
-  apiFetch<{ id: string; title: string; deleted: boolean }>(`/admin/ads/${String(adId).trim()}`, {
+export const deleteAdminAd = async (adId: string) => {
+  const response = await apiFetch<{ id: string; title: string; deleted: boolean }>(`/admin/ads/${String(adId).trim()}`, {
     method: "DELETE",
   });
+
+  notifyAdsUpdated();
+  return response;
+};
 
 export const getStock = async (): Promise<Map<string, boolean>> => {
   try {
@@ -1299,6 +1326,7 @@ export const useCreateCouponMutation = () => {
     mutationFn: (couponData: AdminCouponInput) => createAdminCoupon(couponData),
     onSuccess: (coupon) => {
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+      queryClient.invalidateQueries({ queryKey: ["storefront-coupons"] });
       toast({
         title: "Coupon created",
         description: `${coupon.code} is now available in the coupon list.`,
@@ -1328,6 +1356,7 @@ export const useUpdateCouponMutation = () => {
     }) => updateAdminCoupon(couponId, couponData),
     onSuccess: (coupon) => {
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+      queryClient.invalidateQueries({ queryKey: ["storefront-coupons"] });
       toast({
         title: "Coupon updated",
         description: `${coupon.code} has been updated.`,
@@ -1351,6 +1380,7 @@ export const useDeleteCouponMutation = () => {
     mutationFn: (couponId: string) => deleteAdminCoupon(couponId),
     onSuccess: (coupon) => {
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+      queryClient.invalidateQueries({ queryKey: ["storefront-coupons"] });
       toast({
         title: "Coupon deleted",
         description: `${coupon.code} was removed.`,
@@ -1394,6 +1424,7 @@ export const useCreateAdMutation = () => {
     mutationFn: (adData: AdminAdInput) => createAdminAd(adData),
     onSuccess: (ad) => {
       queryClient.invalidateQueries({ queryKey: ["admin-ads"] });
+      queryClient.invalidateQueries({ queryKey: ["storefront-ads"] });
       toast({
         title: "Ad created",
         description: `${ad.title} is now available in ads list.`,
@@ -1423,6 +1454,7 @@ export const useUpdateAdMutation = () => {
     }) => updateAdminAd(adId, adData),
     onSuccess: (ad) => {
       queryClient.invalidateQueries({ queryKey: ["admin-ads"] });
+      queryClient.invalidateQueries({ queryKey: ["storefront-ads"] });
       toast({
         title: "Ad updated",
         description: `${ad.title} has been updated.`,
@@ -1446,6 +1478,7 @@ export const useDeleteAdMutation = () => {
     mutationFn: (adId: string) => deleteAdminAd(adId),
     onSuccess: (ad) => {
       queryClient.invalidateQueries({ queryKey: ["admin-ads"] });
+      queryClient.invalidateQueries({ queryKey: ["storefront-ads"] });
       toast({
         title: "Ad deleted",
         description: `${ad.title} was removed.`,

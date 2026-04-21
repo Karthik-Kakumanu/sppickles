@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { AlertCircle, ArrowLeft, ArrowRight, Eye, EyeOff, KeyRound, Lock, Smartphone } from "lucide-react";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
@@ -9,8 +9,10 @@ import { confirmAdminPasswordResetOtp, requestAdminPasswordResetOtp } from "@/li
 
 const AdminForgotPasswordPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { isAdminAuthenticated, isAdminReady } = useStore();
+  const { isAdminAuthenticated, isAdminReady, logoutAdmin } = useStore();
+  const isChangePasswordMode = searchParams.get("mode") === "change" || searchParams.get("from") === "dashboard";
 
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
@@ -32,7 +34,7 @@ const AdminForgotPasswordPage = () => {
     );
   }
 
-  if (isAdminAuthenticated) {
+  if (isAdminAuthenticated && !isChangePasswordMode) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -108,11 +110,15 @@ const AdminForgotPasswordPage = () => {
     setIsResettingPassword(true);
 
     try {
-      await confirmAdminPasswordResetOtp(mobileLastTen, otp, newPassword);
+      const response = await confirmAdminPasswordResetOtp(mobileLastTen, otp, newPassword);
+
+      if (response.sessionsRevoked) {
+        await logoutAdmin().catch(() => undefined);
+      }
 
       toast({
         title: "Password changed",
-        description: "Password updated successfully. Login with your new password.",
+        description: "Password updated successfully. All logged-in admin devices were signed out.",
       });
 
       navigate("/admin/login", { replace: true });
@@ -145,8 +151,12 @@ const AdminForgotPasswordPage = () => {
               alt={brand.name}
               className="mx-auto h-16 w-16 rounded-full object-contain"
             />
-            <h1 className="mt-4 font-heading text-3xl font-semibold text-theme-heading">Forgot Password</h1>
-            <p className="mt-2 text-sm text-theme-body">OTP reset for admin account</p>
+            <h1 className="mt-4 font-heading text-3xl font-semibold text-theme-heading">
+              {isChangePasswordMode ? "Change Password" : "Forgot Password"}
+            </h1>
+            <p className="mt-2 text-sm text-theme-body">
+              {isChangePasswordMode ? "OTP password change for admin account" : "OTP reset for admin account"}
+            </p>
           </div>
 
           <form onSubmit={handleRequestOtp} className="space-y-4">
@@ -276,11 +286,11 @@ const AdminForgotPasswordPage = () => {
 
           <div className="mt-6">
             <Link
-              to="/admin/login"
+              to={isChangePasswordMode ? "/admin/dashboard" : "/admin/login"}
               className="inline-flex items-center gap-2 text-sm font-semibold text-[#2f7a43] transition hover:text-[#28683a]"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to login
+              {isChangePasswordMode ? "Back to dashboard" : "Back to login"}
             </Link>
           </div>
         </div>

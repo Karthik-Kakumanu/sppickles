@@ -2,14 +2,17 @@ import { motion } from "framer-motion";
 import { MessageCircle, Star } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import SectionTitle from "@/components/SectionTitle";
+import { useLanguage } from "@/components/LanguageProvider";
 import { brand, type ProductRecord } from "@/data/site";
 import { formatCurrency } from "@/lib/pricing";
+import { getDynamicProductName, translateDynamicText } from "@/lib/translation";
 
 type FeaturedProductCarouselProps = {
   products: ProductRecord[];
 };
 
 const FeaturedProductCarousel = ({ products }: FeaturedProductCarouselProps) => {
+  const { language } = useLanguage();
   const cards = products.slice(0, 8);
 
   if (cards.length === 0) {
@@ -68,6 +71,7 @@ const FeaturedProductCarousel = ({ products }: FeaturedProductCarouselProps) => 
 
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {cards.map((product, index) => {
+          const displayName = getDynamicProductName(product, language);
           const prefilledWhatsapp = `${brand.whatsappUrl}?text=${encodeURIComponent(
             `Hi, I want to order ${product.name}`,
           )}`;
@@ -84,8 +88,8 @@ const FeaturedProductCarousel = ({ products }: FeaturedProductCarouselProps) => 
             >
               <div className="relative overflow-hidden rounded-[1.25rem]">
                 <img
-                  src={product.image}
-                  alt={product.name}
+	                  src={product.image}
+	                  alt={displayName}
                   loading="lazy"
                   className="aspect-square w-full object-cover transition duration-700 group-hover:scale-105"
                 />
@@ -110,11 +114,11 @@ const FeaturedProductCarousel = ({ products }: FeaturedProductCarouselProps) => 
                     {product.category}
                   </p>
                   <h3 className="text-theme-heading mt-2 text-balance font-heading text-[2rem] font-semibold leading-tight">
-                    {product.name}
-                  </h3>
-                  <p className="text-theme-body mt-3 max-w-[28ch] text-sm leading-7">
-                    {product.description}
-                  </p>
+	                    {displayName}
+	                  </h3>
+	                  <p className="text-theme-body mt-3 max-w-[28ch] text-sm leading-7">
+	                    {translateDynamicText(product.description, language)}
+	                  </p>
                 </div>
 
                 <div className="border-t border-mint/12 pt-4">

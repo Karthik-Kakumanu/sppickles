@@ -6,6 +6,7 @@ import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { formatCurrency } from "@/lib/pricing";
+import { getDynamicProductName } from "@/lib/translation";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 
@@ -242,7 +243,7 @@ const CartPage = () => {
                       <div className="h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl border border-[#e1eadf] bg-[#f5faf6] shadow-[0_6px_18px_rgba(30,79,46,0.08)] sm:h-[88px] sm:w-[88px] lg:h-[104px] lg:w-[104px]">
                         <img
                           src={line.product.image}
-                          alt={line.product.name}
+	                          alt={getDynamicProductName(line.product, language)}
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -254,7 +255,7 @@ const CartPage = () => {
                             {line.product.category}
                           </p>
                           <h2 className="max-w-[16rem] font-heading text-[0.98rem] font-semibold leading-tight text-theme-heading sm:max-w-none sm:text-[1.25rem]">
-                            {line.product.name}
+	                            {getDynamicProductName(line.product, language)}
                           </h2>
                           <p
                             className={`text-[10px] leading-5 text-theme-body sm:text-sm sm:leading-6 ${

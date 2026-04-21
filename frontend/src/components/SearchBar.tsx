@@ -1,7 +1,9 @@
 import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X } from "lucide-react";
+import { useLanguage } from "@/components/LanguageProvider";
 import { type ProductRecord } from "@/data/site";
+import { getDynamicProductName } from "@/lib/translation";
 import { cn } from "@/lib/utils";
 
 type SearchBarProps = {
@@ -19,6 +21,7 @@ const SearchBar = ({
   placeholder = "Search pickles, podi, recipes...",
   maxResults = 8,
 }: SearchBarProps) => {
+  const { language } = useLanguage();
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
@@ -28,11 +31,11 @@ const SearchBar = ({
     const lowerQuery = query.toLowerCase();
     return products
       .filter((product) => {
-        const searchableText = `${product.name} ${product.description} ${product.category}`.toLowerCase();
+        const searchableText = `${product.name} ${getDynamicProductName(product, language)} ${product.description} ${product.category}`.toLowerCase();
         return searchableText.includes(lowerQuery);
       })
       .slice(0, maxResults);
-  }, [query, products, maxResults]);
+  }, [language, maxResults, products, query]);
 
   const handleSelect = useCallback(
     (product: ProductRecord) => {
@@ -134,13 +137,13 @@ const SearchBar = ({
                       {product.image && (
                         <img
                           src={product.image}
-                          alt={product.name}
+                          alt={getDynamicProductName(product, language)}
                           className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
                         />
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-theme-contrast group-hover:text-theme-heading">
-                          {product.name}
+                          {getDynamicProductName(product, language)}
                         </p>
                         <p className="text-xs text-theme-body">{product.category}</p>
                       </div>

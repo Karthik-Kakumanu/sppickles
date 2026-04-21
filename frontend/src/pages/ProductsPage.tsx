@@ -14,6 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchFilter } from "@/hooks/useSearchFilter";
 import { getProductAvailability, useStockQuery } from "@/lib/api";
+import { getDynamicProductName } from "@/lib/translation";
 
 type ProductsPageProps = {
   initialFilter?: StoreFilter;
@@ -339,7 +340,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
                       <motion.img
                         key={activeHeroProduct.id}
                         src={activeHeroProduct.image}
-                        alt={isTe ? (activeHeroProduct.name_te ?? activeHeroProduct.name) : activeHeroProduct.name}
+                        alt={getDynamicProductName(activeHeroProduct, language)}
                         className="aspect-[16/10] w-full object-cover"
                         initial={{ opacity: 0, scale: 1.04 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -366,7 +367,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
                           {pageCopy.featuredPick}
                         </p>
                         <p className={`mt-1 text-[1.05rem] font-bold leading-snug drop-shadow-md sm:text-[1.25rem] ${isTe ? "font-telugu" : "font-heading"}`}>
-                          {isTe ? (activeHeroProduct.name_te ?? activeHeroProduct.name) : activeHeroProduct.name}
+                          {getDynamicProductName(activeHeroProduct, language)}
                         </p>
                       </motion.div>
                     </AnimatePresence>
@@ -388,7 +389,7 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
                       >
                         <img
                           src={product.image}
-                          alt={isTe ? (product.name_te ?? product.name) : product.name}
+                          alt={getDynamicProductName(product, language)}
                           className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-105"
                           loading="lazy"
                         />
