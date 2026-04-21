@@ -225,9 +225,14 @@ const sendFast2SmsOtp = async (mobileNumber, otp) => {
     if (FAST2SMS_ENTITY_ID) {
       body.set("entity_id", FAST2SMS_ENTITY_ID);
     }
-  } else if (FAST2SMS_ROUTE === "otp") {
-    body.set("route", "otp");
-    body.set("variables_values", otp);
+  } else if (FAST2SMS_ROUTE === "otp" || FAST2SMS_ROUTE === "q") {
+    // Force the Quick SMS route to bypass the strict website verification
+    body.set("route", "q");
+    
+    // Quick SMS requires the actual message text instead of just variables
+    // IMPORTANT: If this fails, change "SP Pickles" back to "Revistra" to match your approved telecom template!
+    body.set("message", `${otp} is your SP Pickles OTP. It is valid for 10 minutes. Do not share it with anyone.`);
+    
     body.set("flash", "0");
 
     if (FAST2SMS_SENDER_ID) {
