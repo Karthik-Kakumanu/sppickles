@@ -18,6 +18,18 @@ services:
         fromDatabase:
           name: sp-pickles-db
           property: connectionString
+      - key: OTP_PROVIDER
+        value: fast2sms
+      - key: FAST2SMS_ENDPOINT
+        value: https://www.fast2sms.com/dev/bulkV2
+      - key: FAST2SMS_ROUTE
+        value: otp
+      - key: FAST2SMS_API_KEY
+        sync: false
+      - key: ADMIN_PASSWORD_RESET_ALLOWED_PHONE
+        sync: false
+      - key: ADMIN_PASSWORD_RESET_OTP_TTL_MS
+        value: 600000
 
 databases:
   - name: sp-pickles-db

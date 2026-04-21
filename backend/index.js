@@ -80,9 +80,6 @@ const FAST2SMS_ROUTE = String(process.env.FAST2SMS_ROUTE || "otp").trim().toLowe
 const FAST2SMS_SENDER_ID = String(process.env.FAST2SMS_SENDER_ID || "").trim();
 const FAST2SMS_TEMPLATE_ID = String(process.env.FAST2SMS_TEMPLATE_ID || "").trim();
 const FAST2SMS_ENTITY_ID = String(process.env.FAST2SMS_ENTITY_ID || "").trim();
-const FAST2SMS_MESSAGE_TEMPLATE = String(
-  process.env.FAST2SMS_MESSAGE_TEMPLATE || "Your SP Pickles admin OTP is {{OTP}}. It is valid for 10 minutes.",
-).trim();
 const RAZORPAY_MODE = String(process.env.RAZORPAY_MODE ?? "auto").trim().toLowerCase();
 const RAZORPAY_KEY_ID = String(process.env.RAZORPAY_KEY_ID ?? "").trim();
 const RAZORPAY_KEY_SECRET = String(process.env.RAZORPAY_KEY_SECRET ?? "").trim();
@@ -140,6 +137,65 @@ const getIndianMobileDigits = (mobileNumber) => {
   return normalized.replace(/^\+91/, "");
 };
 
+const getFast2SmsPayloadMessages = (payload) => {
+  const messages = [];
+
+  if (!payload || typeof payload !== "object") {
+    return messages;
+  }
+
+  const addMessage = (value) => {
+    if (value === undefined || value === null) {
+      return;
+    }
+
+    messages.push(String(value));
+  };
+
+  if (Array.isArray(payload.message)) {
+    payload.message.forEach(addMessage);
+  } else {
+    addMessage(payload.message);
+  }
+
+  addMessage(payload.error);
+  addMessage(payload.errorMessage);
+  addMessage(payload.description);
+
+  return messages.filter(Boolean);
+};
+
+const hasFast2SmsSuccessMessage = (payload) =>
+  getFast2SmsPayloadMessages(payload).some((message) => /sent|success/i.test(message));
+
+const isFast2SmsSuccessPayload = (payload) => {
+  if (!payload || typeof payload !== "object") {
+    return false;
+  }
+
+  return (
+    payload.return === true ||
+    String(payload.return).toLowerCase() === "true" ||
+    Number(payload.status_code) === 200 ||
+    Boolean(payload.request_id) ||
+    hasFast2SmsSuccessMessage(payload)
+  );
+};
+
+const getFast2SmsFailureReason = (payload) => {
+  const messages = getFast2SmsPayloadMessages(payload);
+
+  if (messages.length > 0) {
+    return messages.join(" | ").slice(0, 500);
+  }
+
+  if (payload && typeof payload === "object" && payload.status_code) {
+    return `status_code=${payload.status_code}`;
+  }
+
+  return "";
+};
+
 const sendFast2SmsOtp = async (mobileNumber, otp) => {
   if (!FAST2SMS_API_KEY) {
     throw new Error("FAST2SMS_API_KEY is missing.");
@@ -157,20 +213,19 @@ const sendFast2SmsOtp = async (mobileNumber, otp) => {
   if (FAST2SMS_ROUTE === "dlt") {
     body.set("route", "dlt");
 
-    if (FAST2SMS_SENDER_ID) {
-      body.set("sender_id", FAST2SMS_SENDER_ID);
+    if (!FAST2SMS_SENDER_ID || !FAST2SMS_TEMPLATE_ID) {
+      throw new Error("Fast2SMS DLT route requires FAST2SMS_SENDER_ID and FAST2SMS_TEMPLATE_ID.");
     }
 
-    if (FAST2SMS_TEMPLATE_ID) {
-      body.set("template_id", FAST2SMS_TEMPLATE_ID);
-    }
+    body.set("sender_id", FAST2SMS_SENDER_ID);
+    // Fast2SMS names the approved DLT template/message ID parameter "message".
+    body.set("message", FAST2SMS_TEMPLATE_ID);
+    body.set("variables_values", otp);
 
     if (FAST2SMS_ENTITY_ID) {
       body.set("entity_id", FAST2SMS_ENTITY_ID);
     }
-
-    body.set("message", FAST2SMS_MESSAGE_TEMPLATE.replace(/\{\{OTP\}\}/g, otp));
-  } else {
+  } else if (FAST2SMS_ROUTE === "otp") {
     body.set("route", "otp");
     body.set("variables_values", otp);
     body.set("flash", "0");
@@ -178,6 +233,8 @@ const sendFast2SmsOtp = async (mobileNumber, otp) => {
     if (FAST2SMS_SENDER_ID) {
       body.set("sender_id", FAST2SMS_SENDER_ID);
     }
+  } else {
+    throw new Error(`Unsupported FAST2SMS_ROUTE "${FAST2SMS_ROUTE}". Use "otp" or "dlt".`);
   }
 
   const response = await fetch(FAST2SMS_ENDPOINT, {
@@ -191,12 +248,13 @@ const sendFast2SmsOtp = async (mobileNumber, otp) => {
   });
 
   const payload = await response.json().catch(() => ({}));
-  const isSuccess =
-    response.ok &&
-    (payload?.return === true || payload?.status_code === 200 || payload?.request_id || payload?.message?.includes("SMS"));
+  const isSuccess = response.ok && isFast2SmsSuccessPayload(payload);
 
   if (!isSuccess) {
-    throw new Error(`Fast2SMS request failed with status ${response.status}.`);
+    const providerReason = getFast2SmsFailureReason(payload);
+    throw new Error(
+      `Fast2SMS request failed with status ${response.status}${providerReason ? `: ${providerReason}` : "."}`,
+    );
   }
 
   return payload;
@@ -257,10 +315,18 @@ const requestAdminPasswordResetOtp = async (body) => {
     await sendPasswordResetOtp(mobile, otp);
   } catch (error) {
     adminPasswordResetOtps.delete(mobile);
+    const cause = error instanceof Error ? error.message : "Unknown provider error";
+
+    log("error", "Admin password reset OTP SMS delivery failed", {
+      mobile: maskMobileNumber(mobile),
+      provider: OTP_PROVIDER,
+      cause,
+    });
+
     throw {
       statusCode: 502,
       message: "Failed to deliver OTP SMS. Check Fast2SMS configuration and try again.",
-      details: { cause: error instanceof Error ? error.message : "Unknown provider error" },
+      details: { cause },
     };
   }
 

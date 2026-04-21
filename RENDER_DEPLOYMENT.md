@@ -32,6 +32,12 @@ DATABASE_URL=postgresql://user:password@localhost/sp_pickles
 NODE_ENV=production
 PORT=5000
 JWT_SECRET=your-secret-key-here
+OTP_PROVIDER=fast2sms
+FAST2SMS_API_KEY=your-fast2sms-api-key
+FAST2SMS_ENDPOINT=https://www.fast2sms.com/dev/bulkV2
+FAST2SMS_ROUTE=otp
+ADMIN_PASSWORD_RESET_ALLOWED_PHONE=your-admin-mobile-number
+ADMIN_PASSWORD_RESET_OTP_TTL_MS=600000
 ```
 
 ### 4. **Deploy Database**
@@ -60,6 +66,12 @@ NODE_ENV=production
 PORT=5000
 DATABASE_URL=postgresql://...
 JWT_SECRET=your-secure-secret-key
+OTP_PROVIDER=fast2sms
+FAST2SMS_API_KEY=your-fast2sms-api-key
+FAST2SMS_ENDPOINT=https://www.fast2sms.com/dev/bulkV2
+FAST2SMS_ROUTE=otp
+ADMIN_PASSWORD_RESET_ALLOWED_PHONE=your-admin-mobile-number
+ADMIN_PASSWORD_RESET_OTP_TTL_MS=600000
 ```
 
 **Frontend (.env):**

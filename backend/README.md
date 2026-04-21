@@ -185,6 +185,12 @@ DATABASE_URL=postgres://username:password@localhost:5432/sppickles
 CORS_ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:5173
 JWT_SECRET=your-super-secret-jwt-key-min-32-characters
 ENABLE_REQUEST_LOGGING=true
+OTP_PROVIDER=fast2sms
+FAST2SMS_API_KEY=your-fast2sms-api-key
+FAST2SMS_ENDPOINT=https://www.fast2sms.com/dev/bulkV2
+FAST2SMS_ROUTE=otp
+ADMIN_PASSWORD_RESET_ALLOWED_PHONE=your-admin-mobile-number
+ADMIN_PASSWORD_RESET_OTP_TTL_MS=600000
 RAZORPAY_MODE=auto
 RAZORPAY_TEST_KEY_ID=rzp_test_xxxxxxxxxxxxx
 RAZORPAY_TEST_KEY_SECRET=replace-with-your-razorpay-test-secret
@@ -204,6 +210,14 @@ RAZORPAY_CURRENCY=INR
 | `CORS_ORIGIN` | http://localhost:8080 | Fallback single allowed origin |
 | `JWT_SECRET` | - | JWT signing secret (min 32 chars in production) |
 | `ENABLE_REQUEST_LOGGING` | true | Enable structured request logging |
+| `OTP_PROVIDER` | none | Set to `fast2sms` to send admin password reset OTP SMS |
+| `FAST2SMS_API_KEY` | - | Fast2SMS API authorization key |
+| `FAST2SMS_ENDPOINT` | https://www.fast2sms.com/dev/bulkV2 | Fast2SMS API endpoint |
+| `FAST2SMS_ROUTE` | otp | Fast2SMS route (`otp` or `dlt`) |
+| `FAST2SMS_SENDER_ID` | - | Required when `FAST2SMS_ROUTE=dlt` |
+| `FAST2SMS_TEMPLATE_ID` | - | Required when `FAST2SMS_ROUTE=dlt`; this is the approved Fast2SMS message/template ID |
+| `ADMIN_PASSWORD_RESET_ALLOWED_PHONE` | +91 79813 70664 | Mobile number allowed to request admin password reset OTP |
+| `ADMIN_PASSWORD_RESET_OTP_TTL_MS` | 600000 | Password reset OTP validity window |
 | `RAZORPAY_MODE` | auto | Razorpay credential mode (`auto`, `test`, `live`) |
 | `RAZORPAY_TEST_KEY_ID` | - | Razorpay test key ID |
 | `RAZORPAY_TEST_KEY_SECRET` | - | Razorpay test key secret |
