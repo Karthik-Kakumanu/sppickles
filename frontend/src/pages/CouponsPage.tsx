@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { BadgePercent, Ticket } from "lucide-react";
@@ -118,7 +118,7 @@ export default function CouponsPage() {
   const { language } = useLanguage();
   const copy = couponsCopy[language];
 
-  const { data: coupons = [], isLoading, refetch } = useQuery({
+  const { data: coupons = [], isLoading } = useQuery({
     queryKey: ["storefront-coupons"],
     queryFn: getCoupons,
     staleTime: 0,
@@ -127,39 +127,6 @@ export default function CouponsPage() {
     refetchOnWindowFocus: true,
     refetchOnMount: "always",
   });
-
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === "sp-coupons-updated-at") {
-        void refetch();
-      }
-    };
-
-    const couponChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("sp-coupons") : null;
-    const handleBroadcast = (event: MessageEvent) => {
-      if (event.data?.type === "coupons-updated") {
-        void refetch();
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    couponChannel?.addEventListener("message", handleBroadcast);
-
-    const couponEvents = typeof window !== "undefined" ? new EventSource("/api/coupon-events", { withCredentials: true }) : null;
-    const handleServerEvent = () => {
-      void refetch();
-    };
-
-    couponEvents?.addEventListener("coupon-update", handleServerEvent);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      couponChannel?.removeEventListener("message", handleBroadcast);
-      couponChannel?.close();
-      couponEvents?.removeEventListener("coupon-update", handleServerEvent);
-      couponEvents?.close();
-    };
-  }, [refetch]);
 
   const activeCoupons = useMemo(
     () => coupons.filter((coupon) => coupon.isActive),

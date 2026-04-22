@@ -648,7 +648,8 @@ function SearchBarWithState({
         value={query}
         onChange={handleChange}
         placeholder={placeholder || "Search products..."}
-        className="flex-1 border-0 bg-transparent outline-none text-theme-heading placeholder:text-theme-body/40 font-medium"
+        spellCheck={false}
+        className="products-search-input min-w-0 flex-1 appearance-none border-none bg-transparent px-0 py-0 text-theme-heading shadow-none outline-none ring-0 placeholder:text-theme-body/40 font-medium"
       />
 
       {query && (

@@ -559,19 +559,6 @@
     "isGreenTouch": true
   },
   {
-    "id": "product-44-sweet-methi-avakaya",
-    "name": "Sweet Methi Avakaya",
-    "category": "pickles",
-    "subcategory": "asafoetida",
-    "price_per_kg": 750,
-    "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Pickled%20mango.jpg",
-    "description": "A bold mango pickle prepared in the Andhra tradition with a deep, tangy spice profile.",
-    "isAvailable": true,
-    "isBestSeller": false,
-    "isBrahminHeritage": true,
-    "isGreenTouch": true
-  },
-  {
     "id": "product-45-sweet-dabbakaya",
     "name": "Sweet Dabbakaya",
     "category": "pickles",
@@ -917,19 +904,6 @@
     "price_per_kg": 750,
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Pickled%20mango.jpg",
     "description": "A bold mango pickle prepared in the Andhra tradition with a deep, tangy spice profile.",
-    "isAvailable": true,
-    "isBestSeller": false,
-    "isBrahminHeritage": true,
-    "isGreenTouch": true
-  },
-  {
-    "id": "product-72-traditional-chilli-fryum",
-    "name": "Traditional Chilli Fryum",
-    "category": "fryums",
-    "subcategory": null,
-    "price_per_kg": 950,
-    "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Vadiyalu.jpg",
-    "description": "Traditional fryums prepared for crisp frying, meal pairing, and festive Andhra spreads.",
     "isAvailable": true,
     "isBestSeller": false,
     "isBrahminHeritage": true,

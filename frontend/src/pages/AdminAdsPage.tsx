@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   type AdminAd,
   type AdMediaType,
+  MAX_ADMIN_ADS,
   useAdminAdsQuery,
   useCreateAdMutation,
   useUpdateAdMutation,
@@ -102,8 +103,8 @@ const isAdLiveNow = (ad: AdminAd) => {
   const startsAtTime = ad.startsAt ? new Date(ad.startsAt).getTime() : null;
   const endsAtTime = ad.endsAt ? new Date(ad.endsAt).getTime() : null;
 
-  const startsOk = startsAtTime === null || startsAtTime <= now;
-  const endsOk = endsAtTime === null || endsAtTime >= now;
+  const startsOk = startsAtTime !== null && Number.isFinite(startsAtTime) && startsAtTime <= now;
+  const endsOk = endsAtTime !== null && Number.isFinite(endsAtTime) && endsAtTime >= now;
 
   return startsOk && endsOk;
 };
@@ -119,7 +120,14 @@ const formatDateTime = (value: string | null) => {
 
 const AdminAdsPage = () => {
   const { isAdminReady, isAdminAuthenticated } = useStore();
-  const { data: ads = [], isLoading, isRefetching, refetch } = useAdminAdsQuery();
+  const {
+    data: ads = [],
+    isLoading,
+    isError,
+    error,
+    isRefetching,
+    refetch,
+  } = useAdminAdsQuery(isAdminReady && isAdminAuthenticated);
   const createMutation = useCreateAdMutation();
   const updateMutation = useUpdateAdMutation();
   const deleteMutation = useDeleteAdMutation();
@@ -176,6 +184,16 @@ const AdminAdsPage = () => {
   };
 
   const handleToggleActive = async (ad: AdminAd) => {
+    if (!ad.startsAt || !ad.endsAt) {
+      toast({
+        title: "Dates required",
+        description: "Add start and end dates before changing this ad status.",
+        variant: "destructive",
+      });
+      handleEdit(ad);
+      return;
+    }
+
     await updateMutation.mutateAsync({ adId: ad.id, adData: { isActive: !ad.isActive } });
   };
 
@@ -184,6 +202,24 @@ const AdminAdsPage = () => {
 
     const startsAt = toIsoDateBoundaryOrNull(form.startsAt, "start");
     const endsAt = toIsoDateBoundaryOrNull(form.endsAt, "end");
+
+    if (!editingId && ads.length >= MAX_ADMIN_ADS) {
+      toast({
+        title: `Only ${MAX_ADMIN_ADS} ads eligible`,
+        description: "Delete one of the existing ads before adding another.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!startsAt || !endsAt) {
+      toast({
+        title: "Dates required",
+        description: "Start date and end date are mandatory for every ad.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (startsAt && endsAt && new Date(startsAt).getTime() > new Date(endsAt).getTime()) {
       toast({
@@ -214,24 +250,12 @@ const AdminAdsPage = () => {
           adId: editingId,
           adData: payload,
         });
-        toast({
-          title: "Ad updated",
-          description: `${form.title} has been updated successfully.`,
-        });
       } else {
         await createMutation.mutateAsync(payload);
-        toast({
-          title: "Ad created",
-          description: `${form.title} has been created successfully.`,
-        });
       }
       handleReset();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
+    } catch {
+      // The mutation hook shows the request error toast.
     } finally {
       setIsSubmitting(false);
     }
@@ -356,9 +380,15 @@ const AdminAdsPage = () => {
                 ) : null}
               </div>
 
-              <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
-                <label className="space-y-1.5 text-sm font-medium text-theme-body">
-                  Title
+	              <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
+	                {!editingId && ads.length >= MAX_ADMIN_ADS ? (
+	                  <div className="rounded-xl border border-[#f0c8bf] bg-[#fff4f1] px-4 py-3 text-sm font-semibold text-[#b64d39]">
+	                    Only {MAX_ADMIN_ADS} ads are eligible at a time. Delete one of the existing ads before adding another.
+	                  </div>
+	                ) : null}
+
+	                <label className="space-y-1.5 text-sm font-medium text-theme-body">
+	                  Title
                   <input
                     value={form.title}
                     onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
@@ -424,20 +454,23 @@ const AdminAdsPage = () => {
                     Starts on
                     <input
                       type="date"
-                      value={form.startsAt}
-                      onChange={(event) => setForm((current) => ({ ...current, startsAt: event.target.value }))}
-                      className={fieldClass}
-                    />
-                  </label>
+	                      value={form.startsAt}
+	                      onChange={(event) => setForm((current) => ({ ...current, startsAt: event.target.value }))}
+	                      required
+	                      className={fieldClass}
+	                    />
+	                  </label>
 
                   <label className="space-y-1.5 text-sm font-medium text-theme-body">
                     Ends on
                     <input
-                      type="date"
-                      value={form.endsAt}
-                      onChange={(event) => setForm((current) => ({ ...current, endsAt: event.target.value }))}
-                      className={fieldClass}
-                    />
+	                      type="date"
+	                      value={form.endsAt}
+	                      onChange={(event) => setForm((current) => ({ ...current, endsAt: event.target.value }))}
+	                      min={form.startsAt || undefined}
+	                      required
+	                      className={fieldClass}
+	                    />
                   </label>
                 </div>
 
@@ -536,6 +569,10 @@ const AdminAdsPage = () => {
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Loading ads...
                   </div>
+                ) : isError ? (
+                  <div className="rounded-xl border border-[#f0c8bf] bg-[#fff4f1] px-4 py-7 text-sm font-semibold text-[#b64d39]">
+                    {error instanceof Error ? error.message : "Unable to load ads. Please refresh."}
+                  </div>
                 ) : filteredAds.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-[#d8e5d8] bg-[linear-gradient(180deg,#fbfdfb_0%,#f4f9f5_100%)] px-4 py-9 text-center">
                     <MonitorPlay className="mx-auto h-5 w-5 text-theme-body-soft" />
@@ -558,9 +595,9 @@ const AdminAdsPage = () => {
                                 <span className="inline-flex items-center gap-1"><Clapperboard className="h-3 w-3" /> Video</span>
                               )}
                             </span>
-                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${isAdLiveNow(ad) ? "border-[#bde2cd] bg-[#edf8f1] text-[#1f7a4d]" : "border-[#d5d5d5] bg-[#f3f3f3] text-[#575757]"}`}>
-                              {isAdLiveNow(ad) ? "Live" : ad.isActive ? "Scheduled" : "Inactive"}
-                            </span>
+	                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${isAdLiveNow(ad) ? "border-[#bde2cd] bg-[#edf8f1] text-[#1f7a4d]" : "border-[#d5d5d5] bg-[#f3f3f3] text-[#575757]"}`}>
+	                              {isAdLiveNow(ad) ? "Live" : ad.isActive && (!ad.startsAt || !ad.endsAt) ? "Needs dates" : ad.isActive ? "Scheduled" : "Inactive"}
+	                            </span>
                           </div>
 
                           <h3 className="truncate text-base font-semibold text-theme-heading">{ad.title}</h3>

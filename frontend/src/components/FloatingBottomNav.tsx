@@ -3,7 +3,7 @@ import { Gift, Home, Megaphone, ShoppingBag, XCircle } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
-import { getAds, getCoupons, type AdminAd, type AdminCoupon } from "@/lib/api";
+import { getAds, getCoupons, type AdminAd, type AdminCoupon, useCouponRealtimeUpdates } from "@/lib/api";
 
 type BottomNavItem = {
   label: string;
@@ -83,13 +83,15 @@ export default function FloatingBottomNav() {
   const { language } = useLanguage();
   const isTelugu = language === "te";
   const items = getItems(isTelugu);
+  useCouponRealtimeUpdates();
   const { data: coupons = [] } = useQuery({
-    queryKey: ["bottom-nav-coupons"],
+    queryKey: ["storefront-coupons"],
     queryFn: getCoupons,
-    staleTime: 30_000,
-    refetchInterval: 60_000,
+    staleTime: 0,
+    refetchInterval: 2_000,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
   const { data: ads = [] } = useQuery({
     queryKey: ["bottom-nav-ads"],
@@ -103,8 +105,8 @@ export default function FloatingBottomNav() {
   const adCount = ads.filter(isAdActiveNow).length;
 
   return (
-    <div className="fixed bottom-3 left-1/2 z-50 w-[min(96vw,900px)] -translate-x-1/2 px-2 pb-[calc(env(safe-area-inset-bottom)+0.25rem)]">
-      <nav className="grid grid-cols-5 items-center gap-1 rounded-[1.6rem] border border-[#d8e5d8] bg-white/95 p-2 shadow-[0_20px_50px_rgba(30,79,46,0.18)] backdrop-blur-xl">
+    <div className="fixed bottom-3 left-1/2 z-50 w-[min(94vw,860px)] -translate-x-1/2 px-2 pb-[calc(env(safe-area-inset-bottom)+0.25rem)]">
+      <nav className="grid grid-cols-5 items-center gap-1 rounded-[1.35rem] border border-[#d8e5d8] bg-white/95 p-1.5 shadow-[0_16px_38px_rgba(30,79,46,0.16)] backdrop-blur-xl">
         {items.map((item) => {
           const Icon = item.icon;
           const active = item.isActive(location.pathname);
@@ -119,7 +121,7 @@ export default function FloatingBottomNav() {
             <Link
               key={item.to}
               to={item.to}
-              className={`relative inline-flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-semibold transition md:text-xs ${
+              className={`relative inline-flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 text-[10px] font-semibold transition md:text-xs ${
                 active
                   ? "bg-[#2f7a43] !text-white shadow-[0_8px_20px_rgba(47,122,67,0.25)]"
                   : "text-[#486553] hover:bg-[#eff6ef]"
@@ -130,7 +132,11 @@ export default function FloatingBottomNav() {
               <Icon className={`h-4 w-4 md:h-4.5 md:w-4.5 ${active ? "!text-white" : ""}`} />
               <span className={active ? "!text-white" : ""}>{item.label}</span>
               {showBadge ? (
-                <span className="absolute right-2 top-1 inline-flex min-w-[1.1rem] items-center justify-center px-1 text-[10px] font-bold leading-4 text-inherit">
+                <span
+                  className={`absolute right-2 top-1.5 inline-flex items-center justify-center p-0 text-[10px] font-black leading-none ${
+                    active ? "text-white" : "text-[#486553]"
+                  }`}
+                >
                   {badgeValue > 99 ? "99+" : badgeValue}
                 </span>
               ) : null}

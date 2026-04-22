@@ -321,6 +321,16 @@
     color: rgba(85, 102, 84, 0.62) !important;
   }
 
+  .products-search-input,
+  .products-search-input:hover,
+  .products-search-input:focus,
+  .products-search-input:focus-visible {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+
   .font-telugu {
     font-family: "Hind Guntur", "Noto Sans Telugu", "Nirmala UI", sans-serif;
     font-feature-settings: "kern" 1;

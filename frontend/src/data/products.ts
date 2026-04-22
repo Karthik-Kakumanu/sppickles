@@ -194,7 +194,6 @@ const catalogSeed: CatalogSeed[] = [
   { id: 41, name: "Mamidi Turumu Pachadi", category: "pickles", subcategory: "asafoetida", price: 600 },
   { id: 42, name: "Mamidi Mukkala Pachadi", category: "pickles", subcategory: "asafoetida", price: 600 },
   { id: 43, name: "Teepi Kaya Avakaya", category: "pickles", subcategory: "asafoetida", price: 850 },
-  { id: 44, name: "Sweet Methi Avakaya", category: "pickles", subcategory: "asafoetida", price: 750 },
   { id: 45, name: "Sweet Dabbakaya", category: "pickles", subcategory: "asafoetida", price: 650 },
   { id: 46, name: "Sweet Magaya", category: "pickles", subcategory: "asafoetida", price: 750 },
   { id: 47, name: "Pulihora Avakaya", category: "pickles", subcategory: "asafoetida", price: 750 },
@@ -222,7 +221,6 @@ const catalogSeed: CatalogSeed[] = [
   { id: 69, name: "Biyyapu Rava Vadiyalu", category: "fryums", price: 650 },
   { id: 70, name: "Goruchikkudu Vadiyalu", category: "fryums", price: 850 },
   { id: 71, name: "Kaya Avakaya", category: "pickles", subcategory: "asafoetida", price: 750 },
-  { id: 72, name: "Traditional Chilli Fryum", category: "fryums", price: 950 },
 ];
 
 const slugify = (value: string) =>

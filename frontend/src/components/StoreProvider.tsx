@@ -42,6 +42,7 @@ type StoreContextValue = {
   adminEmail: string | null;
   addToCart: (product: ProductRecord, weight: WeightOption, quantity: number) => void;
   updateCartLineQuantity: (key: string, quantity: number) => void;
+  updateCartLineWeight: (key: string, newWeight: WeightOption) => void;
   removeFromCart: (key: string) => void;
   clearCart: () => void;
   loginAdmin: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
@@ -306,6 +307,37 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const updateCartLineWeight = (key: string, newWeight: WeightOption) => {
+    setCartLines((current) => {
+      const lineIndex = current.findIndex((line) => buildCartKey(line.productId, line.weight) === key);
+      if (lineIndex === -1) return current;
+      const line = current[lineIndex];
+      // If already same weight, do nothing
+      if (line.weight === newWeight) return current;
+      // Check if another line with same product and newWeight exists
+      const mergeIndex = current.findIndex((l, i) =>
+        i !== lineIndex && l.productId === line.productId && l.weight === newWeight
+      );
+      if (mergeIndex !== -1) {
+        // Merge quantities
+        const merged = [
+          ...current.slice(0, mergeIndex),
+          {
+            ...current[mergeIndex],
+            quantity: current[mergeIndex].quantity + line.quantity,
+          },
+          ...current.slice(mergeIndex + 1, lineIndex),
+          ...current.slice(lineIndex + 1),
+        ];
+        return merged;
+      }
+      // Otherwise, just update weight
+      return current.map((l, i) =>
+        i === lineIndex ? { ...l, weight: newWeight } : l
+      );
+    });
+  };
+
   const removeFromCart = (key: string) => {
     setCartLines((current) =>
       current.filter((line) => buildCartKey(line.productId, line.weight) !== key),
@@ -350,6 +382,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       adminEmail,
       addToCart,
       updateCartLineQuantity,
+      updateCartLineWeight,
       removeFromCart,
       clearCart,
       loginAdmin,

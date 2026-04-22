@@ -6,6 +6,7 @@ import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { formatCurrency } from "@/lib/pricing";
+import { weightOptions } from "@/data/site";
 import { getDynamicProductName } from "@/lib/translation";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
@@ -125,6 +126,7 @@ const CartPage = () => {
     removeFromCart,
     clearCart,
     bestSellers,
+    updateCartLineWeight,
   } = useStore();
   const { language } = useLanguage();
   const t = cartCopy[language];
@@ -257,13 +259,26 @@ const CartPage = () => {
                           <h2 className="max-w-[16rem] font-heading text-[0.98rem] font-semibold leading-tight text-theme-heading sm:max-w-none sm:text-[1.25rem]">
 	                            {getDynamicProductName(line.product, language)}
                           </h2>
-                          <p
-                            className={`text-[10px] leading-5 text-theme-body sm:text-sm sm:leading-6 ${
-                              language === "te" ? "font-telugu" : ""
-                            }`}
-                          >
-                            {t.selectedWeight}: {line.weight}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] leading-5 text-theme-body sm:text-sm sm:leading-6 ${language === "te" ? "font-telugu" : ""}`}>{t.selectedWeight}:</span>
+                            <div className="flex gap-1">
+                              {weightOptions.map(opt => (
+                                <button
+                                  key={opt.label}
+                                  type="button"
+                                  className={`px-2.5 py-1 rounded-lg border text-xs sm:text-sm transition-all
+                                    ${line.weight === opt.label
+                                      ? 'bg-[#2f7a43] text-white border-[#2f7a43] shadow'
+                                      : 'bg-white text-theme-heading border-[#e3ebe0] hover:bg-[#edf5ee]'}
+                                  `}
+                                  onClick={() => updateCartLineWeight(line.key, opt.label)}
+                                  aria-pressed={line.weight === opt.label}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         </div>
 
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">

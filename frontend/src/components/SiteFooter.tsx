@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Globe2, Mail, MapPin, Phone, Facebook, Instagram, Youtube } from "lucide-react";
+import { Globe2, Mail, MapPin, Phone, Facebook, Instagram } from "lucide-react";
 import { brand, navigation } from "@/data/site";
 import { useLanguage } from "@/components/LanguageProvider";
 import { content as translations } from "@/content/translations";
@@ -57,35 +57,16 @@ const SiteFooter = () => {
             {/* Social Media */}
             <div className="mt-5 flex items-center gap-2.5">
               <span className="text-xs font-semibold text-theme-body-soft uppercase tracking-wide">{t.footer.followUs}</span>
-              <div className="flex gap-3">
-                <a
-                  href={brand.socialMedia.instagram}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-xl border border-pink-100 bg-pink-50 p-2.5 text-pink-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-pink-100"
-                  aria-label="Instagram"
-                >
-                  <Instagram className="h-4 w-4" />
-                </a>
-                <a
-                  href={brand.socialMedia.facebook}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-xl border border-blue-100 bg-blue-50 p-2.5 text-blue-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-100"
-                  aria-label="Facebook"
-                >
-                  <Facebook className="h-4 w-4" />
-                </a>
-                <a
-                  href={brand.socialMedia.youtube}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-xl border border-red-100 bg-red-50 p-2.5 text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-100"
-                  aria-label="YouTube"
-                >
-                  <Youtube className="h-4 w-4" />
-                </a>
-              </div>
+              <a
+                href={brand.socialMedia.facebook}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-100"
+                aria-label="Facebook"
+              >
+                <Facebook className="h-4 w-4" />
+                <span>Facebook</span>
+              </a>
             </div>
           </div>
 
@@ -213,16 +194,16 @@ const SiteFooter = () => {
                 <WhatsAppLogo className="h-3.5 w-3.5" />
                 WhatsApp
               </a>
-              <a
-                href="https://instagram.com/pixelkode.co"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 transition hover:text-[#2f7a43] whitespace-nowrap"
-                aria-label="PixelKode Instagram"
-              >
-                <Instagram className="h-3.5 w-3.5" />
-                Instagram
-              </a>
+                <a
+                  href="https://instagram.com/pixelkode.co"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 transition hover:text-[#2f7a43] whitespace-nowrap"
+                  aria-label="PixelKode Instagram"
+                >
+                  <Instagram className="h-3.5 w-3.5" />
+                  Instagram
+                </a>
               </div>
             </div>
           </div>

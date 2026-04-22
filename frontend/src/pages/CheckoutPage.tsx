@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AlertCircle, ArrowRight, ShoppingBag } from "lucide-react";
 import { calculateShippingByWeight, getRegionByState, validatePincode } from "@/lib/pincode";
 import { formatCurrency, getWeightMultiplier } from "@/lib/pricing";
-import { getEligibleSubtotalForCoupon } from "@/lib/couponPricing";
+import { getCouponDiscountAmount, getEligibleSubtotalForCoupon } from "@/lib/couponPricing";
 import { getCoupons, type AdminCoupon } from "@/lib/api";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
@@ -112,7 +112,7 @@ const checkoutUiCopy = {
     couponDiscount: "Coupon discount",
     enterCoupon: "Enter a coupon code.",
     invalidCoupon: "Coupon code is invalid or inactive.",
-    minOrderRequired: (amount: number) => `Minimum order ${formatCurrency(amount)} required for this coupon.`,
+    minOrderRequired: (amount: number) => `Eligible items must reach ${formatCurrency(amount)} for this coupon.`,
     notApplicable: "This coupon does not apply to the selected products.",
     appliedSuccess: (code: string) => `Coupon ${code} applied successfully.`,
     removedSuccess: "Coupon removed.",
@@ -130,7 +130,7 @@ const checkoutUiCopy = {
     couponDiscount: "కూపన్ తగ్గింపు",
     enterCoupon: "కూపన్ కోడ్ నమోదు చేయండి.",
     invalidCoupon: "కూపన్ కోడ్ చెల్లదు లేదా యాక్టివ్‌లో లేదు.",
-    minOrderRequired: (amount: number) => `ఈ కూపన్‌కి కనీస ఆర్డర్ ${formatCurrency(amount)} అవసరం.`,
+    minOrderRequired: (amount: number) => `ఈ కూపన్ కోసం అర్హమైన వస్తువులు కనీసం ${formatCurrency(amount)} చేరాలి.`,
     notApplicable: "ఈ కూపన్ ఎంచుకున్న ఉత్పత్తులకు వర్తించదు.",
     appliedSuccess: (code: string) => `${code} కూపన్ విజయవంతంగా అమలైంది.`,
     removedSuccess: "కూపన్ తొలగించబడింది.",
@@ -187,7 +187,7 @@ const CheckoutPage = () => {
   const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
   const [couponMessage, setCouponMessage] = useState("");
 
-  const { data: coupons = [], refetch: refetchCoupons } = useQuery({
+  const { data: coupons = [] } = useQuery({
     queryKey: ["storefront-coupons"],
     queryFn: getCoupons,
     staleTime: 0,
@@ -196,39 +196,6 @@ const CheckoutPage = () => {
     refetchOnWindowFocus: true,
     refetchOnMount: "always",
   });
-
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === "sp-coupons-updated-at") {
-        void refetchCoupons();
-      }
-    };
-
-    const couponChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("sp-coupons") : null;
-    const handleBroadcast = (event: MessageEvent) => {
-      if (event.data?.type === "coupons-updated") {
-        void refetchCoupons();
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    couponChannel?.addEventListener("message", handleBroadcast);
-
-    const couponEvents = typeof window !== "undefined" ? new EventSource("/api/coupon-events", { withCredentials: true }) : null;
-    const handleServerEvent = () => {
-      void refetchCoupons();
-    };
-
-    couponEvents?.addEventListener("coupon-update", handleServerEvent);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      couponChannel?.removeEventListener("message", handleBroadcast);
-      couponChannel?.close();
-      couponEvents?.removeEventListener("coupon-update", handleServerEvent);
-      couponEvents?.close();
-    };
-  }, [refetchCoupons]);
 
   const sanitizedPhone = form.phone.replace(/\D/g, "").slice(0, 10);
   const sanitizedPincode = form.pincode.replace(/\D/g, "").slice(0, 6);
@@ -254,23 +221,14 @@ const CheckoutPage = () => {
       return 0;
     }
 
-    if (appliedCoupon.minOrderAmount !== null && subtotal < Number(appliedCoupon.minOrderAmount)) {
-      return 0;
-    }
-
     const eligibleSubtotal = getEligibleSubtotalForCoupon(appliedCoupon, cart);
 
     if (eligibleSubtotal <= 0) {
       return 0;
     }
 
-    let discount =
-      appliedCoupon.discountType === "percentage"
-        ? Math.round((eligibleSubtotal * Number(appliedCoupon.discountValue)) / 100)
-        : Math.round(Number(appliedCoupon.discountValue));
-
-    return Math.max(0, Math.min(discount, eligibleSubtotal));
-  }, [appliedCoupon, cart, subtotal]);
+    return getCouponDiscountAmount(appliedCoupon, eligibleSubtotal);
+  }, [appliedCoupon, cart]);
 
   const total = Math.max(0, subtotal + shipping - discountAmount);
 
@@ -366,16 +324,16 @@ const CheckoutPage = () => {
       return;
     }
 
-    if (coupon.minOrderAmount !== null && subtotal < Number(coupon.minOrderAmount)) {
-      setCouponMessage(ui.minOrderRequired(Number(coupon.minOrderAmount)));
-      setAppliedCouponCode(null);
-      return;
-    }
-
     const eligibleSubtotal = getEligibleSubtotalForCoupon(coupon, cart);
 
     if (eligibleSubtotal <= 0) {
       setCouponMessage(ui.notApplicable);
+      setAppliedCouponCode(null);
+      return;
+    }
+
+    if (coupon.minOrderAmount !== null && eligibleSubtotal < Number(coupon.minOrderAmount)) {
+      setCouponMessage(ui.minOrderRequired(Number(coupon.minOrderAmount)));
       setAppliedCouponCode(null);
       return;
     }
@@ -772,6 +730,12 @@ const CheckoutPage = () => {
                   <span>{ui.subtotal}</span>
                   <span className="price-figure">{formatCurrency(subtotal)}</span>
                 </div>
+                {discountAmount > 0 ? (
+                  <div className="flex justify-between text-sm text-[#1f6a3b]">
+                    <span>{ui.couponDiscount}</span>
+                    <span className="price-figure">- {formatCurrency(discountAmount)}</span>
+                  </div>
+                ) : null}
                 <div className="flex justify-between text-sm text-theme-body">
                   <span>{copy.shippingLabel}</span>
                   <span
@@ -786,12 +750,6 @@ const CheckoutPage = () => {
                         : copy.pendingShipping}
                   </span>
                 </div>
-                {discountAmount > 0 ? (
-                  <div className="flex justify-between text-sm text-[#1f6a3b]">
-                    <span>{ui.couponDiscount}</span>
-                    <span className="price-figure">- {formatCurrency(discountAmount)}</span>
-                  </div>
-                ) : null}
                 <div className="border-t border-[#d8e5d8] pt-3">
                   <div className="flex justify-between font-heading text-xl font-bold text-theme-heading sm:text-2xl">
                     <span>{t.checkout.total}</span>

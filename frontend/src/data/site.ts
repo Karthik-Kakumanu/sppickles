@@ -118,9 +118,7 @@ export const brand = {
     sunday: "Closed",
   },
   socialMedia: {
-    instagram: "https://instagram.com/sppickles",
-    facebook: "https://facebook.com/sppickles",
-    youtube: "https://youtube.com/@sppickles",
+    facebook: "https://www.facebook.com/share/18yCdKNnZ3/",
   },
   currencySymbol: "₹",
   yearEstablished: 2016,

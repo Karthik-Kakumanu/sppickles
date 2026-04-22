@@ -32,7 +32,13 @@ const getAllowedOrigins = () => {
 
   return process.env.NODE_ENV === "production"
     ? ["https://sppickles.com", "https://www.sppickles.com"]
-    : ["http://localhost:8080", "http://127.0.0.1:8080", "http://localhost:5173"];
+    : [
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:8070",
+        "http://127.0.0.1:8070",
+        "http://localhost:5173",
+      ];
 };
 
 const appendVaryHeader = (res, headerName) => {

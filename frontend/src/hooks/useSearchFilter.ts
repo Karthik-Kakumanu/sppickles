@@ -1,7 +1,52 @@
 import { useMemo } from "react";
-import { type ProductRecord } from "@/data/site";
+import { type ProductRecord, weightOptions } from "@/data/site";
 import { type FilterOptions } from "@/components/FilterPanel";
 import { translateDynamicText } from "@/lib/translation";
+
+const CATEGORY_SEARCH_TERMS: Record<ProductRecord["category"], string[]> = {
+  pickles: ["pickle", "pickles", "pachadi", "orugu"],
+  powders: ["powder", "powders", "podi", "podulu", "karam"],
+  fryums: ["fryum", "fryums", "appadalu", "vadiyalu"],
+};
+
+const SUBCATEGORY_SEARCH_TERMS: Record<NonNullable<ProductRecord["subcategory"]>, string[]> = {
+  salt: ["salt", "salted", "uppu"],
+  asafoetida: ["asafoetida", "hing", "inguva", "tempered"],
+};
+
+const normalizeSearchText = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/250\s*(?:grams?|gm|g|గ్రా)/gu, "250g")
+    .replace(/500\s*(?:grams?|gm|g|గ్రా)/gu, "500g")
+    .replace(/1\s*(?:kg|kgs|kilogram|kilograms|kilo|కేజీ|కిలో)/gu, "1kg")
+    .replace(/\bhalf(?:\s*(?:kg|kilo|kilogram))?\b/gu, "500g")
+    .replace(/\bquarter(?:\s*(?:kg|kilo|kilogram))?\b/gu, "250g")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const buildSearchIndex = (product: ProductRecord) => {
+  const weightTerms = weightOptions.flatMap(({ label }) => {
+    const spacedLabel = label.replace(/(\d)([a-z]+)/i, "$1 $2");
+    return [label, spacedLabel];
+  });
+
+  const keywords = [
+    product.name,
+    product.name_te ?? "",
+    product.nameTeluguguTelugu ?? "",
+    translateDynamicText(product.name, "te"),
+    product.description,
+    product.category,
+    ...CATEGORY_SEARCH_TERMS[product.category],
+    product.subcategory ?? "",
+    ...(product.subcategory ? SUBCATEGORY_SEARCH_TERMS[product.subcategory] : []),
+    ...weightTerms,
+  ];
+
+  return normalizeSearchText(keywords.join(" "));
+};
 
 export function useSearchFilter(
   products: ProductRecord[],
@@ -11,25 +56,13 @@ export function useSearchFilter(
   return useMemo(() => {
     let filtered = [...products];
 
-    // 1. Search filter - check product name, category, and subcategory
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    // 1. Search filter - support names, Telugu labels, category aliases, and size keywords
+    const normalizedQuery = normalizeSearchText(searchQuery);
+    if (normalizedQuery) {
+      const queryTerms = normalizedQuery.split(" ").filter(Boolean);
       filtered = filtered.filter((product) => {
-        const name = product.name.toLowerCase();
-        const nameTe = product.name_te?.toLowerCase() || "";
-        const legacyNameTe = product.nameTeluguguTelugu?.toLowerCase() || "";
-        const dynamicNameTe = translateDynamicText(product.name, "te").toLowerCase();
-        const category = product.category.toLowerCase();
-        const subcategory = product.subcategory?.toLowerCase() || "";
-
-        return (
-          name.includes(query) ||
-          nameTe.includes(query) ||
-          legacyNameTe.includes(query) ||
-          dynamicNameTe.includes(query) ||
-          category.includes(query) ||
-          subcategory.includes(query)
-        );
+        const searchIndex = buildSearchIndex(product);
+        return queryTerms.every((term) => searchIndex.includes(term));
       });
     }
 
@@ -76,12 +109,6 @@ export function useSearchFilter(
         break;
       case "newest":
       default:
-        // Keep original order (by id)
-        filtered.sort((a, b) => {
-          const idA = typeof a.id === "string" ? parseInt(a.id, 10) : (a.id as any);
-          const idB = typeof b.id === "string" ? parseInt(b.id, 10) : (b.id as any);
-          return idA - idB;
-        });
         break;
     }
 

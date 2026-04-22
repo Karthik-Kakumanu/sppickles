@@ -55,7 +55,13 @@ export const getCouponDiscountAmount = (coupon: AdminCoupon, eligibleSubtotal: n
     return 0;
   }
 
-  let discountAmount =
+  const minOrderAmount = coupon.minOrderAmount === null ? null : Number(coupon.minOrderAmount);
+
+  if (minOrderAmount !== null && (!Number.isFinite(minOrderAmount) || eligibleSubtotal < minOrderAmount)) {
+    return 0;
+  }
+
+  const discountAmount =
     coupon.discountType === "percentage"
       ? Math.round((eligibleSubtotal * Number(coupon.discountValue)) / 100)
       : Math.round(Number(coupon.discountValue));

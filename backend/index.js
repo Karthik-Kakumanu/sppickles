@@ -56,6 +56,7 @@ const VALID_COUPON_CATEGORY_SCOPES = new Set([
   "tempered-pickles",
 ]);
 const VALID_AD_MEDIA_TYPES = new Set(["image", "video"]);
+const MAX_ADMIN_ADS = 2;
 const MEDIA_JSON_BODY_LIMIT_BYTES = Math.max(
   1_000_000,
   Number(process.env.MEDIA_JSON_BODY_LIMIT_BYTES || 50_000_000),
@@ -90,6 +91,7 @@ const RAZORPAY_TEST_KEY_SECRET = String(process.env.RAZORPAY_TEST_KEY_SECRET ?? 
 const RAZORPAY_CURRENCY = String(process.env.RAZORPAY_CURRENCY ?? "INR").trim().toUpperCase();
 const adminLoginAttempts = new Map();
 const couponEventClients = new Set();
+const adEventClients = new Set();
 const adminPasswordResetOtps = new Map();
 
 const normalizeIndianMobile = (value) => {
@@ -755,6 +757,56 @@ const handleCouponEventsStream = (req, res) => {
   });
 };
 
+const writeAdEvent = (res, payload) => {
+  try {
+    res.write(`event: ad-update\n`);
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
+  } catch {
+    adEventClients.delete(res);
+    try {
+      res.end();
+    } catch {
+      // Ignore stream close errors.
+    }
+  }
+};
+
+const broadcastAdUpdate = (payload = { updatedAt: Date.now() }) => {
+  for (const client of adEventClients) {
+    writeAdEvent(client, payload);
+  }
+};
+
+const handleAdEventsStream = (req, res) => {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+
+  adEventClients.add(res);
+  writeAdEvent(res, { type: "connected", updatedAt: Date.now() });
+
+  const keepAlive = setInterval(() => {
+    try {
+      res.write(`: keepalive ${Date.now()}\n\n`);
+    } catch {
+      // Ignore keepalive write failures.
+    }
+  }, 20000);
+
+  req.on("close", () => {
+    clearInterval(keepAlive);
+    adEventClients.delete(res);
+    try {
+      res.end();
+    } catch {
+      // Ignore close errors.
+    }
+  });
+};
+
 const getAdminSessionIdleTimeoutSeconds = () => {
   if (!Number.isFinite(ADMIN_SESSION_IDLE_TIMEOUT_MINUTES) || ADMIN_SESSION_IDLE_TIMEOUT_MINUTES <= 0) {
     return 30 * 60;
@@ -973,7 +1025,22 @@ const getProducts = async ({ includeDeleted = false, deletedOnly = false } = {})
     from products p
     left join stock_status s on s.product_id = p.id
     ${whereClause}
-    order by p.deleted_at desc nulls last, p.updated_at desc, p.created_at desc, p.name asc
+    order by
+      case p.category
+        when 'pickles' then 0
+        when 'powders' then 1
+        when 'fryums' then 2
+        else 3
+      end,
+      case
+        when p.category = 'pickles' then case p.subcategory when 'salt' then 0 when 'asafoetida' then 1 else 2 end
+        else 0
+      end,
+      case
+        when p.id ~ '^product-[0-9]+' then substring(p.id from '^product-([0-9]+)')::bigint
+        else null
+      end nulls last,
+      p.name asc
   `);
 
   return result.rows.map(serializeProductRow);
@@ -1204,6 +1271,50 @@ const restoreProduct = async (productId) => {
   return serializeProductRow(result.rows[0]);
 };
 
+const permanentlyDeleteProduct = async (productId) => {
+  const client = await pool.connect();
+
+  try {
+    await client.begin();
+
+    const result = await client.query(
+      `
+        delete from products
+        where id = $1
+          and deleted_at is not null
+        returning id, name
+      `,
+      [productId],
+    );
+
+    if (result.rowCount === 0) {
+      throw { statusCode: 404, message: "Deleted product not found." };
+    }
+
+    await client.query(
+      `
+        delete from stock_status
+        where product_id = $1
+      `,
+      [productId],
+    );
+
+    await client.commit();
+
+    return {
+      id: String(result.rows[0].id),
+      name: String(result.rows[0].name ?? ""),
+      deleted: true,
+      permanent: true,
+    };
+  } catch (error) {
+    await client.rollback();
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 const importProducts = async (body) => {
   if (!isPlainObject(body) || !Array.isArray(body.products)) {
     throw { statusCode: 400, message: "products must be an array." };
@@ -1343,6 +1454,14 @@ const parseOptionalTimestamp = (value, fieldName) => {
   return date.toISOString();
 };
 
+const parseRequiredTimestamp = (value, fieldName) => {
+  if (value === null || value === undefined || String(value).trim() === "") {
+    throw { statusCode: 400, message: `${fieldName} is required.` };
+  }
+
+  return parseOptionalTimestamp(value, fieldName);
+};
+
 const serializeCouponRow = (row) => ({
   id: String(row.id ?? ""),
   code: String(row.code ?? ""),
@@ -1413,8 +1532,8 @@ const normalizeCouponPayload = async (body, { fallbackId = null } = {}) => {
   const targetCategoryRaw = String(body.targetCategory ?? body.target_category ?? "").trim().toLowerCase();
   const targetProductIdRaw = String(body.targetProductId ?? body.target_product_id ?? "").trim();
   const minOrderAmount = parseOptionalCurrency(body.minOrderAmount ?? body.min_order_amount, "Min order amount");
-  const startsAt = parseOptionalTimestamp(body.startsAt ?? body.starts_at, "Start date");
-  const endsAt = parseOptionalTimestamp(body.endsAt ?? body.ends_at, "End date");
+  const startsAt = parseRequiredTimestamp(body.startsAt ?? body.starts_at, "Start date");
+  const endsAt = parseRequiredTimestamp(body.endsAt ?? body.ends_at, "End date");
   const isActive = typeof (body.isActive ?? body.is_active) === "boolean" ? Boolean(body.isActive ?? body.is_active) : true;
 
   if (!code || !/^[A-Z0-9][A-Z0-9-]{2,29}$/.test(code)) {
@@ -1436,8 +1555,8 @@ const normalizeCouponPayload = async (body, { fallbackId = null } = {}) => {
     throw { statusCode: 400, message: "Percentage discount cannot exceed 100." };
   }
 
-  if (discountType === "fixed" && minOrderAmount === null) {
-    throw { statusCode: 400, message: "Min order amount is required for fixed discount coupons." };
+  if (discountType === "fixed" && (minOrderAmount === null || minOrderAmount <= 0)) {
+    throw { statusCode: 400, message: "Min order amount greater than 0 is required for fixed discount coupons." };
   }
 
   if (!VALID_COUPON_SCOPES.has(appliesTo)) {
@@ -1515,38 +1634,46 @@ const getStorefrontCoupons = async () => {
       left join products p on p.id = c.target_product_id
       where
         c.is_active = true
-        and (c.starts_at is null or c.starts_at <= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'))
-        and (c.ends_at is null or c.ends_at >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'))
       order by c.updated_at desc, c.created_at desc
     `,
   );
 
-  return result.rows.map(serializeCouponRow);
+  return result.rows.map(serializeCouponRow).filter((coupon) =>
+    isWithinScheduleWindow(coupon.startsAt, coupon.endsAt),
+  );
 };
 
 const createCoupon = async (body) => {
   const payload = await normalizeCouponPayload(body);
 
-  await pool.query(
+  const result = await pool.query(
     `
-      insert into coupons (
-        id,
-        code,
-        title,
-        description,
-        discount_type,
-        discount_value,
-        applies_to,
-        target_category,
-        target_product_id,
-        min_order_amount,
-        starts_at,
-        ends_at,
-        is_active,
-        created_at,
-        updated_at
+      with inserted as (
+        insert into coupons (
+          id,
+          code,
+          title,
+          description,
+          discount_type,
+          discount_value,
+          applies_to,
+          target_category,
+          target_product_id,
+          min_order_amount,
+          starts_at,
+          ends_at,
+          is_active,
+          created_at,
+          updated_at
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        returning *
       )
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      select
+        inserted.*,
+        p.name as target_product_name
+      from inserted
+      left join products p on p.id = inserted.target_product_id
     `,
     [
       payload.id,
@@ -1565,8 +1692,8 @@ const createCoupon = async (body) => {
     ],
   );
 
-  const coupon = await getCouponById(payload.id);
-  broadcastCouponUpdate({ action: "created", couponId: coupon.id, updatedAt: Date.now() });
+  const coupon = serializeCouponRow(result.rows[0]);
+  broadcastCouponUpdate({ action: "created", couponId: coupon.id, coupon, updatedAt: Date.now() });
   return coupon;
 };
 
@@ -1584,23 +1711,30 @@ const updateCoupon = async (couponId, body) => {
 
   const result = await pool.query(
     `
-      update coupons
-      set
-        code = $2,
-        title = $3,
-        description = $4,
-        discount_type = $5,
-        discount_value = $6,
-        applies_to = $7,
-        target_category = $8,
-        target_product_id = $9,
-        min_order_amount = $10,
-        starts_at = $11,
-        ends_at = $12,
-        is_active = $13,
-        updated_at = CURRENT_TIMESTAMP
-      where id = $1
-      returning id
+      with updated as (
+        update coupons
+        set
+          code = $2,
+          title = $3,
+          description = $4,
+          discount_type = $5,
+          discount_value = $6,
+          applies_to = $7,
+          target_category = $8,
+          target_product_id = $9,
+          min_order_amount = $10,
+          starts_at = $11,
+          ends_at = $12,
+          is_active = $13,
+          updated_at = CURRENT_TIMESTAMP
+        where id = $1
+        returning *
+      )
+      select
+        updated.*,
+        p.name as target_product_name
+      from updated
+      left join products p on p.id = updated.target_product_id
     `,
     [
       couponId,
@@ -1623,8 +1757,8 @@ const updateCoupon = async (couponId, body) => {
     throw { statusCode: 404, message: "Coupon not found." };
   }
 
-  const coupon = await getCouponById(couponId);
-  broadcastCouponUpdate({ action: "updated", couponId: coupon.id, updatedAt: Date.now() });
+  const coupon = serializeCouponRow(result.rows[0]);
+  broadcastCouponUpdate({ action: "updated", couponId: coupon.id, coupon, updatedAt: Date.now() });
   return coupon;
 };
 
@@ -1675,12 +1809,27 @@ const parseOptionalUrl = (value, fieldName, { allowDataUrl = false } = {}) => {
   return urlValue;
 };
 
+const isInlineAdMediaUrl = (value) => /^data:(image|video)\//i.test(String(value ?? "").trim());
+
+const getPublicAdMediaUrl = (row) => {
+  const mediaUrl = String(row.media_url ?? "").trim();
+  const usesInlineMedia = Boolean(row.uses_inline_media) || isInlineAdMediaUrl(mediaUrl);
+
+  if (!usesInlineMedia) {
+    return mediaUrl;
+  }
+
+  const updatedAt = row.updated_at ? new Date(row.updated_at).getTime() : Date.now();
+  const version = Number.isFinite(updatedAt) ? updatedAt : Date.now();
+  return `${API_PREFIX}/ads/${encodeURIComponent(String(row.id ?? ""))}/media?v=${version}`;
+};
+
 const serializeAdRow = (row) => ({
   id: String(row.id ?? ""),
   title: String(row.title ?? ""),
   description: String(row.description ?? ""),
   mediaType: String(row.media_type ?? "image"),
-  mediaUrl: String(row.media_url ?? ""),
+  mediaUrl: getPublicAdMediaUrl(row),
   ctaText: row.cta_text ? String(row.cta_text) : null,
   ctaUrl: row.cta_url ? String(row.cta_url) : null,
   displayOrder: Number(row.display_order ?? 0),
@@ -1690,6 +1839,32 @@ const serializeAdRow = (row) => ({
   createdAt: row.created_at ?? null,
   updatedAt: row.updated_at ?? null,
 });
+
+const serializeRawAdRow = (row) => ({
+  ...serializeAdRow(row),
+  mediaUrl: String(row.media_url ?? ""),
+});
+
+const isPublicAdMediaUrlForId = (value, adId) => {
+  const urlValue = String(value ?? "").trim();
+
+  if (!urlValue) {
+    return false;
+  }
+
+  const expectedPath = `${API_PREFIX}/ads/${encodeURIComponent(String(adId))}/media`;
+
+  if (urlValue.startsWith(expectedPath)) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(urlValue, "http://localhost");
+    return parsed.pathname === expectedPath;
+  } catch {
+    return false;
+  }
+};
 
 const getAdById = async (adId) => {
   const result = await pool.query(
@@ -1709,6 +1884,72 @@ const getAdById = async (adId) => {
   return serializeAdRow(result.rows[0]);
 };
 
+const getRawAdById = async (adId) => {
+  const result = await pool.query(
+    `
+      select *
+      from ads
+      where id = $1
+      limit 1
+    `,
+    [adId],
+  );
+
+  if (result.rowCount === 0) {
+    throw { statusCode: 404, message: "Ad not found." };
+  }
+
+  return serializeRawAdRow(result.rows[0]);
+};
+
+const getAdMediaById = async (adId) => {
+  const result = await pool.query(
+    `
+      select id, media_type, media_url, updated_at
+      from ads
+      where id = $1
+      limit 1
+    `,
+    [adId],
+  );
+
+  if (result.rowCount === 0) {
+    throw { statusCode: 404, message: "Ad media not found." };
+  }
+
+  return result.rows[0];
+};
+
+const sendAdMedia = async (res, adId) => {
+  const adMedia = await getAdMediaById(adId);
+  const mediaUrl = String(adMedia.media_url ?? "").trim();
+
+  if (!isInlineAdMediaUrl(mediaUrl)) {
+    res.writeHead(302, {
+      Location: mediaUrl,
+      "Cache-Control": "no-cache",
+    });
+    res.end();
+    return;
+  }
+
+  const match = /^data:([^;,]+);base64,(.*)$/i.exec(mediaUrl);
+
+  if (!match) {
+    throw { statusCode: 415, message: "Unsupported ad media format." };
+  }
+
+  const contentType = match[1];
+  const mediaBuffer = Buffer.from(match[2], "base64");
+
+  res.writeHead(200, {
+    "Content-Type": contentType,
+    "Content-Length": mediaBuffer.length,
+    "Cache-Control": "public, max-age=60",
+  });
+  res.end(mediaBuffer);
+};
+
 const normalizeAdPayload = (body, { fallbackId = null } = {}) => {
   if (!isPlainObject(body)) {
     throw { statusCode: 400, message: "Ad payload must be a JSON object." };
@@ -1724,8 +1965,8 @@ const normalizeAdPayload = (body, { fallbackId = null } = {}) => {
   const ctaText = String(body.ctaText ?? body.cta_text ?? "").trim() || null;
   const ctaUrl = parseOptionalUrl(body.ctaUrl ?? body.cta_url, "ctaUrl");
   const displayOrder = Math.max(Number.parseInt(String(body.displayOrder ?? body.display_order ?? 0), 10) || 0, 0);
-  const startsAt = parseOptionalTimestamp(body.startsAt ?? body.starts_at, "Start date");
-  const endsAt = parseOptionalTimestamp(body.endsAt ?? body.ends_at, "End date");
+  const startsAt = parseRequiredTimestamp(body.startsAt ?? body.starts_at, "Start date");
+  const endsAt = parseRequiredTimestamp(body.endsAt ?? body.ends_at, "End date");
   const isActive = typeof (body.isActive ?? body.is_active) === "boolean" ? Boolean(body.isActive ?? body.is_active) : true;
 
   if (!title) {
@@ -1762,7 +2003,24 @@ const normalizeAdPayload = (body, { fallbackId = null } = {}) => {
 const getAdminAds = async () => {
   const result = await pool.query(
     `
-      select *
+      select
+        id,
+        title,
+        description,
+        media_type,
+        case
+          when media_url like 'data:%' then ''
+          else media_url
+        end as media_url,
+        media_url like 'data:%' as uses_inline_media,
+        cta_text,
+        cta_url,
+        display_order,
+        starts_at,
+        ends_at,
+        is_active,
+        created_at,
+        updated_at
       from ads
       order by is_active desc, updated_at desc, created_at desc
     `,
@@ -1774,7 +2032,24 @@ const getAdminAds = async () => {
 const getStorefrontAds = async () => {
   const result = await pool.query(
     `
-      select *
+      select
+        id,
+        title,
+        description,
+        media_type,
+        case
+          when media_url like 'data:%' then ''
+          else media_url
+        end as media_url,
+        media_url like 'data:%' as uses_inline_media,
+        cta_text,
+        cta_url,
+        display_order,
+        starts_at,
+        ends_at,
+        is_active,
+        created_at,
+        updated_at
       from ads
       where
         is_active = true
@@ -1789,47 +2064,80 @@ const getStorefrontAds = async () => {
 
 const createAd = async (body) => {
   const payload = normalizeAdPayload(body);
+  const client = await pool.connect();
 
-  await pool.query(
-    `
-      insert into ads (
-        id,
-        title,
-        description,
-        media_type,
-        media_url,
-        cta_text,
-        cta_url,
-        display_order,
-        starts_at,
-        ends_at,
-        is_active,
-        created_at,
-        updated_at
-      )
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-    `,
-    [
-      payload.id,
-      payload.title,
-      payload.description,
-      payload.mediaType,
-      payload.mediaUrl,
-      payload.ctaText,
-      payload.ctaUrl,
-      payload.displayOrder,
-      payload.startsAt,
-      payload.endsAt,
-      payload.isActive,
-    ],
-  );
+  try {
+    await client.begin();
+    await client.query("lock table ads in exclusive mode");
 
-  return getAdById(payload.id);
+    const countResult = await client.query("select count(*)::int as count from ads");
+    const adCount = Number(countResult.rows[0]?.count ?? 0);
+
+    if (adCount >= MAX_ADMIN_ADS) {
+      throw {
+        statusCode: 409,
+        message: `Only ${MAX_ADMIN_ADS} ads are eligible at a time. Delete one of the existing ads before adding another.`,
+      };
+    }
+
+    await client.query(
+      `
+        insert into ads (
+          id,
+          title,
+          description,
+          media_type,
+          media_url,
+          cta_text,
+          cta_url,
+          display_order,
+          starts_at,
+          ends_at,
+          is_active,
+          created_at,
+          updated_at
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      `,
+      [
+        payload.id,
+        payload.title,
+        payload.description,
+        payload.mediaType,
+        payload.mediaUrl,
+        payload.ctaText,
+        payload.ctaUrl,
+        payload.displayOrder,
+        payload.startsAt,
+        payload.endsAt,
+        payload.isActive,
+      ],
+    );
+
+    await client.commit();
+  } catch (error) {
+    await client.rollback();
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  const ad = await getAdById(payload.id);
+  broadcastAdUpdate({ action: "created", adId: ad.id, updatedAt: Date.now() });
+  return ad;
 };
 
 const updateAd = async (adId, body) => {
-  const existingAd = await getAdById(adId);
-  const payload = normalizeAdPayload({ ...existingAd, ...body }, { fallbackId: adId });
+  const existingAd = await getRawAdById(adId);
+  const incomingMediaUrl = body?.mediaUrl ?? body?.media_url;
+  const bodyWithRawMedia = isPublicAdMediaUrlForId(incomingMediaUrl, adId)
+    ? {
+        ...body,
+        mediaUrl: existingAd.mediaUrl,
+        media_url: existingAd.mediaUrl,
+      }
+    : body;
+  const payload = normalizeAdPayload({ ...existingAd, ...bodyWithRawMedia }, { fallbackId: adId });
 
   const result = await pool.query(
     `
@@ -1868,7 +2176,9 @@ const updateAd = async (adId, body) => {
     throw { statusCode: 404, message: "Ad not found." };
   }
 
-  return getAdById(adId);
+  const ad = await getAdById(adId);
+  broadcastAdUpdate({ action: "updated", adId: ad.id, updatedAt: Date.now() });
+  return ad;
 };
 
 const deleteAd = async (adId) => {
@@ -1885,11 +2195,14 @@ const deleteAd = async (adId) => {
     throw { statusCode: 404, message: "Ad not found." };
   }
 
-  return {
+  const response = {
     id: String(result.rows[0].id),
     title: String(result.rows[0].title),
     deleted: true,
   };
+
+  broadcastAdUpdate({ action: "deleted", adId: response.id, updatedAt: Date.now() });
+  return response;
 };
 
 const getAdminAnalytics = async () => {
@@ -1946,8 +2259,10 @@ const getAdminAnalytics = async () => {
     `),
   ]);
 
-  const totalRevenue = ordersResult.rows.reduce((sum, row) => sum + Number(row.total ?? 0), 0);
-  const totalOrders = ordersResult.rows.length;
+  // Only count delivered orders for revenue and order count
+  const deliveredOrders = ordersResult.rows.filter(row => normalizeOrderStatus(row.status) === "delivered");
+  const totalRevenue = deliveredOrders.reduce((sum, row) => sum + Number(row.total ?? 0), 0);
+  const totalOrders = deliveredOrders.length;
   const avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
   const itemCountsByOrder = new Map(
     itemCountResult.rows.map((row) => [String(row.order_id ?? ""), Number(row.item_count ?? 0)]),
@@ -2322,13 +2637,6 @@ const resolveCouponDiscount = async (payload, subtotal) => {
     throw { statusCode: 400, message: "Coupon is not active right now." };
   }
 
-  if (coupon.minOrderAmount !== null && subtotal < Number(coupon.minOrderAmount)) {
-    throw {
-      statusCode: 400,
-      message: `Coupon requires a minimum order of ${coupon.minOrderAmount}.`,
-    };
-  }
-
   const productIds = [...new Set(payload.items.map((item) => item.productId))];
   const productResult = productIds.length
     ? await pool.query(
@@ -2373,6 +2681,21 @@ const resolveCouponDiscount = async (payload, subtotal) => {
 
   if (eligibleSubtotal <= 0) {
     throw { statusCode: 400, message: "Coupon is not applicable to items in this cart." };
+  }
+
+  if (coupon.minOrderAmount !== null) {
+    const minOrderAmount = Number(coupon.minOrderAmount);
+
+    if (!Number.isFinite(minOrderAmount)) {
+      throw { statusCode: 400, message: "Coupon configuration is invalid. Please remove the coupon and retry." };
+    }
+
+    if (eligibleSubtotal < minOrderAmount) {
+      throw {
+        statusCode: 400,
+        message: `Coupon requires eligible items worth at least ${coupon.minOrderAmount}.`,
+      };
+    }
   }
 
   const couponDiscountValue = Number(coupon.discountValue);
@@ -3433,6 +3756,7 @@ const server = http.createServer(async (req, res) => {
           createProduct: `POST ${API_PREFIX}/products`,
           updateProduct: `PATCH ${API_PREFIX}/products/:product_id`,
           deleteProduct: `DELETE ${API_PREFIX}/products/:product_id`,
+          permanentlyDeleteProduct: `DELETE ${API_PREFIX}/products/:product_id/permanent`,
           importProducts: `POST ${API_PREFIX}/admin/products/import`,
           adminAnalytics: `GET ${API_PREFIX}/admin/analytics`,
           adminCoupons: `GET ${API_PREFIX}/admin/coupons`,
@@ -3443,6 +3767,7 @@ const server = http.createServer(async (req, res) => {
           createAd: `POST ${API_PREFIX}/admin/ads`,
           updateAd: `PATCH ${API_PREFIX}/admin/ads/:ad_id`,
           deleteAd: `DELETE ${API_PREFIX}/admin/ads/:ad_id`,
+          adEvents: `GET ${API_PREFIX}/ad-events`,
           stock: `GET ${API_PREFIX}/stock`,
           updateStock: `PUT ${API_PREFIX}/stock/:product_id`,
           createOrder: `POST ${API_PREFIX}/orders`,
@@ -3664,6 +3989,22 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (method === "GET" && routePathname === "/ad-events") {
+      handleAdEventsStream(req, res);
+      return;
+    }
+
+    const adMediaRoute = matchRoute(routePathname, "/ads/:ad_id/media");
+    if (adMediaRoute) {
+      if (method !== "GET") {
+        sendError(res, 405, "Method not allowed.");
+        return;
+      }
+
+      await sendAdMedia(res, adMediaRoute.ad_id);
+      return;
+    }
+
     if (method === "GET" && routePathname === "/admin/products/deleted") {
       if (!(await requireActiveAdminSession(req, res))) {
         return;
@@ -3671,6 +4012,22 @@ const server = http.createServer(async (req, res) => {
 
       const products = await getProducts({ includeDeleted: true, deletedOnly: true });
       sendSuccess(res, 200, products);
+      return;
+    }
+
+    const permanentDeleteProductRoute = matchRoute(routePathname, "/products/:product_id/permanent");
+    if (permanentDeleteProductRoute) {
+      if (method !== "DELETE") {
+        sendError(res, 405, "Method not allowed.");
+        return;
+      }
+
+      if (!(await requireActiveAdminSession(req, res))) {
+        return;
+      }
+
+      const deletedProduct = await permanentlyDeleteProduct(permanentDeleteProductRoute.product_id);
+      sendSuccess(res, 200, deletedProduct, "Product permanently deleted.");
       return;
     }
 

@@ -1,12 +1,64 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, Megaphone } from "lucide-react";
 import Seo from "@/components/Seo";
 import { useLanguage } from "@/components/LanguageProvider";
-import { getAds } from "@/lib/api";
+import { getAds, type AdminAd } from "@/lib/api";
 import { translateDynamicText } from "@/lib/translation";
 
-const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
+const pageWrap = "mx-auto w-full max-w-6xl px-5 sm:px-6 lg:px-8";
+
+const AdMediaFrame = ({ ad, alt }: { ad: AdminAd; alt: string }) => {
+  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+
+  useEffect(() => {
+    setAspectRatio(null);
+
+    if (ad.mediaType === "image") {
+      const image = new window.Image();
+
+      image.onload = () => {
+        if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+          setAspectRatio(image.naturalWidth / image.naturalHeight);
+        }
+      };
+
+      image.src = ad.mediaUrl;
+      return;
+    }
+
+    const video = document.createElement("video");
+
+    video.onloadedmetadata = () => {
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        setAspectRatio(video.videoWidth / video.videoHeight);
+      }
+    };
+
+    video.src = ad.mediaUrl;
+  }, [ad.mediaType, ad.mediaUrl]);
+
+  return (
+    <div className="relative w-full overflow-hidden bg-[#f8faf6]" style={{ aspectRatio: aspectRatio ? String(aspectRatio) : "16 / 9" }}>
+      <div className="absolute inset-4 sm:inset-6">
+        {ad.mediaType === "video" ? (
+          <video
+            src={ad.mediaUrl}
+            className="h-full w-full rounded-2xl object-contain"
+            autoPlay
+            muted
+            playsInline
+            loop
+            controls
+            preload="auto"
+          />
+        ) : (
+          <img src={ad.mediaUrl} alt={alt} className="h-full w-full rounded-2xl object-contain" loading="lazy" />
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function AdsPage() {
   const { language } = useLanguage();
@@ -14,10 +66,11 @@ export default function AdsPage() {
   const { data: ads = [], refetch } = useQuery({
     queryKey: ["storefront-ads"],
     queryFn: getAds,
-    staleTime: 15_000,
-    refetchInterval: 20_000,
+    staleTime: 0,
+    refetchInterval: 2_000,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
   useEffect(() => {
@@ -37,10 +90,19 @@ export default function AdsPage() {
     window.addEventListener("storage", handleStorage);
     adsChannel?.addEventListener("message", handleBroadcast);
 
+    const adEvents = typeof window !== "undefined" ? new EventSource("/api/ad-events", { withCredentials: true }) : null;
+    const handleServerEvent = () => {
+      void refetch();
+    };
+
+    adEvents?.addEventListener("ad-update", handleServerEvent);
+
     return () => {
       window.removeEventListener("storage", handleStorage);
       adsChannel?.removeEventListener("message", handleBroadcast);
       adsChannel?.close();
+      adEvents?.removeEventListener("ad-update", handleServerEvent);
+      adEvents?.close();
     };
   }, [refetch]);
 
@@ -50,18 +112,18 @@ export default function AdsPage() {
   );
 
   return (
-    <main className="bg-[var(--color-bg-primary)] pb-8">
+    <main className="bg-[var(--color-bg-primary)] pb-10">
       <Seo
         title="SP Traditional Pickles | Ads"
         description="Latest promotions and announcements managed from admin dashboard."
       />
 
       <section className="border-b border-[#d8e5d8] bg-[linear-gradient(180deg,#fffefa_0%,#f8faf6_100%)]">
-        <div className={`${pageWrap} py-8`}>
+        <div className={`${pageWrap} py-8 sm:py-10`}>
           <span className="inline-flex rounded-full bg-[#edf5ee] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#2f7a43]">
             {isTe ? "ప్రకటనలు" : "Ads"}
           </span>
-          <h1 className="mt-4 font-heading text-3xl font-bold text-theme-heading sm:text-4xl">
+          <h1 className="mt-4 max-w-3xl font-heading text-3xl font-bold text-theme-heading sm:text-4xl">
             {isTe ? "ప్రచారాలు మరియు ప్రకటనలు" : "Promotions and Announcements"}
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-theme-body sm:text-base">
@@ -72,7 +134,7 @@ export default function AdsPage() {
         </div>
       </section>
 
-      <section className={`${pageWrap} py-8`}>
+      <section className={`${pageWrap} py-8 sm:py-10`}>
         {activeAds.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-[#d8e5d8] bg-white px-6 py-10 text-center">
             <Megaphone className="mx-auto h-10 w-10 text-[#2f7a43]" />
@@ -84,33 +146,13 @@ export default function AdsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2 lg:gap-6">
             {activeAds.map((ad) => (
               <article
                 key={ad.id}
-                className="overflow-hidden rounded-3xl border border-[#d8e5d8] bg-white shadow-[0_12px_30px_rgba(30,79,46,0.08)]"
+                className="overflow-hidden rounded-[1.25rem] border border-[#d8e5d8] bg-white shadow-[0_12px_28px_rgba(30,79,46,0.08)] sm:rounded-[1.5rem]"
               >
-                <div className="aspect-video w-full bg-[#f2f7f2]">
-                  {ad.mediaType === "video" ? (
-                    <video
-                      src={ad.mediaUrl}
-                      className="h-full w-full object-cover"
-                      autoPlay
-                      muted
-                      playsInline
-                      loop
-                      controls
-                      preload="auto"
-                    />
-                  ) : (
-                    <img
-                      src={ad.mediaUrl}
-                      alt={translateDynamicText(ad.title, language)}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  )}
-                </div>
+                <AdMediaFrame ad={ad} alt={translateDynamicText(ad.title, language)} />
                 <div className="p-5">
                   <p className="text-lg font-bold text-theme-heading">{translateDynamicText(ad.title, language)}</p>
                   {ad.description ? (

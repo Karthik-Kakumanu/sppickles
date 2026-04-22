@@ -4,6 +4,7 @@ import { BadgePercent, Loader2, Pencil, RefreshCw, Search, Tag, Trash2 } from "l
 import { AdminLayout } from "@/components/AdminLayout";
 import Seo from "@/components/Seo";
 import { useStore } from "@/components/StoreProvider";
+import { useToast } from "@/hooks/use-toast";
 import {
   type AdminCoupon,
   type AdminCouponInput,
@@ -141,6 +142,13 @@ const statusMeta = (coupon: AdminCoupon) => {
     };
   }
 
+  if (!coupon.startsAt || !coupon.endsAt) {
+    return {
+      label: "Needs dates",
+      tone: "border-[#f0c8bf] bg-[#fff0eb] text-[#b64d39]",
+    };
+  }
+
   if (isExpiredCoupon(coupon)) {
     return {
       label: "Expired",
@@ -181,6 +189,7 @@ const AdminCouponsPage = () => {
   const createCouponMutation = useCreateCouponMutation();
   const updateCouponMutation = useUpdateCouponMutation();
   const deleteCouponMutation = useDeleteCouponMutation();
+  const { toast } = useToast();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -252,8 +261,8 @@ const AdminCouponsPage = () => {
       const startsAtTime = coupon.startsAt ? new Date(coupon.startsAt).getTime() : null;
       const endsAtTime = coupon.endsAt ? new Date(coupon.endsAt).getTime() : null;
 
-      const startsOk = startsAtTime === null || startsAtTime <= now;
-      const endsOk = endsAtTime === null || endsAtTime >= now;
+      const startsOk = startsAtTime !== null && Number.isFinite(startsAtTime) && startsAtTime <= now;
+      const endsOk = endsAtTime !== null && Number.isFinite(endsAtTime) && endsAtTime >= now;
 
       return startsOk && endsOk;
     });
@@ -268,8 +277,43 @@ const AdminCouponsPage = () => {
     event.preventDefault();
 
     const parsedMinOrderAmount = toNumberOrNull(form.minOrderAmount);
+    const parsedDiscountValue = Number(form.discountValue);
+    const startsAt = toIsoDateBoundaryOrNull(form.startsAt, "start");
+    const endsAt = toIsoDateBoundaryOrNull(form.endsAt, "end");
 
-    if (form.discountType === "fixed" && parsedMinOrderAmount === null) {
+    if (!Number.isFinite(parsedDiscountValue) || parsedDiscountValue <= 0) {
+      toast({
+        title: "Discount value required",
+        description: "Enter a discount value greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (form.discountType === "fixed" && (parsedMinOrderAmount === null || parsedMinOrderAmount <= 0)) {
+      toast({
+        title: "Minimum order required",
+        description: "Fixed amount coupons need a minimum eligible amount greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!startsAt || !endsAt) {
+      toast({
+        title: "Dates required",
+        description: "Start date and end date are mandatory for every coupon.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (new Date(startsAt).getTime() > new Date(endsAt).getTime()) {
+      toast({
+        title: "Invalid dates",
+        description: "Start date must be before end date.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -278,13 +322,13 @@ const AdminCouponsPage = () => {
       title: form.title.trim(),
       description: form.description.trim(),
       discountType: form.discountType,
-      discountValue: Number(form.discountValue),
+      discountValue: parsedDiscountValue,
       appliesTo: form.appliesTo,
       targetCategory: form.appliesTo === "category" ? (form.targetCategory || null) : null,
       targetProductId: form.appliesTo === "product" ? form.targetProductId.trim() || null : null,
       minOrderAmount: parsedMinOrderAmount,
-      startsAt: toIsoDateBoundaryOrNull(form.startsAt, "start"),
-      endsAt: toIsoDateBoundaryOrNull(form.endsAt, "end"),
+      startsAt,
+      endsAt,
       isActive: form.isActive,
     };
 
@@ -314,6 +358,16 @@ const AdminCouponsPage = () => {
   };
 
   const handleToggleActive = async (coupon: AdminCoupon) => {
+    if (!coupon.startsAt || !coupon.endsAt) {
+      toast({
+        title: "Dates required",
+        description: "Add start and end dates before changing this coupon status.",
+        variant: "destructive",
+      });
+      handleEdit(coupon);
+      return;
+    }
+
     await updateCouponMutation.mutateAsync({
       couponId: coupon.id,
       couponData: { isActive: !coupon.isActive },
@@ -571,6 +625,7 @@ const AdminCouponsPage = () => {
                       type="date"
                       value={form.startsAt}
                       onChange={(event) => setForm((current) => ({ ...current, startsAt: event.target.value }))}
+                      required
                       className={fieldClass}
                     />
                   </label>
@@ -581,6 +636,8 @@ const AdminCouponsPage = () => {
                       type="date"
                       value={form.endsAt}
                       onChange={(event) => setForm((current) => ({ ...current, endsAt: event.target.value }))}
+                      min={form.startsAt || undefined}
+                      required
                       className={fieldClass}
                     />
                   </label>

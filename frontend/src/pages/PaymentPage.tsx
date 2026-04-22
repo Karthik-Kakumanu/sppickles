@@ -180,13 +180,13 @@ const paymentUiCopy = {
 const PaymentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { cart, subtotal: cartSubtotal, clearCart } = useStore();
+  const { cart, clearCart } = useStore();
   const { language } = useLanguage();
   const t = content[language];
   const copy = paymentCopy[language];
   const ui = paymentUiCopy[language];
   const { data: coupons = [] } = useQuery({
-    queryKey: ["payment-coupons"],
+    queryKey: ["storefront-coupons"],
     queryFn: getCoupons,
     staleTime: 0,
     refetchInterval: 2_000,
@@ -269,7 +269,8 @@ const PaymentPage = () => {
     [couponSummary, previewItems],
   );
 
-  const discountAmount = Math.max(0, Number(checkoutData?.discountAmount ?? 0));
+  const checkoutDiscountAmount = Math.max(0, Number(checkoutData?.discountAmount ?? 0));
+  const discountAmount = couponCode ? (couponSummary?.discountAmount ?? 0) : checkoutDiscountAmount;
   const total = Math.max(0, Number(checkoutData?.subtotal ?? 0) + Number(checkoutData?.shipping ?? 0) - discountAmount);
 
   if (!checkoutData) {
@@ -322,16 +323,16 @@ const PaymentPage = () => {
     setErrorMessage("");
 
     if (appliedCoupon) {
-      if (appliedCoupon.minOrderAmount !== null && cartSubtotal < Number(appliedCoupon.minOrderAmount)) {
-        setErrorMessage(`Minimum order ${formatCurrency(Number(appliedCoupon.minOrderAmount))} required for this coupon.`);
-        setIsProcessing(false);
-        return;
-      }
-
       const eligibleSubtotal = getEligibleSubtotalForCoupon(appliedCoupon, cart);
 
       if (eligibleSubtotal <= 0) {
         setErrorMessage("This coupon does not apply to the current cart.");
+        setIsProcessing(false);
+        return;
+      }
+
+      if (appliedCoupon.minOrderAmount !== null && eligibleSubtotal < Number(appliedCoupon.minOrderAmount)) {
+        setErrorMessage(`Eligible items must reach ${formatCurrency(Number(appliedCoupon.minOrderAmount))} for this coupon.`);
         setIsProcessing(false);
         return;
       }
@@ -365,6 +366,7 @@ const PaymentPage = () => {
 
       if (selectedPayment === "cod") {
         const order = await createOrder(orderPayload);
+        const finalizedCheckoutData = { ...checkoutData, discountAmount };
 
         clearCart();
         sessionStorage.removeItem("checkoutData");
@@ -373,7 +375,7 @@ const PaymentPage = () => {
           state: {
             orderId: order.id,
             whatsappUrl: order.whatsappUrl,
-            checkoutData,
+            checkoutData: finalizedCheckoutData,
             paymentMethod: selectedPayment,
             items: previewItems,
           },
@@ -413,6 +415,7 @@ const PaymentPage = () => {
         razorpay_signature: paymentResponse.razorpay_signature,
         checkoutPayload: orderPayload,
       });
+      const finalizedCheckoutData = { ...checkoutData, discountAmount };
 
       clearCart();
       sessionStorage.removeItem("checkoutData");
@@ -421,7 +424,7 @@ const PaymentPage = () => {
         state: {
           orderId: order.id,
           whatsappUrl: order.whatsappUrl,
-          checkoutData,
+          checkoutData: finalizedCheckoutData,
           paymentMethod: selectedPayment,
           items: previewItems,
         },
@@ -618,16 +621,16 @@ const PaymentPage = () => {
               <span>{ui.subtotal}</span>
               <span className="price-figure">{formatCurrency(checkoutData.subtotal)}</span>
             </div>
-            <div className="flex justify-between text-sm text-theme-body">
-              <span>{ui.shipping}</span>
-              <span className="price-figure">{formatCurrency(checkoutData.shipping)}</span>
-            </div>
             {discountAmount > 0 ? (
               <div className="flex justify-between text-sm text-[#1f6a3b]">
                 <span>{ui.couponDiscount}</span>
                 <span className="price-figure">- {formatCurrency(discountAmount)}</span>
               </div>
             ) : null}
+            <div className="flex justify-between text-sm text-theme-body">
+              <span>{ui.shipping}</span>
+              <span className="price-figure">{formatCurrency(checkoutData.shipping)}</span>
+            </div>
             <p className="text-xs leading-6 text-theme-body-soft">
               {ui.couponHelp}
             </p>

@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import {
   type OrderCustomer,
   type OrderRecord,
@@ -45,9 +46,7 @@ const getDefaultApiBaseUrl = () => {
     return "http://localhost:5000/api";
   }
 
-  return LOCAL_HOSTNAMES.has(window.location.hostname)
-    ? "http://localhost:5000/api"
-    : "/api";
+  return "/api";
 };
 
 const ensureApiSuffix = (value: string) =>
@@ -111,6 +110,7 @@ const PRODUCTS_UPDATED_AT_KEY = "sp-products-updated-at";
 const COUPONS_UPDATED_AT_KEY = "sp-coupons-updated-at";
 const ADS_UPDATED_AT_KEY = "sp-ads-updated-at";
 const ADMIN_NEW_ORDER_EVENT = "sp-admin-new-order";
+export const MAX_ADMIN_ADS = 2;
 
 const notifyProductsUpdated = () => {
   if (typeof window === "undefined") {
@@ -132,22 +132,38 @@ const notifyProductsUpdated = () => {
   }
 };
 
-const notifyCouponsUpdated = () => {
+type CouponRealtimePayload = {
+  type?: string;
+  action?: "created" | "updated" | "deleted";
+  coupon?: unknown;
+  couponId?: string;
+  coupon_id?: string;
+  updatedAt?: number;
+};
+
+const notifyCouponsUpdated = (payload: CouponRealtimePayload = {}) => {
   if (typeof window === "undefined") {
     return;
   }
 
+  const updatedAt = Date.now();
+
   try {
-    window.localStorage.setItem(COUPONS_UPDATED_AT_KEY, String(Date.now()));
+    window.localStorage.setItem(COUPONS_UPDATED_AT_KEY, String(updatedAt));
   } catch {
     // Ignore storage write failures in restricted environments.
   }
 
   if (typeof BroadcastChannel !== "undefined") {
+    let couponChannel: BroadcastChannel | null = null;
+
     try {
-      new BroadcastChannel("sp-coupons").postMessage({ type: "coupons-updated", at: Date.now() });
+      couponChannel = new BroadcastChannel("sp-coupons");
+      couponChannel.postMessage({ type: "coupons-updated", at: updatedAt, ...payload });
     } catch {
       // Ignore BroadcastChannel failures.
+    } finally {
+      couponChannel?.close();
     }
   }
 };
@@ -521,6 +537,196 @@ const normalizeAd = (ad: any): AdminAd => ({
   updatedAt: ad.updatedAt ?? ad.updated_at ?? null,
 });
 
+const upsertById = <T extends { id: string }>(items: T[] | undefined, nextItem: T) => {
+  const currentItems = items ?? [];
+  const itemIndex = currentItems.findIndex((item) => item.id === nextItem.id);
+
+  if (itemIndex === -1) {
+    return [nextItem, ...currentItems];
+  }
+
+  return currentItems.map((item) => (item.id === nextItem.id ? nextItem : item));
+};
+
+const removeById = <T extends { id: string }>(items: T[] | undefined, itemId: string) =>
+  (items ?? []).filter((item) => item.id !== itemId);
+
+const isWithinDisplayWindow = (startsAt: string | null, endsAt: string | null) => {
+  const now = Date.now();
+  const startTime = new Date(startsAt).getTime();
+  const endTime = new Date(endsAt).getTime();
+  const startsOk = !startsAt || (Number.isFinite(startTime) && startTime <= now);
+  const endsOk = !endsAt || (Number.isFinite(endTime) && endTime >= now);
+
+  return startsOk && endsOk;
+};
+
+const isStorefrontCoupon = (coupon: AdminCoupon) =>
+  coupon.isActive && isWithinDisplayWindow(coupon.startsAt, coupon.endsAt);
+
+const isStorefrontAd = (ad: AdminAd) =>
+  ad.isActive && isWithinDisplayWindow(ad.startsAt, ad.endsAt);
+
+const sortCouponsForAdmin = (coupons: AdminCoupon[]) =>
+  [...coupons].sort((left, right) => {
+    if (left.isActive !== right.isActive) return left.isActive ? -1 : 1;
+    return new Date(right.updatedAt ?? right.createdAt ?? 0).getTime() - new Date(left.updatedAt ?? left.createdAt ?? 0).getTime();
+  });
+
+const sortCouponsForStorefront = (coupons: AdminCoupon[]) =>
+  [...coupons].sort(
+    (left, right) =>
+      new Date(right.updatedAt ?? right.createdAt ?? 0).getTime() -
+      new Date(left.updatedAt ?? left.createdAt ?? 0).getTime(),
+  );
+
+const updateCouponCaches = (
+  queryClient: QueryClient,
+  coupon: AdminCoupon,
+  { includeAdmin = true }: { includeAdmin?: boolean } = {},
+) => {
+  if (includeAdmin) {
+    queryClient.setQueryData<AdminCoupon[]>(["admin-coupons"], (old) =>
+      sortCouponsForAdmin(upsertById(old, coupon)),
+    );
+  }
+
+  queryClient.setQueryData<AdminCoupon[]>(["storefront-coupons"], (old) => {
+    if (!isStorefrontCoupon(coupon)) {
+      return removeById(old, coupon.id);
+    }
+
+    return sortCouponsForStorefront(upsertById(old, coupon));
+  });
+};
+
+const removeCouponFromCaches = (
+  queryClient: QueryClient,
+  couponId: string,
+  { includeAdmin = true }: { includeAdmin?: boolean } = {},
+) => {
+  if (includeAdmin) {
+    queryClient.setQueryData<AdminCoupon[]>(["admin-coupons"], (old) => removeById(old, couponId));
+  }
+
+  queryClient.setQueryData<AdminCoupon[]>(["storefront-coupons"], (old) => removeById(old, couponId));
+};
+
+const invalidateCouponQueries = (
+  queryClient: QueryClient,
+  { includeAdmin = true }: { includeAdmin?: boolean } = {},
+) => {
+  if (includeAdmin) {
+    void queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+  }
+
+  void queryClient.invalidateQueries({ queryKey: ["storefront-coupons"] });
+};
+
+const parseCouponRealtimePayload = (rawPayload: unknown): CouponRealtimePayload | null => {
+  if (!rawPayload) {
+    return null;
+  }
+
+  if (typeof rawPayload === "string") {
+    try {
+      return JSON.parse(rawPayload) as CouponRealtimePayload;
+    } catch {
+      return null;
+    }
+  }
+
+  if (typeof rawPayload === "object") {
+    return rawPayload as CouponRealtimePayload;
+  }
+
+  return null;
+};
+
+const applyCouponRealtimePayload = (queryClient: QueryClient, rawPayload: unknown) => {
+  const payload = parseCouponRealtimePayload(rawPayload);
+
+  if (!payload || payload.type === "connected") {
+    return true;
+  }
+
+  const coupon = payload.coupon ? normalizeCoupon(payload.coupon) : null;
+  const couponId = String(payload.couponId ?? payload.coupon_id ?? coupon?.id ?? "").trim();
+
+  if (payload.action === "deleted") {
+    if (couponId) {
+      removeCouponFromCaches(queryClient, couponId, { includeAdmin: false });
+      return true;
+    }
+
+    return false;
+  }
+
+  if (coupon?.id) {
+    updateCouponCaches(queryClient, coupon, { includeAdmin: false });
+    return true;
+  }
+
+  return false;
+};
+
+export const getCouponEventsUrl = () => buildRequestUrl(API_BASE_URL, "/coupon-events");
+
+export const useCouponRealtimeUpdates = () => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const refreshCoupons = () => invalidateCouponQueries(queryClient, { includeAdmin: false });
+    const applyOrRefresh = (payload: unknown) => {
+      if (!applyCouponRealtimePayload(queryClient, payload)) {
+        refreshCoupons();
+      }
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === COUPONS_UPDATED_AT_KEY) {
+        refreshCoupons();
+      }
+    };
+
+    const couponChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("sp-coupons") : null;
+    const handleBroadcast = (event: MessageEvent) => {
+      if (event.data?.type === "coupons-updated") {
+        applyOrRefresh(event.data);
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    couponChannel?.addEventListener("message", handleBroadcast);
+
+    let couponEvents: EventSource | null = null;
+    const handleServerEvent = (event: Event) => {
+      applyOrRefresh((event as MessageEvent).data);
+    };
+
+    try {
+      couponEvents = new EventSource(getCouponEventsUrl(), { withCredentials: true });
+      couponEvents.addEventListener("coupon-update", handleServerEvent);
+    } catch {
+      couponEvents = null;
+    }
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      couponChannel?.removeEventListener("message", handleBroadcast);
+      couponChannel?.close();
+      couponEvents?.removeEventListener("coupon-update", handleServerEvent);
+      couponEvents?.close();
+    };
+  }, [queryClient]);
+};
+
+const sortAdsForStorefront = (ads: AdminAd[]) =>
+  [...ads].sort((left, right) => {
+    if (left.displayOrder !== right.displayOrder) return left.displayOrder - right.displayOrder;
+    return new Date(right.updatedAt ?? right.createdAt ?? 0).getTime() - new Date(left.updatedAt ?? left.createdAt ?? 0).getTime();
+  });
+
 export const getProducts = async (
   category: ProductCategory | null = null,
   includeDeleted = false,
@@ -608,6 +814,14 @@ export const deleteProduct = async (productId: string) =>
     method: "DELETE",
   });
 
+export const permanentlyDeleteProduct = async (productId: string) =>
+  apiFetch<{ id: string; name: string; deleted: boolean; permanent: boolean }>(
+    `/products/${String(productId).trim()}/permanent`,
+    {
+      method: "DELETE",
+    },
+  );
+
 export const restoreProduct = async (productId: string) =>
   apiFetch<ProductRecord>(`/products/${String(productId).trim()}/restore`, {
     method: "POST",
@@ -638,7 +852,7 @@ export const createAdminCoupon = async (couponData: AdminCouponInput) => {
   });
 
   const coupon = normalizeCoupon(response);
-  notifyCouponsUpdated();
+  notifyCouponsUpdated({ action: "created", couponId: coupon.id, coupon, updatedAt: Date.now() });
   return coupon;
 };
 
@@ -649,7 +863,7 @@ export const updateAdminCoupon = async (couponId: string, couponData: Partial<Ad
   });
 
   const coupon = normalizeCoupon(response);
-  notifyCouponsUpdated();
+  notifyCouponsUpdated({ action: "updated", couponId: coupon.id, coupon, updatedAt: Date.now() });
   return coupon;
 };
 
@@ -658,7 +872,7 @@ export const deleteAdminCoupon = async (couponId: string) => {
     method: "DELETE",
   });
 
-  notifyCouponsUpdated();
+  notifyCouponsUpdated({ action: "deleted", couponId: response.id, updatedAt: Date.now() });
   return response;
 };
 
@@ -1245,6 +1459,35 @@ export const useDeleteProductMutation = () => {
   });
 };
 
+export const usePermanentDeleteProductMutation = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (productId: string) => permanentlyDeleteProduct(productId),
+    onSuccess: (product) => {
+      queryClient.setQueryData<ProductRecord[]>(["products", null, true], (old) =>
+        removeById(old, product.id),
+      );
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      notifyProductsUpdated();
+      toast({
+        title: "Product permanently deleted",
+        description: `${product.name || product.id} was removed completely.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Permanent delete failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
 export const useRestoreProductMutation = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -1312,10 +1555,11 @@ export const useAdminCouponsQuery = () =>
   useQuery({
     queryKey: ["admin-coupons"],
     queryFn: getAdminCoupons,
-    staleTime: 1000 * 10,
-    refetchInterval: 1000 * 20,
+    staleTime: 0,
+    refetchInterval: 1000 * 5,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
 export const useCreateCouponMutation = () => {
@@ -1325,8 +1569,8 @@ export const useCreateCouponMutation = () => {
   return useMutation({
     mutationFn: (couponData: AdminCouponInput) => createAdminCoupon(couponData),
     onSuccess: (coupon) => {
-      queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
-      queryClient.invalidateQueries({ queryKey: ["storefront-coupons"] });
+      updateCouponCaches(queryClient, coupon);
+      invalidateCouponQueries(queryClient);
       toast({
         title: "Coupon created",
         description: `${coupon.code} is now available in the coupon list.`,
@@ -1355,8 +1599,8 @@ export const useUpdateCouponMutation = () => {
       couponData: Partial<AdminCouponInput>;
     }) => updateAdminCoupon(couponId, couponData),
     onSuccess: (coupon) => {
-      queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
-      queryClient.invalidateQueries({ queryKey: ["storefront-coupons"] });
+      updateCouponCaches(queryClient, coupon);
+      invalidateCouponQueries(queryClient);
       toast({
         title: "Coupon updated",
         description: `${coupon.code} has been updated.`,
@@ -1379,8 +1623,8 @@ export const useDeleteCouponMutation = () => {
   return useMutation({
     mutationFn: (couponId: string) => deleteAdminCoupon(couponId),
     onSuccess: (coupon) => {
-      queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
-      queryClient.invalidateQueries({ queryKey: ["storefront-coupons"] });
+      removeCouponFromCaches(queryClient, coupon.id);
+      invalidateCouponQueries(queryClient);
       toast({
         title: "Coupon deleted",
         description: `${coupon.code} was removed.`,
@@ -1396,24 +1640,27 @@ export const useDeleteCouponMutation = () => {
   });
 };
 
-export const useAdminAdsQuery = () =>
+export const useAdminAdsQuery = (enabled = true) =>
   useQuery({
     queryKey: ["admin-ads"],
     queryFn: getAdminAds,
-    staleTime: 1000 * 10,
-    refetchInterval: 1000 * 20,
+    enabled,
+    staleTime: 0,
+    refetchInterval: 1000 * 5,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
 export const useAdsQuery = () =>
   useQuery({
     queryKey: ["storefront-ads"],
     queryFn: getAds,
-    staleTime: 1000 * 30,
-    refetchInterval: 1000 * 60,
+    staleTime: 0,
+    refetchInterval: 1000 * 2,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
 export const useCreateAdMutation = () => {
@@ -1423,6 +1670,10 @@ export const useCreateAdMutation = () => {
   return useMutation({
     mutationFn: (adData: AdminAdInput) => createAdminAd(adData),
     onSuccess: (ad) => {
+      queryClient.setQueryData<AdminAd[]>(["admin-ads"], (old) => upsertById(old, ad));
+      queryClient.setQueryData<AdminAd[]>(["storefront-ads"], (old) =>
+        isStorefrontAd(ad) ? sortAdsForStorefront(upsertById(old, ad)) : removeById(old, ad.id),
+      );
       queryClient.invalidateQueries({ queryKey: ["admin-ads"] });
       queryClient.invalidateQueries({ queryKey: ["storefront-ads"] });
       toast({
@@ -1453,6 +1704,10 @@ export const useUpdateAdMutation = () => {
       adData: Partial<AdminAdInput>;
     }) => updateAdminAd(adId, adData),
     onSuccess: (ad) => {
+      queryClient.setQueryData<AdminAd[]>(["admin-ads"], (old) => upsertById(old, ad));
+      queryClient.setQueryData<AdminAd[]>(["storefront-ads"], (old) =>
+        isStorefrontAd(ad) ? sortAdsForStorefront(upsertById(old, ad)) : removeById(old, ad.id),
+      );
       queryClient.invalidateQueries({ queryKey: ["admin-ads"] });
       queryClient.invalidateQueries({ queryKey: ["storefront-ads"] });
       toast({
@@ -1477,6 +1732,8 @@ export const useDeleteAdMutation = () => {
   return useMutation({
     mutationFn: (adId: string) => deleteAdminAd(adId),
     onSuccess: (ad) => {
+      queryClient.setQueryData<AdminAd[]>(["admin-ads"], (old) => removeById(old, ad.id));
+      queryClient.setQueryData<AdminAd[]>(["storefront-ads"], (old) => removeById(old, ad.id));
       queryClient.invalidateQueries({ queryKey: ["admin-ads"] });
       queryClient.invalidateQueries({ queryKey: ["storefront-ads"] });
       toast({

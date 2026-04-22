@@ -322,60 +322,48 @@ const HomePage = () => {
       {/* ══════════════════════════════════════
           ADS CAROUSEL
       ══════════════════════════════════════ */}
-      <section className={`${pageWrap} py-8 md:py-10`}>
-        <AdsCarousel />
+      <section className={`${pageWrap} py-6 md:py-8`}>
+        <div className="mx-auto max-w-4xl">
+          <AdsCarousel />
+        </div>
       </section>
 
       {/* ══════════════════════════════════════
           QUICK LINKS: COUPONS + ADS
       ══════════════════════════════════════ */}
-      <section className={`${pageWrap} py-8 md:py-10`}>
-        <div className="mx-auto max-w-2xl space-y-4 text-center">
-          <Eyebrow variant="gold">{isTe ? "త్వరిత లింకులు" : "Quick Links"}</Eyebrow>
-          <SectionHeading isTelugu={isTe} className="!text-3xl md:!text-4xl">
-            {isTe ? "కూపన్లు మరియు ఆడ్స్ వెంటనే చూడండి" : "Jump To Coupons And Ads"}
-          </SectionHeading>
-          <p className={`text-sm text-theme-body sm:text-base ${isTe ? "font-telugu" : ""}`}>
-            {isTe
-              ? "కొత్త ఆఫర్లు, యాడ్స్ చూడాలంటే ఈ షార్ట్‌కట్స్‌ను ఉపయోగించండి."
-              : "Use these shortcuts to quickly view latest coupons and ads."}
-          </p>
-        </div>
-
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4">
-          <Link
-            to="/coupons"
-            className="group rounded-2xl border border-[#d8e5d8] bg-white p-4 sm:rounded-3xl sm:p-6 shadow-[0_10px_26px_rgba(30,79,46,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-[#bcd4c0] hover:shadow-[0_16px_36px_rgba(30,79,46,0.14)]"
-          >
-            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf5ee] text-[#2f7a43] transition-colors duration-300 group-hover:bg-[#2f7a43] group-hover:text-white sm:h-11 sm:w-11 sm:rounded-2xl">
-              <TicketPercent className="h-4 w-4 sm:h-5 sm:w-5" />
+      <section className={`${pageWrap} pb-8 pt-2 md:pb-10 md:pt-4`}>
+        <div className="mx-auto max-w-4xl rounded-[1.25rem] border border-[#d8e5d8] bg-white/90 p-4 shadow-[0_10px_26px_rgba(30,79,46,0.06)] sm:p-5">
+          <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <Eyebrow variant="gold">{isTe ? "త్వరిత లింకులు" : "Quick Links"}</Eyebrow>
+              <SectionHeading isTelugu={isTe} className="mt-3 !text-2xl sm:!text-3xl md:!text-[2.1rem]">
+                {isTe ? "తాజా ఆఫర్లు" : "Latest Offers"}
+              </SectionHeading>
+              <p className={`mt-2 max-w-xl text-sm leading-6 text-theme-body ${isTe ? "font-telugu" : ""}`}>
+                {isTe
+                  ? "కూపన్లు మరియు యాక్టివ్ యాడ్స్‌ను ఒకే చోట త్వరగా చూడండి."
+                  : "Fresh coupons and active promotions are one tap away."}
+              </p>
             </div>
-            <h3 className={`mt-3 font-heading text-xl font-bold text-theme-heading sm:mt-4 sm:text-2xl ${isTe ? "font-telugu" : ""}`}>
-              {isTe ? "కూపన్లు" : "Coupons"}
-            </h3>
-            <p className={`mt-1.5 text-xs leading-5 text-theme-body sm:mt-2 sm:text-sm ${isTe ? "font-telugu" : ""}`}>
-              {isTe
-                ? "అడ్మిన్ జోడించిన అన్ని యాక్టివ్ కూపన్లు ఇక్కడ కనిపిస్తాయి."
-                : "See all active coupons added from admin dashboard."}
-            </p>
-          </Link>
 
-          <Link
-            to="/ads"
-            className="group rounded-2xl border border-[#d8e5d8] bg-white p-4 sm:rounded-3xl sm:p-6 shadow-[0_10px_26px_rgba(30,79,46,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-[#bcd4c0] hover:shadow-[0_16px_36px_rgba(30,79,46,0.14)]"
-          >
-            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf5ee] text-[#2f7a43] transition-colors duration-300 group-hover:bg-[#2f7a43] group-hover:text-white sm:h-11 sm:w-11 sm:rounded-2xl">
-              <Megaphone className="h-4 w-4 sm:h-5 sm:w-5" />
+            <div className="grid grid-cols-2 gap-2 md:min-w-[18rem]">
+              <Link
+                to="/coupons"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl border border-[#d8e5d8] bg-[#f8faf6] px-3 text-sm font-bold text-theme-heading transition hover:border-[#bcd4c0] hover:bg-white"
+              >
+                <TicketPercent className="h-4 w-4 text-[#2f7a43]" />
+                {isTe ? "కూపన్లు" : "Coupons"}
+              </Link>
+
+              <Link
+                to="/ads"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl border border-[#d8e5d8] bg-[#f8faf6] px-3 text-sm font-bold text-theme-heading transition hover:border-[#bcd4c0] hover:bg-white"
+              >
+                <Megaphone className="h-4 w-4 text-[#2f7a43]" />
+                {isTe ? "ఆడ్స్" : "Ads"}
+              </Link>
             </div>
-            <h3 className={`mt-3 font-heading text-xl font-bold text-theme-heading sm:mt-4 sm:text-2xl ${isTe ? "font-telugu" : ""}`}>
-              {isTe ? "ఆడ్స్" : "Ads"}
-            </h3>
-            <p className={`mt-1.5 text-xs leading-5 text-theme-body sm:mt-2 sm:text-sm ${isTe ? "font-telugu" : ""}`}>
-              {isTe
-                ? "అడ్మిన్ యాక్టివ్ చేసిన ప్రోమోషనల్ యాడ్స్‌ను ఇక్కడ చూడండి."
-                : "View active promotional ads managed by admin."}
-            </p>
-          </Link>
+          </div>
         </div>
       </section>
 

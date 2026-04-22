@@ -17,6 +17,7 @@ type CheckoutData = {
   pincode: string;
   shipping: number;
   subtotal: number;
+  discountAmount?: number;
 };
 
 type OrderSuccessItem = {
@@ -145,7 +146,8 @@ const OrderSuccessPage = () => {
     return null;
   }
 
-  const total = orderData.checkoutData.subtotal + orderData.checkoutData.shipping;
+  const discountAmount = Math.max(0, Number(orderData.checkoutData.discountAmount ?? 0));
+  const total = Math.max(0, orderData.checkoutData.subtotal + orderData.checkoutData.shipping - discountAmount);
   const nextSteps = t.nextSteps[orderData.paymentMethod];
 
   const handleCopyOrderId = async () => {
@@ -363,6 +365,12 @@ const OrderSuccessPage = () => {
               <span>{language === "te" ? "ఉప మొత్తం" : "Subtotal"}</span>
               <span className="price-figure">{formatCurrency(orderData.checkoutData.subtotal)}</span>
             </div>
+            {discountAmount > 0 ? (
+              <div className="flex justify-between text-sm text-[#1f6a3b]">
+                <span>{language === "te" ? "కూపన్ తగ్గింపు" : "Coupon discount"}</span>
+                <span className="price-figure">- {formatCurrency(discountAmount)}</span>
+              </div>
+            ) : null}
             <div className="flex justify-between text-sm text-theme-body">
               <span>{language === "te" ? "షిప్పింగ్" : "Shipping"}</span>
               <span className="price-figure">{formatCurrency(orderData.checkoutData.shipping)}</span>

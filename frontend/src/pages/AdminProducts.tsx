@@ -20,6 +20,7 @@ import { resolvePickleImage } from "@/lib/pickleImages";
 import {
   useCreateProductMutation,
   useDeleteProductMutation,
+  usePermanentDeleteProductMutation,
   useProductsQuery,
   useRestoreProductMutation,
   useUpdateProductMutation,
@@ -115,6 +116,7 @@ export function AdminProducts() {
   const updateMutation = useUpdateProductMutation();
   const deleteMutation = useDeleteProductMutation();
   const restoreMutation = useRestoreProductMutation();
+  const permanentDeleteMutation = usePermanentDeleteProductMutation();
 
   const [activeTab, setActiveTab] = useState<"catalog" | "stock">("catalog");
   const [showForm, setShowForm] = useState(false);
@@ -130,7 +132,8 @@ export function AdminProducts() {
     createMutation.isPending ||
     updateMutation.isPending ||
     deleteMutation.isPending ||
-    restoreMutation.isPending;
+    restoreMutation.isPending ||
+    permanentDeleteMutation.isPending;
 
   const categoryFilteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -213,6 +216,18 @@ export function AdminProducts() {
 
   const handleRestoreArchived = async (product: ProductRecord) => {
     await restoreMutation.mutateAsync(product.id);
+  };
+
+  const handlePermanentDeleteArchived = async (product: ProductRecord) => {
+    const confirmed = window.confirm(
+      `Permanently delete ${product.name}? This removes it completely and it cannot be restored.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    await permanentDeleteMutation.mutateAsync(product.id);
   };
 
   const handleRemoveImage = () => {
@@ -896,7 +911,7 @@ export function AdminProducts() {
                     Deleted products
                   </p>
                   <h3 className="mt-1 text-xl font-semibold text-theme-heading">
-                    Restore deleted items.
+                    Restore or permanently delete items.
                   </h3>
                 </div>
                 <p className="text-sm font-semibold text-theme-body">
@@ -936,16 +951,28 @@ export function AdminProducts() {
                           <p className="mt-1 text-sm text-theme-body">{product.description}</p>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => void handleRestoreArchived(product)}
-                          disabled={restoreMutation.isPending}
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold !text-white transition hover:bg-[#165b38] disabled:cursor-not-allowed disabled:opacity-60"
-                          style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
-                        >
-                          {restoreMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 rotate-180" />}
-                          Restore product
-                        </button>
+                        <div className="grid gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void handleRestoreArchived(product)}
+                            disabled={restoreMutation.isPending || permanentDeleteMutation.isPending}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold !text-white transition hover:bg-[#165b38] disabled:cursor-not-allowed disabled:opacity-60"
+                            style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
+                          >
+                            {restoreMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 rotate-180" />}
+                            Restore product
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => void handlePermanentDeleteArchived(product)}
+                            disabled={restoreMutation.isPending || permanentDeleteMutation.isPending}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#f0c8bf] bg-white px-4 py-2.5 text-sm font-semibold text-[#b64d39] transition hover:bg-[#fff2ed] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {permanentDeleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            Delete permanently
+                          </button>
+                        </div>
                       </div>
                     </article>
                   ))}
