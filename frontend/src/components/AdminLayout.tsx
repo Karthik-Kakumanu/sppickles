@@ -136,6 +136,7 @@ export function AdminLayout({ title, children }: AdminLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logoutAdmin, isAdminAuthenticated } = useStore();
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const deviceMenuRef = useRef<HTMLDivElement | null>(null);
   const orderIdsRef = useRef<Set<string>>(new Set());
   const hasSeededOrdersRef = useRef(false);
@@ -255,6 +256,14 @@ export function AdminLayout({ title, children }: AdminLayoutProps) {
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setIsDeviceMenuOpen(false);
+
+    const contentNode = contentRef.current;
+    if (contentNode) {
+      contentNode.scrollTop = 0;
+      contentNode.scrollLeft = 0;
+      contentNode.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
   }, [location.pathname]);
 
   useEffect(() => {
@@ -517,7 +526,7 @@ export function AdminLayout({ title, children }: AdminLayoutProps) {
           </div>
         </header>
 
-        <div className="flex-1 overflow-x-hidden overflow-y-auto">
+        <div ref={contentRef} className="flex-1 overflow-x-hidden overflow-y-auto">
           <div className="mx-auto w-full max-w-[1600px] p-3 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8 xl:p-10">
             {children}
           </div>
