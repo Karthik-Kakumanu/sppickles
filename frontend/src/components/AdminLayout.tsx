@@ -366,13 +366,13 @@ export function AdminLayout({ title, children }: AdminLayoutProps) {
     <div className="flex min-h-screen bg-[linear-gradient(180deg,#f7f2e8_0%,#efe7d7_100%)] text-[#173324]">
       <main className="flex flex-1 flex-col">
         <header className="sticky top-0 z-40 border-b border-[#d9d2c2] bg-[#faf6ed]/92 backdrop-blur-xl">
-          <div className="flex items-center justify-between gap-4 px-6 py-5 lg:px-8 xl:px-10">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-3 px-4 py-4 sm:px-6 sm:py-5 lg:flex-row lg:items-center lg:justify-between lg:px-8 xl:px-10">
+            <div className="flex items-start gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#756f61]">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#756f61]">
                   Admin Workspace
                 </p>
-                <h2 className="mt-1 text-2xl font-bold text-theme-heading">{title}</h2>
+                <h2 className="mt-1 text-xl font-bold text-theme-heading sm:text-2xl">{title}</h2>
               </div>
             </div>
 
@@ -398,7 +398,7 @@ export function AdminLayout({ title, children }: AdminLayoutProps) {
               })}
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex w-full items-center justify-between gap-3 lg:w-auto lg:justify-end">
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -517,8 +517,8 @@ export function AdminLayout({ title, children }: AdminLayoutProps) {
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto">
-          <div className="mx-auto w-full max-w-[1600px] p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8 xl:p-10">
+        <div className="flex-1 overflow-x-hidden overflow-y-auto">
+          <div className="mx-auto w-full max-w-[1600px] p-3 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8 xl:p-10">
             {children}
           </div>
         </div>

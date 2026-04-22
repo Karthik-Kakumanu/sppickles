@@ -125,7 +125,7 @@ const AdminDashboardPage = () => {
       <AdminLayout title="Dashboard">
         <div className="space-y-4">
           <section className="overflow-hidden rounded-[1.7rem] border border-white/70 bg-[linear-gradient(135deg,rgba(255,249,233,0.98)_0%,rgba(244,251,246,0.98)_50%,rgba(232,243,236,0.98)_100%)] p-4 shadow-[0_14px_42px_rgba(17,51,32,0.1)] sm:p-5">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl space-y-2">
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#d8c58a] bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-[#8a651a]">
                   <BarChart3 className="h-3.5 w-3.5" />
@@ -139,17 +139,17 @@ const AdminDashboardPage = () => {
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
                   to="/admin/orders"
-                  className="inline-flex items-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-4 py-2.5 text-sm font-semibold text-theme-heading transition hover:border-[#b9d7be] hover:bg-[#f7fbf8]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-4 py-3 text-sm font-semibold text-theme-heading transition hover:border-[#b9d7be] hover:bg-[#f7fbf8] sm:w-auto sm:py-2.5"
                 >
                   Open orders
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   to="/admin/products"
-                  className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(180deg,#1f7a4d_0%,#165b38_100%)] px-4 py-2.5 text-sm font-semibold !text-white shadow-[0_14px_30px_rgba(31,122,77,0.24)]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(180deg,#1f7a4d_0%,#165b38_100%)] px-4 py-3 text-sm font-semibold !text-white shadow-[0_14px_30px_rgba(31,122,77,0.24)] sm:w-auto sm:py-2.5"
                   style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
                 >
                   Manage products
@@ -185,19 +185,21 @@ const AdminDashboardPage = () => {
 
           <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
             <article className="overflow-hidden rounded-[1.7rem] border border-white/70 bg-[linear-gradient(135deg,rgba(47,122,67,0.04)_0%,rgba(31,122,77,0.02)_100%)] p-4 shadow-[0_14px_42px_rgba(31,122,77,0.12)] backdrop-blur-xl sm:p-6">
-              <div className="mb-6 flex items-start justify-between gap-4 sm:items-center">
+              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-theme-body-soft">
                     💰 Revenue analysis
                   </p>
                   <h2 className="mt-2 text-2xl font-bold text-theme-heading sm:text-3xl">Last 7 day revenue</h2>
-                  <p className="mt-1 text-xs text-theme-body">Detailed performance metrics and trends</p>
+                  <p className="mt-1 text-xs text-theme-body">
+                    Detailed performance metrics and trends. Revenue counts delivered orders only; cancelled orders stay in the status summary.
+                  </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => void refetch()}
                   disabled={isLoading || isRefetching}
-                  className="inline-flex items-center gap-2 rounded-full border border-[#2f7a43]/30 bg-[#2f7a43]/8 px-4 py-2 text-sm font-semibold text-[#1f7a4d] transition hover:border-[#2f7a43]/60 hover:bg-[#2f7a43]/12 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#2f7a43]/30 bg-[#2f7a43]/8 px-4 py-3 text-sm font-semibold text-[#1f7a4d] transition hover:border-[#2f7a43]/60 hover:bg-[#2f7a43]/12 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:py-2"
                 >
                   <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
                   Refresh
@@ -233,38 +235,42 @@ const AdminDashboardPage = () => {
                   </div>
 
                   <div className="rounded-[1.3rem] border border-[#e5eee5] bg-white/95 p-4 sm:p-6">
-                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
-                      {revenueByDay.map((day, index) => {
-                        const maxRevenue = Math.max(...revenueByDay.map((d) => d.revenue), 1);
-                        const normalizedHeight = ((day.revenue / maxRevenue) * 100) * 2.5;
-                        const isHighPerformer = day.revenue > Math.max(...revenueByDay.map((d) => d.revenue)) * 0.7;
-                        const isLowPerformer = day.revenue < Math.max(...revenueByDay.map((d) => d.revenue)) * 0.3;
+                    <div className="overflow-x-auto pb-2">
+                      <div className="min-w-[42rem]">
+                        <div className="grid grid-cols-7 gap-2 sm:gap-3">
+                          {revenueByDay.map((day, index) => {
+                            const maxRevenue = Math.max(...revenueByDay.map((d) => d.revenue), 1);
+                            const normalizedHeight = ((day.revenue / maxRevenue) * 100) * 2.5;
+                            const isHighPerformer = day.revenue > Math.max(...revenueByDay.map((d) => d.revenue)) * 0.7;
+                            const isLowPerformer = day.revenue < Math.max(...revenueByDay.map((d) => d.revenue)) * 0.3;
 
-                        return (
-                          <div key={`${day.label}-${index}`} className="flex flex-col items-center gap-2">
-                            <div className="w-full space-y-1">
-                              <div className="relative h-32 w-full rounded-t-[0.8rem] bg-[#f5f5f0] overflow-hidden">
-                                <div
-                                  className={`absolute bottom-0 w-full rounded-t-[0.6rem] transition-all duration-300 ${
-                                    isHighPerformer
-                                      ? "bg-[linear-gradient(180deg,#1f9d5d_0%,#2f7a43_100%)]"
-                                      : isLowPerformer
-                                        ? "bg-[linear-gradient(180deg,#e8a76f_0%,#c87d54_100%)]"
-                                        : "bg-[linear-gradient(180deg,#2f7a43_0%,#1f7a4d_100%)]"
-                                  }`}
-                                  style={{ height: `${normalizedHeight}%` }}
-                                  title={`${day.label}: ${formatCurrency(day.revenue)} (${day.orders} orders)`}
-                                />
+                            return (
+                              <div key={`${day.label}-${index}`} className="flex flex-col items-center gap-2">
+                                <div className="w-full space-y-1">
+                                  <div className="relative h-32 w-full overflow-hidden rounded-t-[0.8rem] bg-[#f5f5f0]">
+                                    <div
+                                      className={`absolute bottom-0 w-full rounded-t-[0.6rem] transition-all duration-300 ${
+                                        isHighPerformer
+                                          ? "bg-[linear-gradient(180deg,#1f9d5d_0%,#2f7a43_100%)]"
+                                          : isLowPerformer
+                                            ? "bg-[linear-gradient(180deg,#e8a76f_0%,#c87d54_100%)]"
+                                            : "bg-[linear-gradient(180deg,#2f7a43_0%,#1f7a4d_100%)]"
+                                      }`}
+                                      style={{ height: `${normalizedHeight}%` }}
+                                      title={`${day.label}: ${formatCurrency(day.revenue)} (${day.orders} orders)`}
+                                    />
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-theme-body-soft">{day.label}</p>
+                                    <p className="mt-0.5 text-xs font-bold text-theme-heading">{formatCurrency(day.revenue)}</p>
+                                    <p className="text-[10px] text-theme-body-soft">{day.orders} orders</p>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-center">
-                                <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-theme-body-soft">{day.label}</p>
-                                <p className="mt-0.5 text-xs font-bold text-theme-heading">{formatCurrency(day.revenue)}</p>
-                                <p className="text-[10px] text-theme-body-soft">{day.orders} orders</p>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   </div>
 

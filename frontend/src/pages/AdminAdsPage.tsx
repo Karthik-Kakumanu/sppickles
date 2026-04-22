@@ -373,7 +373,7 @@ const AdminAdsPage = () => {
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="rounded-full border border-[#d8e5d8] bg-white px-3 py-1.5 text-xs font-semibold text-theme-body transition hover:border-[#c8d8ca] hover:bg-[#f7fbf8] hover:text-theme-heading"
+                    className="rounded-full border border-[#d8e5d8] bg-white px-3 py-3 text-xs font-semibold text-theme-body transition hover:border-[#c8d8ca] hover:bg-[#f7fbf8] hover:text-theme-heading sm:py-1.5"
                   >
                     New ad
                   </button>
@@ -518,11 +518,11 @@ const AdminAdsPage = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 pt-1">
+                <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center">
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(180deg,#1f7a4d_0%,#165b38_100%)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(31,122,77,0.24)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(180deg,#1f7a4d_0%,#165b38_100%)] px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(31,122,77,0.24)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:py-2.5"
                   >
                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                     {editingId ? "Update ad" : "Create ad"}
@@ -530,7 +530,7 @@ const AdminAdsPage = () => {
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="rounded-full border border-[#d8e5d8] bg-white px-4 py-2.5 text-sm font-semibold text-theme-body transition hover:border-[#c8d8ca] hover:bg-[#f7fbf8] hover:text-theme-heading"
+                    className="rounded-full border border-[#d8e5d8] bg-white px-4 py-3 text-sm font-semibold text-theme-body transition hover:border-[#c8d8ca] hover:bg-[#f7fbf8] hover:text-theme-heading sm:py-2.5"
                   >
                     Reset
                   </button>
@@ -545,7 +545,7 @@ const AdminAdsPage = () => {
                   <button
                     type="button"
                     onClick={() => refetch()}
-                    className="inline-flex items-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-3 py-1.5 text-xs font-semibold text-theme-body transition hover:border-[#c8d8ca] hover:bg-[#f7fbf8] hover:text-theme-heading"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-3 py-3 text-xs font-semibold text-theme-body transition hover:border-[#c8d8ca] hover:bg-[#f7fbf8] hover:text-theme-heading sm:py-1.5"
                   >
                     <RefreshCw className={`h-3.5 w-3.5 ${isRefetching ? "animate-spin" : ""}`} />
                     Refresh
@@ -611,7 +611,7 @@ const AdminAdsPage = () => {
                           <button
                             type="button"
                             onClick={() => handleEdit(ad)}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#d8e5d8] bg-white px-3 py-1.5 text-xs font-semibold text-theme-body transition hover:border-[#c8d8ca] hover:bg-[#f7fbf8] hover:text-theme-heading"
+                            className="inline-flex items-center gap-1 rounded-full border border-[#d8e5d8] bg-white px-3 py-3 text-xs font-semibold text-theme-body transition hover:border-[#c8d8ca] hover:bg-[#f7fbf8] hover:text-theme-heading sm:py-1.5"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                             Edit
@@ -619,14 +619,14 @@ const AdminAdsPage = () => {
                           <button
                             type="button"
                             onClick={() => handleToggleActive(ad)}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#d8e5d8] bg-white px-3 py-1.5 text-xs font-semibold text-theme-body transition hover:border-[#c8d8ca] hover:bg-[#f7fbf8] hover:text-theme-heading"
+                            className="inline-flex items-center gap-1 rounded-full border border-[#d8e5d8] bg-white px-3 py-3 text-xs font-semibold text-theme-body transition hover:border-[#c8d8ca] hover:bg-[#f7fbf8] hover:text-theme-heading sm:py-1.5"
                           >
                             {ad.isActive ? "Deactivate" : "Activate"}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(ad)}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#f0c8bf] px-3 py-1.5 text-xs font-semibold text-[#b64d39] transition hover:bg-[#fff2ed]"
+                            className="inline-flex items-center gap-1 rounded-full border border-[#f0c8bf] px-3 py-3 text-xs font-semibold text-[#b64d39] transition hover:bg-[#fff2ed] sm:py-1.5"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                             Delete

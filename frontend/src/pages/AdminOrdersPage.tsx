@@ -1175,7 +1175,7 @@ const AdminOrdersPage = () => {
                             value={order.status}
                             onChange={(event) => handleStatusChange(order.id, event.target.value as OrderStatus)}
                             disabled={updatingId === order.id}
-                            className={`w-full rounded-full border px-3 py-2 text-sm font-semibold outline-none ${STATUS_META[order.status].select}`}
+                            className={`w-full rounded-full border px-3 py-3 text-sm font-semibold outline-none sm:py-2 ${STATUS_META[order.status].select}`}
                           >
                             {ORDER_STATUSES.map((status) => (
                               <option key={status} value={status}>
@@ -1185,11 +1185,11 @@ const AdminOrdersPage = () => {
                           </select>
                         </div>
 
-                        <div className="mt-3 flex gap-2">
+                        <div className="mt-3 flex flex-wrap gap-2">
                           <button
                             type="button"
                             onClick={() => setExpandedId((current) => (current === order.id ? null : order.id))}
-                            className="flex-1 rounded-full border border-[#d8e5d8] bg-white px-3 py-2 text-xs font-semibold text-theme-body transition hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading"
+                            className="w-full rounded-full border border-[#d8e5d8] bg-white px-3 py-3 text-sm font-semibold text-theme-body transition hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading sm:w-auto sm:flex-1 sm:py-2 sm:text-xs"
                           >
                             {expandedId === order.id ? "Hide items" : "View items"}
                           </button>
@@ -1197,7 +1197,7 @@ const AdminOrdersPage = () => {
                             type="button"
                             onClick={() => handleDeleteOrder(order.id)}
                             disabled={deletingId === order.id}
-                            className="inline-flex items-center justify-center rounded-full border border-[#f0c8bf] bg-[#fff4ef] px-3 py-2 text-xs font-semibold text-[#9f4128] transition hover:bg-[#ffe9e2] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex min-w-[8rem] flex-1 items-center justify-center rounded-full border border-[#f0c8bf] bg-[#fff4ef] px-3 py-3 text-sm font-semibold text-[#9f4128] transition hover:bg-[#ffe9e2] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2 sm:text-xs"
                           >
                             {deletingId === order.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                           </button>
@@ -1206,7 +1206,7 @@ const AdminOrdersPage = () => {
                               type="button"
                               onClick={() => handleRefundOrder(order.id)}
                               disabled={refundingId === order.id}
-                              className="inline-flex items-center justify-center rounded-full border border-[#ead9a2] bg-[#fffaf0] px-3 py-2 text-xs font-semibold text-[#8a651a] transition hover:bg-[#fff4db] disabled:cursor-not-allowed disabled:opacity-60"
+                              className="inline-flex min-w-[8rem] flex-1 items-center justify-center rounded-full border border-[#ead9a2] bg-[#fffaf0] px-3 py-3 text-sm font-semibold text-[#8a651a] transition hover:bg-[#fff4db] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2 sm:text-xs"
                             >
                               {refundingId === order.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <span>Refund</span>}
                             </button>

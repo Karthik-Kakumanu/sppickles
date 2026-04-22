@@ -713,7 +713,7 @@ export function AdminProducts() {
                         <button
                           type="button"
                           onClick={() => handleEdit(product)}
-                          className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-4 py-2 text-sm font-semibold text-theme-heading transition hover:border-[#b9d7be] hover:bg-[#f7fbf8]"
+                          className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-4 py-3 text-sm font-semibold text-theme-heading transition hover:border-[#b9d7be] hover:bg-[#f7fbf8] sm:py-2"
                         >
                           <Plus className="h-4 w-4 rotate-45" />
                           Edit details
@@ -722,7 +722,7 @@ export function AdminProducts() {
                           type="button"
                           onClick={() => void handleDelete(product)}
                           disabled={deleteMutation.isPending}
-                          className="inline-flex items-center justify-center gap-2 rounded-full border border-[#f0c8bf] bg-[#fff4f1] px-4 py-2 text-sm font-semibold text-[#b64d39] transition hover:bg-[#ffe9e2] disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex items-center justify-center gap-2 rounded-full border border-[#f0c8bf] bg-[#fff4f1] px-4 py-3 text-sm font-semibold text-[#b64d39] transition hover:bg-[#ffe9e2] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2"
                         >
                           {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                           Move to deleted
@@ -956,7 +956,7 @@ export function AdminProducts() {
                             type="button"
                             onClick={() => void handleRestoreArchived(product)}
                             disabled={restoreMutation.isPending || permanentDeleteMutation.isPending}
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold !text-white transition hover:bg-[#165b38] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1f7a4d] px-4 py-3 text-sm font-semibold !text-white transition hover:bg-[#165b38] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2.5"
                             style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
                           >
                             {restoreMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 rotate-180" />}
@@ -967,7 +967,7 @@ export function AdminProducts() {
                             type="button"
                             onClick={() => void handlePermanentDeleteArchived(product)}
                             disabled={restoreMutation.isPending || permanentDeleteMutation.isPending}
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#f0c8bf] bg-white px-4 py-2.5 text-sm font-semibold text-[#b64d39] transition hover:bg-[#fff2ed] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#f0c8bf] bg-white px-4 py-3 text-sm font-semibold text-[#b64d39] transition hover:bg-[#fff2ed] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2.5"
                           >
                             {permanentDeleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                             Delete permanently

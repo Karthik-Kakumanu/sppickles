@@ -2235,6 +2235,7 @@ const getAdminAnalytics = async () => {
       select date_trunc('day', created_at)::date as day, coalesce(sum(total), 0)::int as revenue, count(*)::int as orders
       from orders
       where created_at >= CURRENT_DATE - INTERVAL '13 days'
+        and lower(status) = 'delivered'
       group by day
       order by day asc
     `),
@@ -2246,7 +2247,9 @@ const getAdminAnalytics = async () => {
         sum(oi.quantity)::int as units_sold,
         sum(oi.total_price)::int as revenue
       from order_items oi
+      inner join orders o on o.id = oi.order_id
       left join products p on p.id = oi.product_id
+      where lower(o.status) = 'delivered'
       group by oi.product_id
       order by units_sold desc, revenue desc
       limit 6
