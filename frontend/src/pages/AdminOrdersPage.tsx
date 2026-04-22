@@ -562,10 +562,10 @@ const AdminOrdersPage = () => {
     <>
       <Seo title="SP Traditional Pickles | Admin Orders" description="Premium admin order management." noIndex />
       <AdminLayout title="Orders">
-        <div className="space-y-8">
-          <div className="space-y-8">
-              <div className="theme-card rounded-[1.25rem] border p-4 shadow-sm xl:p-5">
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+        <div className="space-y-6 sm:space-y-8">
+          <div className="space-y-6 sm:space-y-8">
+              <div className="theme-card rounded-[1.25rem] border p-3 shadow-sm sm:p-4 xl:p-5">
+                <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
                   <div className="max-w-4xl">
                     <p className="text-theme-heading text-[10px] font-semibold uppercase tracking-[0.18em]">
                       Orders
@@ -585,16 +585,16 @@ const AdminOrdersPage = () => {
                           </div>
                         </div>
 
-                    <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                      <div className="rounded-[1.15rem] border border-[#ead9a2] bg-[linear-gradient(145deg,#fffdfa_0%,#fff5db_100%)] p-3 shadow-[0_10px_22px_rgba(30,79,46,0.08)]">
+                    <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-5">
+                      <div className="col-span-2 rounded-[1.15rem] border border-[#ead9a2] bg-[linear-gradient(145deg,#fffdfa_0%,#fff5db_100%)] p-3 shadow-[0_10px_22px_rgba(30,79,46,0.08)] lg:col-span-1">
                         <div className="inline-flex items-center gap-1.5 rounded-full bg-[#fff0c6] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#8a651a]">
                           <ShoppingCart className="h-3.5 w-3.5" />
                           Total Orders
                         </div>
-                        <p className="mt-2 font-heading text-3xl font-bold leading-none text-theme-heading">
+                        <p className="mt-2 font-heading text-2xl font-bold leading-none text-theme-heading sm:text-3xl">
                           {metrics.totalOrders}
                         </p>
-                        <p className="mt-1 text-[11px] leading-4 text-theme-body">
+                        <p className="mt-1 text-[11px] leading-4 text-theme-body sm:text-sm sm:leading-6">
                           Total revenue: {formatCurrency(metrics.revenue)}
                         </p>
                       </div>
@@ -606,16 +606,16 @@ const AdminOrdersPage = () => {
                         return (
                           <div
                             key={status}
-                            className={`rounded-[1.15rem] border p-3 shadow-[0_10px_22px_rgba(30,79,46,0.08)] ${STATUS_META[status].panel}`}
+                            className={`rounded-[1.15rem] border p-3 shadow-[0_10px_22px_rgba(30,79,46,0.08)] lg:col-span-1 ${STATUS_META[status].panel}`}
                           >
                             <div className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] ${STATUS_META[status].badge}`}>
                               <Icon className="h-3.5 w-3.5" />
                               {STATUS_META[status].label}
                             </div>
-                            <p className={`mt-2 font-heading text-3xl font-bold leading-none ${STATUS_META[status].count}`}>
+                            <p className={`mt-2 font-heading text-2xl font-bold leading-none sm:text-3xl ${STATUS_META[status].count}`}>
                               {metrics.counts[status]}
                             </p>
-                            <p className="mt-1 text-[11px] leading-4 text-theme-body">
+                            <p className="mt-1 text-[11px] leading-4 text-theme-body sm:text-sm sm:leading-6">
                               {status === "pending"
                                 ? "Fresh orders waiting for action"
                                 : status === "processing"
@@ -629,7 +629,7 @@ const AdminOrdersPage = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="rounded-[1rem] border border-[#ead9a2] bg-[#fff7e3] px-4 py-3">
+                    <div className="rounded-[1rem] border border-[#ead9a2] bg-[#fff7e3] px-3 py-3 sm:px-4">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8a651a]">
                         Logged In
                       </p>
@@ -639,11 +639,11 @@ const AdminOrdersPage = () => {
                     </div>
 
                     <div className="rounded-[1rem] border border-[#d8e5d8] bg-[#f7fbf7] p-3">
-                      <div className="flex flex-col gap-2">
+                      <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-col">
                         <button
                           type="button"
                           onClick={handleExportToSheets}
-                          className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-4 py-2 text-xs font-semibold text-theme-body transition hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-3 py-2 text-xs font-semibold text-theme-body transition hover:border-[#2f7a43]/35 hover:bg-[#edf5ee] hover:text-theme-heading"
                         >
                           <FileSpreadsheet className="h-3.5 w-3.5" />
                           Export to Sheets
@@ -654,7 +654,7 @@ const AdminOrdersPage = () => {
                             void refetch();
                           }}
                           disabled={isLoading || isRefetching}
-                          className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-4 py-2 text-xs font-semibold text-theme-body transition hover:border-[#e2b93b] hover:bg-[#fff8e8] hover:text-theme-heading disabled:cursor-not-allowed disabled:opacity-70"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#d8e5d8] bg-white px-3 py-2 text-xs font-semibold text-theme-body transition hover:border-[#e2b93b] hover:bg-[#fff8e8] hover:text-theme-heading disabled:cursor-not-allowed disabled:opacity-70"
                         >
                           <RefreshCw className={`h-3.5 w-3.5 ${isRefetching ? "animate-spin" : ""}`} />
                           Refresh orders
@@ -662,7 +662,7 @@ const AdminOrdersPage = () => {
                         <button
                           type="button"
                           onClick={logoutAdmin}
-                          className="inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-4 py-2 text-xs font-semibold text-theme-body transition hover:border-[#d9c5b5] hover:bg-[#fdf7f2] hover:text-theme-heading"
+                          className="col-span-2 inline-flex w-full items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-3 py-2 text-xs font-semibold text-theme-body transition hover:border-[#d9c5b5] hover:bg-[#fdf7f2] hover:text-theme-heading lg:col-span-1"
                         >
                           Sign out
                         </button>
@@ -690,7 +690,7 @@ const AdminOrdersPage = () => {
 
                       setShowManualEntry(true);
                     }}
-                    className="inline-flex items-center gap-2 rounded-full border border-[#2f7a43] bg-[#2f7a43] px-4 py-2 text-sm font-semibold !text-white"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#2f7a43] bg-[#2f7a43] px-4 py-2 text-sm font-semibold !text-white sm:w-auto"
                     style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
                   >
                     <PlusCircle className="h-4 w-4" />
@@ -1061,12 +1061,12 @@ const AdminOrdersPage = () => {
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
                       placeholder="Search by order ID or phone"
-                      className="theme-input w-full rounded-full border py-3 pl-11 pr-4 text-sm outline-none transition focus:border-[#e2b93b]"
+                      className="theme-input w-full rounded-full border py-2.5 pl-11 pr-4 text-sm outline-none transition focus:border-[#e2b93b] sm:py-3"
                     />
                   </div>
                 </div>
 
-                <div className="mt-6 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="mt-6 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
                   <button
                     type="button"
                     onClick={() => setStatusFilter("all")}
