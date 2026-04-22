@@ -1474,6 +1474,7 @@ const serializeCouponRow = (row) => ({
   targetProductId: row.target_product_id ? String(row.target_product_id) : null,
   targetProductName: row.target_product_name ? String(row.target_product_name) : null,
   minOrderAmount: row.min_order_amount === null ? null : Number(row.min_order_amount),
+  maxDiscountAmount: row.max_discount_amount === null ? null : Number(row.max_discount_amount),
   startsAt: row.starts_at ?? null,
   endsAt: row.ends_at ?? null,
   isActive: Boolean(row.is_active ?? true),
@@ -2709,7 +2710,7 @@ const resolveCouponDiscount = async (payload, subtotal) => {
       ? Math.round((eligibleSubtotal * couponDiscountValue) / 100)
       : Math.round(couponDiscountValue);
 
-  if (coupon.maxDiscountAmount !== null) {
+  if (coupon.maxDiscountAmount !== null && coupon.maxDiscountAmount !== undefined) {
     const maxDiscountAmount = Number(coupon.maxDiscountAmount);
 
     if (!Number.isFinite(maxDiscountAmount)) {

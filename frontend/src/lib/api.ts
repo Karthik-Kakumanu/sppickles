@@ -294,6 +294,7 @@ export type AdminCoupon = {
   targetProductId: string | null;
   targetProductName: string | null;
   minOrderAmount: number | null;
+  maxDiscountAmount: number | null;
   startsAt: string | null;
   endsAt: string | null;
   isActive: boolean;
@@ -514,6 +515,8 @@ const normalizeCoupon = (coupon: any): AdminCoupon => ({
   targetProductName: coupon.targetProductName ?? coupon.target_product_name ?? null,
   minOrderAmount:
     coupon.minOrderAmount ?? coupon.min_order_amount ?? null,
+  maxDiscountAmount:
+    coupon.maxDiscountAmount ?? coupon.max_discount_amount ?? null,
   startsAt: coupon.startsAt ?? coupon.starts_at ?? null,
   endsAt: coupon.endsAt ?? coupon.ends_at ?? null,
   isActive: Boolean(coupon.isActive ?? coupon.is_active ?? true),

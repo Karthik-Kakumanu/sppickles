@@ -66,7 +66,13 @@ export const getCouponDiscountAmount = (coupon: AdminCoupon, eligibleSubtotal: n
       ? Math.round((eligibleSubtotal * Number(coupon.discountValue)) / 100)
       : Math.round(Number(coupon.discountValue));
 
-  return Math.max(0, Math.min(discountAmount, eligibleSubtotal));
+  const maxDiscountAmount = coupon.maxDiscountAmount === null ? null : Number(coupon.maxDiscountAmount);
+  const cappedDiscountAmount =
+    maxDiscountAmount !== null && Number.isFinite(maxDiscountAmount)
+      ? Math.min(discountAmount, Math.round(maxDiscountAmount))
+      : discountAmount;
+
+  return Math.max(0, Math.min(cappedDiscountAmount, eligibleSubtotal));
 };
 
 const allocateDiscountAcrossEligibleLines = (
