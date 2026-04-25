@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AlertCircle, ArrowRight, CreditCard, Loader2 } from "lucide-react";
 import {
-  createOrder,
   createRazorpayOrder,
   getCoupons,
   verifyRazorpayPayment,
@@ -19,8 +18,6 @@ import { content } from "@/content/translations";
 import { getDynamicProductName } from "@/lib/translation";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
-
-type PaymentMethod = "upi" | "cod";
 
 type CheckoutData = {
   name: string;
@@ -125,8 +122,6 @@ const paymentCopy = {
     bankTitle: "UPI / Card",
     bankBody:
       "UPI and card payments are supported for this order.",
-    codTitle: "Cash on Delivery",
-    codBody: "Place the order now and pay when the order is delivered.",
     backWarningTitle: "Important",
     backWarningBody:
       "Do not press back or refresh until payment is confirmed. Closing this step early can interrupt payment verification.",
@@ -196,7 +191,6 @@ const PaymentPage = () => {
   });
 
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("cod");
   const [errorMessage, setErrorMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -349,7 +343,7 @@ const PaymentPage = () => {
         pincode: checkoutData.pincode,
         shipping: checkoutData.shipping,
         couponCode: appliedCoupon?.code ?? null,
-        paymentMethod: selectedPayment,
+        paymentMethod: "upi",
         items: cart.map((line) => {
           const fallbackUnitPrice = Math.round(line.totalPrice / Math.max(1, Number(line.quantity) || 1));
           const unitPrice = Number.isFinite(Number(line.price)) ? Number(line.price) : fallbackUnitPrice;
@@ -363,27 +357,6 @@ const PaymentPage = () => {
           };
         }),
       };
-
-      if (selectedPayment === "cod") {
-        const order = await createOrder(orderPayload);
-        const finalizedCheckoutData = { ...checkoutData, discountAmount };
-
-        clearCart();
-        sessionStorage.removeItem("checkoutData");
-
-        navigate("/order-success", {
-          state: {
-            orderId: order.id,
-            whatsappUrl: order.whatsappUrl,
-            checkoutData: finalizedCheckoutData,
-            paymentMethod: selectedPayment,
-            items: previewItems,
-          },
-          replace: true,
-        });
-
-        return;
-      }
 
       const razorpayOrder = await createRazorpayOrder(orderPayload);
       await loadRazorpayScript();
@@ -425,7 +398,7 @@ const PaymentPage = () => {
           orderId: order.id,
           whatsappUrl: order.whatsappUrl,
           checkoutData: finalizedCheckoutData,
-          paymentMethod: selectedPayment,
+          paymentMethod: "upi",
           items: previewItems,
         },
         replace: true,
@@ -435,13 +408,6 @@ const PaymentPage = () => {
       setIsProcessing(false);
     }
   };
-
-  const getOptionClassName = (method: PaymentMethod) =>
-    `block cursor-pointer rounded-[1.8rem] border p-5 transition duration-300 ${
-      selectedPayment === method
-        ? "border-[#e2b93b] bg-[#fff9ed] shadow-[0_20px_40px_rgba(30,79,46,0.1)]"
-        : "border-[#d8e5d8] bg-white hover:border-[#e2b93b] hover:bg-[#fffdf7]"
-    }`;
 
   return (
     <main className="overflow-hidden bg-[var(--color-bg-primary)]">
@@ -474,69 +440,21 @@ const PaymentPage = () => {
             </p>
           </div>
 
-          <label className={getOptionClassName("upi")}>
+          <div className="rounded-[1.8rem] border border-[#e2b93b] bg-[#fff9ed] p-5 shadow-[0_20px_40px_rgba(30,79,46,0.1)]">
             <div className="flex items-start gap-4">
-              <input
-                type="radio"
-                name="payment"
-                value="upi"
-                checked={selectedPayment === "upi"}
-                onChange={(event) => setSelectedPayment(event.target.value as PaymentMethod)}
-                className="mt-1 h-4 w-4 accent-[#2f7a43]"
-              />
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf5ee]">
+                <CreditCard className="h-5 w-5 text-[#2f7a43]" />
+              </div>
               <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf5ee]">
-                    <CreditCard className="h-5 w-5 text-[#2f7a43]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold text-theme-heading ${language === "te" ? "font-telugu" : ""}`}>
-                      {copy.bankTitle}
-                    </p>
-                    <p
-                      className={`mt-1 text-sm text-theme-body ${
-                        language === "te" ? "font-telugu" : ""
-                      }`}
-                    >
-                      {copy.bankBody}
-                    </p>
-                  </div>
-                </div>
+                <p className={`font-semibold text-theme-heading ${language === "te" ? "font-telugu" : ""}`}>
+                  {copy.bankTitle}
+                </p>
+                <p className={`mt-1 text-sm text-theme-body ${language === "te" ? "font-telugu" : ""}`}>
+                  {copy.bankBody}
+                </p>
               </div>
             </div>
-          </label>
-
-          <label className={getOptionClassName("cod")}>
-            <div className="flex items-start gap-4">
-              <input
-                type="radio"
-                name="payment"
-                value="cod"
-                checked={selectedPayment === "cod"}
-                onChange={(event) => setSelectedPayment(event.target.value as PaymentMethod)}
-                className="mt-1 h-4 w-4 accent-[#2f7a43]"
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf5ee]">
-                    <CreditCard className="h-5 w-5 text-[#2f7a43]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold text-theme-heading ${language === "te" ? "font-telugu" : ""}`}>
-                      {copy.codTitle}
-                    </p>
-                    <p
-                      className={`mt-1 text-sm text-theme-body ${
-                        language === "te" ? "font-telugu" : ""
-                      }`}
-                    >
-                      {copy.codBody}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </label>
+          </div>
 
           <div className="rounded-2xl border border-[#d9644c]/35 bg-[#fff4f1] px-4 py-4">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#c14f3a]">

@@ -2512,8 +2512,8 @@ const normalizeOrderPayload = (body) => {
     throw { statusCode: 400, message: "Shipping must be zero or a positive number." };
   }
 
-  if (!["upi", "cod"].includes(paymentMethod)) {
-    throw { statusCode: 400, message: "Payment method must be 'upi' or 'cod'." };
+  if (paymentMethod !== "upi") {
+    throw { statusCode: 400, message: "Payment method must be 'upi'." };
   }
 
   if (items.length === 0) {

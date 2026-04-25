@@ -32,7 +32,7 @@ type OrderSuccessState = {
   orderId: string;
   whatsappUrl?: string;
   checkoutData: CheckoutData;
-  paymentMethod: "upi" | "bank" | "cod";
+  paymentMethod: "upi";
   items: OrderSuccessItem[];
 };
 

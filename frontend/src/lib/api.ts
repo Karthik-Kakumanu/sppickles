@@ -963,7 +963,7 @@ export type CheckoutOrderPayload = {
   pincode: string;
   shipping: number;
   couponCode?: string | null;
-  paymentMethod?: "upi" | "cod";
+  paymentMethod?: "upi";
   items: Array<{
     productId: string;
     name: string;
