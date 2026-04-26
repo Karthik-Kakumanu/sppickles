@@ -490,6 +490,26 @@ const activeRazorpayCredentials = resolveActiveRazorpayCredentials();
 const ACTIVE_RAZORPAY_KEY_ID = activeRazorpayCredentials.keyId;
 const ACTIVE_RAZORPAY_KEY_SECRET = activeRazorpayCredentials.keySecret;
 const ACTIVE_RAZORPAY_MODE = inferRazorpayModeFromKey(ACTIVE_RAZORPAY_KEY_ID);
+const ACTIVE_RAZORPAY_KEY_SOURCE =
+  RAZORPAY_MODE === "live"
+    ? RAZORPAY_LIVE_KEY_ID
+      ? "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET"
+      : "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET"
+    : RAZORPAY_MODE === "test"
+      ? RAZORPAY_TEST_KEY_ID
+        ? "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET"
+        : "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET"
+      : NODE_ENV === "production" && RAZORPAY_LIVE_KEY_ID && RAZORPAY_LIVE_KEY_SECRET
+        ? "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET"
+        : NODE_ENV !== "production" && RAZORPAY_TEST_KEY_ID && RAZORPAY_TEST_KEY_SECRET
+          ? "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET"
+          : RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET
+            ? "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET"
+            : RAZORPAY_LIVE_KEY_ID && RAZORPAY_LIVE_KEY_SECRET
+              ? "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET"
+              : RAZORPAY_TEST_KEY_ID && RAZORPAY_TEST_KEY_SECRET
+                ? "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET"
+                : "unconfigured";
 
 const razorpayClient =
   ACTIVE_RAZORPAY_KEY_ID && ACTIVE_RAZORPAY_KEY_SECRET
@@ -2583,6 +2603,50 @@ const assertRazorpayConfigured = () => {
   }
 };
 
+const getRazorpayConfigDetails = () => ({
+  mode: ACTIVE_RAZORPAY_MODE,
+  currency: RAZORPAY_CURRENCY,
+  keySource: ACTIVE_RAZORPAY_KEY_SOURCE,
+  keyIdPrefix: ACTIVE_RAZORPAY_KEY_ID ? `${ACTIVE_RAZORPAY_KEY_ID.slice(0, 12)}...` : null,
+});
+
+const normalizeRazorpayApiError = (error, action) => {
+  const statusCode = Number(error?.statusCode || error?.error?.statusCode || 0);
+  const providerMessage =
+    String(
+      error?.error?.description ??
+        error?.description ??
+        error?.message ??
+        "Razorpay request failed.",
+    ).trim() || "Razorpay request failed.";
+
+  if (statusCode === 401) {
+    return {
+      statusCode: 503,
+      message:
+        `Razorpay rejected the configured API credentials while trying to ${action}. ` +
+        "Check that the backend has the correct live/test key pair and matching mode.",
+      details: {
+        providerMessage,
+        ...getRazorpayConfigDetails(),
+      },
+    };
+  }
+
+  if (statusCode >= 400 && statusCode < 500) {
+    return {
+      statusCode: 502,
+      message: `Razorpay could not ${action}. ${providerMessage}`,
+      details: {
+        providerMessage,
+        ...getRazorpayConfigDetails(),
+      },
+    };
+  }
+
+  return error;
+};
+
 const toRazorpayAmount = (rupees) => {
   const numericRupees = Number(rupees);
 
@@ -2772,15 +2836,21 @@ const createRazorpayPaymentOrder = async (body) => {
   const { total } = await buildOrderTotals(payload);
   const amount = toRazorpayAmount(total);
 
-  const razorpayOrder = await razorpayClient.orders.create({
-    amount,
-    currency: RAZORPAY_CURRENCY,
-    receipt: buildRazorpayReceipt(),
-    notes: {
-      customer_name: payload.customer.name,
-      customer_phone: payload.customer.phone,
-    },
-  });
+  let razorpayOrder;
+
+  try {
+    razorpayOrder = await razorpayClient.orders.create({
+      amount,
+      currency: RAZORPAY_CURRENCY,
+      receipt: buildRazorpayReceipt(),
+      notes: {
+        customer_name: payload.customer.name,
+        customer_phone: payload.customer.phone,
+      },
+    });
+  } catch (error) {
+    throw normalizeRazorpayApiError(error, "create the payment order");
+  }
 
   return {
     keyId: ACTIVE_RAZORPAY_KEY_ID,
@@ -3087,7 +3157,7 @@ const verifyRazorpayPaymentAndCreateOrder = async (body) => {
   const { total } = await buildOrderTotals(payload);
   const expectedAmount = toRazorpayAmount(total);
 
-  const expectedSignature = createHmac("sha256", RAZORPAY_KEY_SECRET)
+  const expectedSignature = createHmac("sha256", ACTIVE_RAZORPAY_KEY_SECRET)
     .update(`${razorpayOrderId}|${razorpayPaymentId}`)
     .digest("hex");
 
@@ -3095,7 +3165,13 @@ const verifyRazorpayPaymentAndCreateOrder = async (body) => {
     throw { statusCode: 400, message: "Payment signature verification failed." };
   }
 
-  const payment = await razorpayClient.payments.fetch(razorpayPaymentId);
+  let payment;
+
+  try {
+    payment = await razorpayClient.payments.fetch(razorpayPaymentId);
+  } catch (error) {
+    throw normalizeRazorpayApiError(error, "verify the payment");
+  }
 
   if (String(payment.order_id ?? "") !== razorpayOrderId) {
     throw { statusCode: 400, message: "Payment does not belong to the provided Razorpay order." };

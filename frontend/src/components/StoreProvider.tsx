@@ -52,6 +52,8 @@ type StoreContextValue = {
 const StoreContext = createContext<StoreContextValue | null>(null);
 
 const buildCartKey = (productId: string, weight: WeightOption) => `${productId}::${weight}`;
+const isAdminPath = () =>
+  typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
 
 export const StoreProvider = ({ children }: { children: ReactNode }) => {
   const [cartLines, setCartLines] = useState<CartLine[]>(() =>
@@ -72,6 +74,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   }, [cartLines]);
 
   useEffect(() => {
+    if (!isAdminPath()) {
+      setIsAdminReady(true);
+      return;
+    }
+
     let isMounted = true;
 
     const loadAdminSession = async () => {
@@ -96,7 +103,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (!adminEmail) {
+    if (!adminEmail || !isAdminPath()) {
       return;
     }
 

@@ -30,6 +30,18 @@ services:
         sync: false
       - key: ADMIN_PASSWORD_RESET_OTP_TTL_MS
         value: 600000
+      - key: RAZORPAY_MODE
+        value: live
+      - key: RAZORPAY_LIVE_KEY_ID
+        sync: false
+      - key: RAZORPAY_LIVE_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_TEST_KEY_ID
+        sync: false
+      - key: RAZORPAY_TEST_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_CURRENCY
+        value: INR
 
 databases:
   - name: sp-pickles-db
