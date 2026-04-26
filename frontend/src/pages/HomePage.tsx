@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { Globe2, Mail, MapPin, Megaphone, Phone, ShoppingBag, TicketPercent } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import ProductCard from "@/components/ProductCard";
@@ -172,17 +172,33 @@ const SectionHeading = ({
   </h2>
 );
 
+const buildStableShuffleRank = (id: string, seed: number) => {
+  let hash = seed;
+
+  for (let index = 0; index < id.length; index += 1) {
+    hash = (hash * 33 + id.charCodeAt(index)) >>> 0;
+  }
+
+  return hash;
+};
+
 const HomePage = () => {
   const { products, bestSellers } = useStore();
   const { language } = useLanguage();
   const t = homeCopy[language];
   const isTe = language === "te";
+  const shuffleSeedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
 
   const visibleHomeCategories = homeCategoryCards.slice(0, 4);
 
   const featuredProducts = useMemo(() => {
     const source = bestSellers.length > 0 ? bestSellers : products;
-    const shuffle = <T,>(items: T[]) => [...items].sort(() => Math.random() - 0.5);
+    const shuffle = <T extends { id: string | number }>(items: T[]) =>
+      [...items].sort(
+        (left, right) =>
+          buildStableShuffleRank(String(left.id), shuffleSeedRef.current) -
+          buildStableShuffleRank(String(right.id), shuffleSeedRef.current),
+      );
     const pickles = shuffle(source.filter((p) => p.category === "pickles")).slice(0, 5);
     const powders = shuffle(source.filter((p) => p.category === "powders")).slice(0, 5);
     const fryums = shuffle(source.filter((p) => p.category === "fryums")).slice(0, 5);
