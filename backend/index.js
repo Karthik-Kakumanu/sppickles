@@ -465,59 +465,6 @@ const maskRazorpayKeyId = (keyId) => {
   return `${normalizedKeyId.slice(0, 12)}...`;
 };
 
-const getConfiguredRazorpayCredentialPairs = () =>
-  [
-    {
-      source: "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET",
-      keyId: RAZORPAY_KEY_ID,
-      keySecret: RAZORPAY_KEY_SECRET,
-    },
-    {
-      source: "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET",
-      keyId: RAZORPAY_LIVE_KEY_ID,
-      keySecret: RAZORPAY_LIVE_KEY_SECRET,
-    },
-    {
-      source: "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET",
-      keyId: RAZORPAY_TEST_KEY_ID,
-      keySecret: RAZORPAY_TEST_KEY_SECRET,
-    },
-  ].filter(({ keyId, keySecret }) => keyId && keySecret);
-
-const getRazorpayCredentialConflict = () => {
-  const configuredPairs = getConfiguredRazorpayCredentialPairs();
-
-  if (configuredPairs.length <= 1) {
-    return null;
-  }
-
-  const distinctPairs = new Map();
-
-  for (const pair of configuredPairs) {
-    const fingerprint = `${pair.keyId}::${pair.keySecret}`;
-
-    if (!distinctPairs.has(fingerprint)) {
-      distinctPairs.set(fingerprint, []);
-    }
-
-    distinctPairs.get(fingerprint).push(pair);
-  }
-
-  if (distinctPairs.size <= 1) {
-    return null;
-  }
-
-  return {
-    message:
-      "Multiple Razorpay credential pairs are configured on the backend. Remove stale key pairs so only one active live/test pair remains.",
-    configuredSources: Array.from(distinctPairs.values()).map((pairs) => ({
-      sources: pairs.map((pair) => pair.source),
-      keyIdPrefix: maskRazorpayKeyId(pairs[0]?.keyId),
-      inferredMode: inferRazorpayModeFromKey(String(pairs[0]?.keyId ?? "")),
-    })),
-  };
-};
-
 const pickCompleteRazorpayCredentialPair = (...candidates) => {
   for (const candidate of candidates) {
     const keyId = String(candidate?.keyId ?? "").trim();
@@ -541,33 +488,19 @@ const pickCompleteRazorpayCredentialPair = (...candidates) => {
 
 const resolveActiveRazorpayCredentials = () => {
   if (RAZORPAY_MODE === "live") {
-    return pickCompleteRazorpayCredentialPair(
-      {
-        keyId: RAZORPAY_LIVE_KEY_ID,
-        keySecret: RAZORPAY_LIVE_KEY_SECRET,
-        source: "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET",
-      },
-      {
-        keyId: RAZORPAY_KEY_ID,
-        keySecret: RAZORPAY_KEY_SECRET,
-        source: "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET",
-      },
-    );
+    return pickCompleteRazorpayCredentialPair({
+      keyId: RAZORPAY_LIVE_KEY_ID,
+      keySecret: RAZORPAY_LIVE_KEY_SECRET,
+      source: "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET",
+    });
   }
 
   if (RAZORPAY_MODE === "test") {
-    return pickCompleteRazorpayCredentialPair(
-      {
-        keyId: RAZORPAY_TEST_KEY_ID,
-        keySecret: RAZORPAY_TEST_KEY_SECRET,
-        source: "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET",
-      },
-      {
-        keyId: RAZORPAY_KEY_ID,
-        keySecret: RAZORPAY_KEY_SECRET,
-        source: "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET",
-      },
-    );
+    return pickCompleteRazorpayCredentialPair({
+      keyId: RAZORPAY_TEST_KEY_ID,
+      keySecret: RAZORPAY_TEST_KEY_SECRET,
+      source: "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET",
+    });
   }
 
   if (NODE_ENV === "production" && RAZORPAY_LIVE_KEY_ID && RAZORPAY_LIVE_KEY_SECRET) {
@@ -587,11 +520,6 @@ const resolveActiveRazorpayCredentials = () => {
   }
 
   return pickCompleteRazorpayCredentialPair(
-    {
-      keyId: RAZORPAY_KEY_ID,
-      keySecret: RAZORPAY_KEY_SECRET,
-      source: "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET",
-    },
     {
       keyId: RAZORPAY_LIVE_KEY_ID,
       keySecret: RAZORPAY_LIVE_KEY_SECRET,
@@ -2698,20 +2626,7 @@ const assertRazorpayConfigured = () => {
     throw {
       statusCode: 503,
       message:
-        "Online payment is not configured. Set Razorpay credentials on the backend (RAZORPAY_MODE + live/test keys, or RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET).",
-    };
-  }
-
-  const credentialConflict = getRazorpayCredentialConflict();
-
-  if (credentialConflict) {
-    throw {
-      statusCode: 503,
-      message: credentialConflict.message,
-      details: {
-        ...getRazorpayConfigDetails(),
-        configuredSources: credentialConflict.configuredSources,
-      },
+        "Online payment is not configured. Set Razorpay credentials on the backend using RAZORPAY_MODE with the matching live/test key pair.",
     };
   }
 };
@@ -4667,6 +4582,5 @@ server.listen(PORT, () => {
     razorpayMode: ACTIVE_RAZORPAY_MODE,
     razorpayKeySource: ACTIVE_RAZORPAY_KEY_SOURCE,
     razorpayKeyIdPrefix: maskRazorpayKeyId(ACTIVE_RAZORPAY_KEY_ID),
-    razorpayCredentialConflict: getRazorpayCredentialConflict()?.configuredSources ?? null,
   });
 });
