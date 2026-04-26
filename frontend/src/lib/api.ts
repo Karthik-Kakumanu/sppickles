@@ -200,6 +200,41 @@ class ApiError extends Error {
   }
 }
 
+const formatApiErrorMessage = (message: string, details: unknown) => {
+  if (!details || typeof details !== "object") {
+    return message;
+  }
+
+  const detailRecord = details as Record<string, unknown>;
+  const keySource = String(detailRecord.keySource ?? "").trim();
+  const mode = String(detailRecord.mode ?? "").trim();
+  const keyIdPrefix = String(detailRecord.keyIdPrefix ?? "").trim();
+  const configuredSources = Array.isArray(detailRecord.configuredSources)
+    ? detailRecord.configuredSources
+    : [];
+
+  if (
+    message.toLowerCase().includes("razorpay") &&
+    (keySource || mode || keyIdPrefix || configuredSources.length > 0)
+  ) {
+    const diagnosticParts = [
+      mode ? `mode: ${mode}` : "",
+      keySource ? `source: ${keySource}` : "",
+      keyIdPrefix ? `key: ${keyIdPrefix}` : "",
+    ].filter(Boolean);
+
+    if (configuredSources.length > 1) {
+      diagnosticParts.push("multiple backend key pairs detected");
+    }
+
+    if (diagnosticParts.length > 0) {
+      return `${message} Backend diagnostic: ${diagnosticParts.join(", ")}.`;
+    }
+  }
+
+  return message;
+};
+
 type ApiEnvelope<T> = {
   success?: boolean;
   data?: T;
@@ -399,7 +434,7 @@ const apiFetch = async <T>(endpoint: string, options: RequestInit = {}) => {
 
   if (!response.ok) {
     throw new ApiError(
-      payload?.error || payload?.message || `API Error: ${response.status}`,
+      formatApiErrorMessage(payload?.error || payload?.message || `API Error: ${response.status}`, payload?.details),
       response.status,
       payload?.details,
     );

@@ -230,6 +230,8 @@ RAZORPAY_CURRENCY=INR
 | `ADMIN_LOGIN_WINDOW_MS` | 900000 | Login attempt window (15 min default) |
 | `ADMIN_LOGIN_LOCKOUT_MS` | 1800000 | Lockout duration (30 min default) |
 
+Use only one complete Razorpay key pair for the active mode whenever possible. For example, with `RAZORPAY_MODE=live`, prefer `RAZORPAY_LIVE_KEY_ID` and `RAZORPAY_LIVE_KEY_SECRET`, and remove stale legacy/test pairs from the deployment environment to avoid accidental credential conflicts.
+
 ## Error Handling
 
 All error responses include:

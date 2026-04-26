@@ -38,7 +38,16 @@ FAST2SMS_ENDPOINT=https://www.fast2sms.com/dev/bulkV2
 FAST2SMS_ROUTE=otp
 ADMIN_PASSWORD_RESET_ALLOWED_PHONE=your-admin-mobile-number
 ADMIN_PASSWORD_RESET_OTP_TTL_MS=600000
+RAZORPAY_MODE=live
+RAZORPAY_LIVE_KEY_ID=rzp_live_xxxxxxxxxxxxx
+RAZORPAY_LIVE_KEY_SECRET=your-live-secret
+RAZORPAY_CURRENCY=INR
 ```
+
+Important:
+- Keep only one active Razorpay pair for the selected mode.
+- If you use `RAZORPAY_MODE=live`, update `RAZORPAY_LIVE_KEY_ID` and `RAZORPAY_LIVE_KEY_SECRET`.
+- Remove stale `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` or old test/live pairs from Render if they are no longer used.
 
 ### 4. **Deploy Database**
 
