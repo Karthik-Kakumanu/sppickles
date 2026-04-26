@@ -7,16 +7,57 @@ import WhatsAppLogo from "@/components/WhatsAppLogo";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 
+const footerUi = {
+  en: {
+    trustedTitle: "Why customers trust us",
+    trustBadges: [
+      "Traditional vegetarian recipes",
+      "Careful packing",
+      "Home-style flavour",
+      "Direct customer support",
+    ],
+    cancelOrder: "Cancel Order",
+    visitUs: "Visit Us",
+    refundPolicy: "Refund Policy",
+    developedBy: "Developed by",
+    facebook: "Facebook",
+    instagram: "Instagram",
+    whatsappOrders: "WhatsApp Orders",
+    pixelkodeWhatsapp: "PixelKode WhatsApp",
+    pixelkodeInstagram: "PixelKode Instagram",
+    addressLabel: "Store address",
+  },
+  te: {
+    trustedTitle: "మమ్మల్ని నమ్మే కారణాలు",
+    trustBadges: [
+      "సాంప్రదాయ శాకాహార రుచులు",
+      "జాగ్రత్తగా ప్యాకింగ్",
+      "ఇంటి రుచిని గుర్తుచేసే నాణ్యత",
+      "నేరుగా కస్టమర్ సహాయం",
+    ],
+    cancelOrder: "ఆర్డర్ రద్దు",
+    visitUs: "మా చిరునామా",
+    refundPolicy: "రిఫండ్ విధానం",
+    developedBy: "రూపకల్పన చేసిన వారు",
+    facebook: "ఫేస్‌బుక్",
+    instagram: "ఇన్‌స్టాగ్రామ్",
+    whatsappOrders: "వాట్సాప్ ఆర్డర్లు",
+    pixelkodeWhatsapp: "పిక్సెల్‌కోడ్ వాట్సాప్",
+    pixelkodeInstagram: "పిక్సెల్‌కోడ్ ఇన్‌స్టాగ్రామ్",
+    addressLabel: "దుకాణ చిరునామా",
+  },
+} as const;
+
 const SiteFooter = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const ui = footerUi[language];
+  const isTelugu = language === "te";
 
   return (
-    <footer className="border-t border-[#d8e5d8] bg-[linear-gradient(180deg,#fffefa_0%,#f6f9f4_100%)] py-10 md:py-14 text-theme-heading">
+    <footer className="border-t border-[#d8e5d8] bg-[linear-gradient(180deg,#fffefa_0%,#f6f9f4_100%)] py-10 text-theme-heading md:py-14">
       <div className={pageWrap}>
-        {/* Main Footer Grid */}
         <div className="mb-10 grid gap-10 lg:grid-cols-[1.25fr_0.9fr_1.1fr]">
-          {/* Brand Section */}
           <div className="max-w-xl">
             <div className="mb-6 rounded-2xl border border-[#dce8dc] bg-[linear-gradient(145deg,#ffffff_0%,#f4f8f1_100%)] p-4 shadow-[0_20px_35px_rgba(30,79,46,0.08)]">
               <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-start sm:gap-4 sm:text-left">
@@ -28,71 +69,67 @@ const SiteFooter = () => {
                   />
                 </div>
                 <div className="min-w-0 pt-0 sm:pt-0.5">
-                  <h2 className="font-heading text-[1.9rem] leading-[1.05] font-semibold tracking-[-0.01em] text-theme-heading sm:text-[2.05rem]">
+                  <h2 className="font-heading text-[1.9rem] font-semibold leading-[1.05] tracking-[-0.01em] text-theme-heading sm:text-[2.05rem]">
                     {brand.name}
                   </h2>
-                  <p className={`mt-1.5 text-sm leading-relaxed text-theme-body ${language === "te" ? "font-telugu" : ""}`}>
-                    {language === "te" ? brand.teluguSubtitle : brand.subtitle}
+                  <p className={`mt-1.5 text-sm leading-relaxed text-theme-body ${isTelugu ? "font-telugu" : ""}`}>
+                    {isTelugu ? brand.teluguSubtitle : brand.subtitle}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Trust Badges */}
             <div className="space-y-2">
-              <p className="text-xs font-semibold text-theme-body-soft uppercase tracking-wide">Why We're Trusted:</p>
+              <p className={`text-xs font-semibold uppercase tracking-wide text-theme-body-soft ${isTelugu ? "font-telugu" : ""}`}>
+                {ui.trustedTitle}
+              </p>
               <div className="grid grid-cols-2 gap-2">
-                {brand.usps.map((usp) => (
+                {ui.trustBadges.map((badge) => (
                   <div
-                    key={usp}
-                    className="flex items-center gap-2 rounded-xl border border-[#b9e4c5] bg-[linear-gradient(180deg,#f3fff7_0%,#eaf8f0_100%)] px-3 py-2 text-xs font-semibold text-[#1d6a3f]"
+                    key={badge}
+                    className={`flex items-center gap-2 rounded-xl border border-[#b9e4c5] bg-[linear-gradient(180deg,#f3fff7_0%,#eaf8f0_100%)] px-3 py-2 text-xs font-semibold text-[#1d6a3f] ${isTelugu ? "font-telugu" : ""}`}
                   >
                     <span className="inline-flex h-1.5 w-1.5 rounded-full bg-green-600" />
-                    {usp}
+                    {badge}
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Social Media */}
             <div className="mt-5 flex items-center gap-2.5">
-              <span className="text-xs font-semibold text-theme-body-soft uppercase tracking-wide">{t.footer.followUs}</span>
+              <span className={`text-xs font-semibold uppercase tracking-wide text-theme-body-soft ${isTelugu ? "font-telugu" : ""}`}>
+                {t.footer.followUs}
+              </span>
               <a
                 href={brand.socialMedia.facebook}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-100"
-                aria-label="Facebook"
+                aria-label={ui.facebook}
               >
                 <Facebook className="h-4 w-4" />
-                <span>Facebook</span>
+                <span className={isTelugu ? "font-telugu" : ""}>{ui.facebook}</span>
               </a>
             </div>
           </div>
 
-          {/* Quick Links */}
           <div>
-            <h3 className="font-heading text-xl font-semibold text-theme-heading mb-6">
-              {t.footer.quickLinks}
-            </h3>
+            <h3 className="mb-6 font-heading text-xl font-semibold text-theme-heading">{t.footer.quickLinks}</h3>
             <div className="flex flex-col gap-4 text-sm text-theme-body">
               {navigation.map((item) => (
-                <Link key={item.to} to={item.to} className="transition hover:text-[#956d00] font-medium">
+                <Link key={item.to} to={item.to} className={`font-medium transition hover:text-[#956d00] ${isTelugu ? "font-telugu" : ""}`}>
                   {t.layout.nav[item.to]}
                 </Link>
               ))}
-              <Link to="/cancel-order" className="transition hover:text-[#956d00] font-medium">
-                {language === "te" ? "ఆర్డర్ రద్దు" : "Cancel Order"}
+              <Link to="/cancel-order" className={`font-medium transition hover:text-[#956d00] ${isTelugu ? "font-telugu" : ""}`}>
+                {ui.cancelOrder}
               </Link>
             </div>
           </div>
 
-          {/* Contact */}
           <div>
-            <h3 className="font-heading text-xl font-semibold text-theme-heading mb-6">
-              {t.footer.contact}
-            </h3>
-            <div className="space-y-4 text-sm leading-6 text-theme-body mb-6">
+            <h3 className="mb-6 font-heading text-xl font-semibold text-theme-heading">{t.footer.contact}</h3>
+            <div className="mb-6 space-y-4 text-sm leading-6 text-theme-body">
               <a
                 href={brand.whatsappUrl}
                 target="_blank"
@@ -102,13 +139,16 @@ const SiteFooter = () => {
                 <span className="mt-0.5 inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#2f7a43] !text-white shadow-[0_0_0_1px_rgba(47,122,67,0.18),0_8px_18px_rgba(47,122,67,0.12)]">
                   <WhatsAppLogo className="h-[22px] w-[22px]" />
                 </span>
-                <span className="font-medium">{brand.whatsappDisplay}</span>
+                <div>
+                  <p className={`font-semibold text-theme-heading ${isTelugu ? "font-telugu" : ""}`}>{ui.whatsappOrders}</p>
+                  <span className="font-medium">{brand.whatsappDisplay}</span>
+                </div>
               </a>
               <a
                 href={`mailto:${brand.supportEmail}`}
                 className="flex items-start gap-2 transition hover:text-[#2f7a43]"
               >
-                <Mail className="mt-1 h-4 w-4 text-[#2f7a43] flex-shrink-0" />
+                <Mail className="mt-1 h-4 w-4 flex-shrink-0 text-[#2f7a43]" />
                 <span className="font-medium">{brand.supportEmail}</span>
               </a>
               {brand.phoneNumbers.map((number) => (
@@ -117,7 +157,7 @@ const SiteFooter = () => {
                   href={`tel:${number.replace(/[^+\d]/g, "")}`}
                   className="flex items-start gap-2 transition hover:text-[#2f7a43]"
                 >
-                  <Phone className="mt-1 h-4 w-4 text-[#2f7a43] flex-shrink-0" />
+                  <Phone className="mt-1 h-4 w-4 flex-shrink-0 text-[#2f7a43]" />
                   <span className="font-medium">{number}</span>
                 </a>
               ))}
@@ -125,84 +165,85 @@ const SiteFooter = () => {
           </div>
         </div>
 
-        {/* Info Sections */}
-        <div className="grid gap-8 mb-12 md:grid-cols-2">
-          {/* About */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h4 className="font-heading text-lg font-semibold text-theme-heading mb-3">{t.footer.about}</h4>
-            <p className={`text-sm leading-6 text-theme-body ${language === "te" ? "font-telugu" : ""}`}>
-              {language === "te"
-                ? "కుటుంబ ఆధారిత ఆంధ్ర ఆహార బ్రాండ్, ఇది సరిపోవు వీక్ష్యాన్ని, జాగ్రత్త పూర్ణ ప్యాకేజింగ్, మరియు సంప్రదాయ శాకాహార రుచులపై దృష్టి సారిస్తుంది."
+        <div className="mb-12 grid gap-8 md:grid-cols-2">
+          <div className="rounded-xl border border-gray-200 bg-white p-6">
+            <h4 className="mb-3 font-heading text-lg font-semibold text-theme-heading">{t.footer.about}</h4>
+            <p className={`text-sm leading-6 text-theme-body ${isTelugu ? "font-telugu" : ""}`}>
+              {isTelugu
+                ? "సాంప్రదాయ శాకాహార రుచులను అందంగా ప్యాక్ చేసి భారతదేశం మరియు విదేశాల్లో ఉన్న కుటుంబాలకు చేరవేసే కుటుంబ ఆధారిత ఆంధ్ర ఆహార బ్రాండ్‌ మేము."
                 : t.footer.aboutText}
             </p>
           </div>
 
-          {/* Contact Address */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h4 className="font-heading text-lg font-semibold text-theme-heading mb-3">Visit Us</h4>
+          <div className="rounded-xl border border-gray-200 bg-white p-6">
+            <h4 className={`mb-3 font-heading text-lg font-semibold text-theme-heading ${isTelugu ? "font-telugu" : ""}`}>
+              {ui.visitUs}
+            </h4>
             <a
               href={brand.mapUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-start gap-3 text-sm text-theme-body hover:text-[#2f7a43] transition"
+              className="flex items-start gap-3 text-sm text-theme-body transition hover:text-[#2f7a43]"
             >
-              <MapPin className="mt-1 h-5 w-5 text-[#2f7a43] flex-shrink-0" />
-              <span className="font-medium">{brand.address}</span>
+              <MapPin className="mt-1 h-5 w-5 flex-shrink-0 text-[#2f7a43]" />
+              <div>
+                <p className={`font-semibold text-theme-heading ${isTelugu ? "font-telugu" : ""}`}>{ui.addressLabel}</p>
+                <span className={`font-medium ${isTelugu ? "font-telugu" : ""}`}>{brand.address}</span>
+              </div>
             </a>
           </div>
         </div>
 
-        {/* Footer Bottom */}
         <div className="border-t border-[#d8e5d8] pt-8">
-          <div className="space-y-4 mb-6">
+          <div className="mb-6 space-y-4">
             <div className="grid gap-6 md:grid-cols-2">
-              <p className={`text-sm text-theme-body-soft ${language === "te" ? "font-telugu" : ""}`}>
-                {t.footer.copyright}
-              </p>
+              <p className={`text-sm text-theme-body-soft ${isTelugu ? "font-telugu" : ""}`}>{t.footer.copyright}</p>
               <div className="grid grid-cols-3 items-center gap-2 text-center md:flex md:items-center md:justify-start md:gap-4">
-                <Link to="/privacy" className="text-xs text-theme-body-soft transition hover:text-theme-heading sm:text-sm whitespace-nowrap">
+                <Link to="/privacy" className={`whitespace-nowrap text-xs text-theme-body-soft transition hover:text-theme-heading sm:text-sm ${isTelugu ? "font-telugu" : ""}`}>
                   {t.footer.privacy}
                 </Link>
-                <Link to="/terms" className="text-xs text-theme-body-soft transition hover:text-theme-heading sm:text-sm whitespace-nowrap">
+                <Link to="/terms" className={`whitespace-nowrap text-xs text-theme-body-soft transition hover:text-theme-heading sm:text-sm ${isTelugu ? "font-telugu" : ""}`}>
                   {t.footer.terms}
                 </Link>
-                <Link to="/refund" className="text-xs text-theme-body-soft transition hover:text-theme-heading sm:text-sm whitespace-nowrap">
-                  Refund Policy
+                <Link to="/refund" className={`whitespace-nowrap text-xs text-theme-body-soft transition hover:text-theme-heading sm:text-sm ${isTelugu ? "font-telugu" : ""}`}>
+                  {ui.refundPolicy}
                 </Link>
               </div>
             </div>
 
             <div className="flex flex-col items-start gap-2 text-[11px] leading-5 text-theme-body-soft/80">
-              <span className="font-semibold uppercase tracking-[0.18em] text-theme-body-soft/90">Developed by</span>
+              <span className={`font-semibold uppercase tracking-[0.18em] text-theme-body-soft/90 ${isTelugu ? "font-telugu" : ""}`}>
+                {ui.developedBy}
+              </span>
               <div className="grid w-full grid-cols-3 items-center gap-2 sm:flex sm:w-auto sm:items-center sm:gap-4">
-              <a
-                href="https://pixelkode.netlify.app"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 font-semibold text-theme-heading transition hover:text-[#2f7a43] whitespace-nowrap"
-              >
-                <Globe2 className="h-3 w-3" />
-                PixelKode
-              </a>
-              <a
-                href="https://wa.me/918897925715"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 transition hover:text-[#2f7a43] whitespace-nowrap"
-                aria-label="PixelKode WhatsApp"
-              >
-                <WhatsAppLogo className="h-3.5 w-3.5" />
-                WhatsApp
-              </a>
+                <a
+                  href="https://pixelkode.netlify.app"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-semibold text-theme-heading transition hover:text-[#2f7a43]"
+                >
+                  <Globe2 className="h-3 w-3" />
+                  PixelKode
+                </a>
+                <a
+                  href="https://wa.me/918897925715"
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition hover:text-[#2f7a43] ${isTelugu ? "font-telugu" : ""}`}
+                  aria-label={ui.pixelkodeWhatsapp}
+                >
+                  <WhatsAppLogo className="h-3.5 w-3.5" />
+                  {t.layout.whatsapp}
+                </a>
                 <a
                   href="https://instagram.com/pixelkode.co"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 transition hover:text-[#2f7a43] whitespace-nowrap"
-                  aria-label="PixelKode Instagram"
+                  className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition hover:text-[#2f7a43] ${isTelugu ? "font-telugu" : ""}`}
+                  aria-label={ui.pixelkodeInstagram}
                 >
                   <Instagram className="h-3.5 w-3.5" />
-                  Instagram
+                  {ui.instagram}
                 </a>
               </div>
             </div>

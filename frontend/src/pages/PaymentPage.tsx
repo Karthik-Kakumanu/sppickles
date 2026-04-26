@@ -180,6 +180,26 @@ const PaymentPage = () => {
   const t = content[language];
   const copy = paymentCopy[language];
   const ui = paymentUiCopy[language];
+  const runtimeCopy =
+    language === "te"
+      ? {
+          validatingCoupon: "కూపన్‌ను పరిశీలిస్తున్నాము. కాసేపు ఆగి మళ్లీ ప్రయత్నించండి.",
+          invalidCartValues:
+            "కార్ట్‌లోని ఒకటి లేదా ఎక్కువ ఉత్పత్తుల ధర వివరాలు సరైనవిగా లేవు. దయచేసి కార్ట్‌కు వెళ్లి పరిమాణాలను మళ్లీ తనిఖీ చేయండి.",
+          couponNotApplicable: "ఈ కూపన్ ప్రస్తుత కార్ట్‌కు వర్తించదు.",
+          eligibleItemsMinOrder: (amount: string) =>
+            `ఈ కూపన్ కోసం వర్తించే ఉత్పత్తుల మొత్తం కనీసం ${amount} ఉండాలి.`,
+          orderPaymentDescription: (amount: string) => `ఆర్డర్ చెల్లింపు - ${amount}`,
+        }
+      : {
+          validatingCoupon: "Validating coupon. Please wait and try again.",
+          invalidCartValues:
+            "One or more cart items has invalid pricing. Please go back to cart and refresh item quantities.",
+          couponNotApplicable: "This coupon does not apply to the current cart.",
+          eligibleItemsMinOrder: (amount: string) =>
+            `Eligible items must reach ${amount} for this coupon.`,
+          orderPaymentDescription: (amount: string) => `Order payment - ${amount}`,
+        };
   const { data: coupons = [] } = useQuery({
     queryKey: ["storefront-coupons"],
     queryFn: getCoupons,
@@ -298,7 +318,7 @@ const PaymentPage = () => {
     }
 
     if (couponValidationPending) {
-      setErrorMessage("Validating coupon, please wait and try again.");
+      setErrorMessage(runtimeCopy.validatingCoupon);
       return;
     }
 
@@ -309,7 +329,7 @@ const PaymentPage = () => {
     });
 
     if (hasInvalidCartValues) {
-      setErrorMessage("One or more cart items has invalid pricing. Please go back to cart and refresh item quantities.");
+      setErrorMessage(runtimeCopy.invalidCartValues);
       return;
     }
 
@@ -320,13 +340,13 @@ const PaymentPage = () => {
       const eligibleSubtotal = getEligibleSubtotalForCoupon(appliedCoupon, cart);
 
       if (eligibleSubtotal <= 0) {
-        setErrorMessage("This coupon does not apply to the current cart.");
+        setErrorMessage(runtimeCopy.couponNotApplicable);
         setIsProcessing(false);
         return;
       }
 
       if (appliedCoupon.minOrderAmount !== null && eligibleSubtotal < Number(appliedCoupon.minOrderAmount)) {
-        setErrorMessage(`Eligible items must reach ${formatCurrency(Number(appliedCoupon.minOrderAmount))} for this coupon.`);
+        setErrorMessage(runtimeCopy.eligibleItemsMinOrder(formatCurrency(Number(appliedCoupon.minOrderAmount))));
         setIsProcessing(false);
         return;
       }
@@ -367,7 +387,7 @@ const PaymentPage = () => {
         currency: razorpayOrder.currency,
         order_id: razorpayOrder.orderId,
         name: "SP Traditional Pickles",
-        description: `Order payment - ${formatCurrency(total)}`,
+        description: runtimeCopy.orderPaymentDescription(formatCurrency(total)),
         prefill: {
           name: checkoutData.name,
           contact: checkoutData.phone,

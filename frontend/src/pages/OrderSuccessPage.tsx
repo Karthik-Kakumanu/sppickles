@@ -41,85 +41,81 @@ const successCopy = {
     eyebrow: "Order Confirmed",
     title: "Your order is recorded and ready for the next step",
     intro:
-      "The order has been captured successfully. The customer can now continue to WhatsApp, keep the order ID safe, and wait for the next delivery or payment update.",
+      "Your order has been received successfully. Save the order ID, continue on WhatsApp if needed, and wait for the next payment or dispatch update from the team.",
     deliveryTitle: "Delivery address",
-    paymentTitle: "Payment note",
+    paymentTitle: "Payment update",
     cancellationTitle: "Cancellation window",
-    cancellationBody: "You can cancel this order within 6 hours of purchase. After that, the order is locked for packing and delivery.",
+    cancellationBody:
+      "You can cancel this order within 6 hours of purchase. After that, the order moves into packing and dispatch preparation.",
     reminderTitle: "Important reminder",
     reminderBody:
-      "To cancel later, keep both Order ID and checkout phone number ready. Copy the Order ID now and save it with your phone number.",
+      "If you need support later, keep both the order ID and checkout phone number ready. Copy the order ID now and save it safely.",
     refundNoteTitle: "Refund note for prepaid orders",
     refundNoteBody:
-      "If a paid order is cancelled, refund is initiated immediately. Razorpay/payment charges may apply as per gateway policy, and the remaining eligible amount is usually credited within 1 working day (bank timelines may vary).",
+      "If a prepaid order is cancelled, the refund is initiated immediately. Payment gateway charges may apply according to policy, and the remaining eligible amount is usually credited within 1 working day.",
     paymentMessages: {
-      upi: "UPI/Card is selected. Please continue on WhatsApp to complete payment confirmation with the team.",
-      bank: "The team can now continue manual payment confirmation or transfer guidance directly with you.",
-      cod: "Cash on delivery is selected. Payment is expected when the order reaches you.",
+      upi: "UPI or card payment was selected. Continue on WhatsApp if the team needs to share or confirm the payment details.",
     },
     nextStepsTitle: "What happens next",
     nextSteps: {
       upi: [
-        "Save the order ID and continue the conversation on WhatsApp.",
-        "The team shares the UPI/Card payment confirmation steps.",
-        "Packing and dispatch follow after confirmation.",
-      ],
-      bank: [
-        "Save the order ID and continue the conversation on WhatsApp.",
-        "The team can confirm payment or transfer guidance after reviewing the order.",
-        "Packing and dispatch follow after confirmation.",
-      ],
-      cod: [
-        "Save the order ID and continue the conversation on WhatsApp if needed.",
-        "The order moves to packing and dispatch after team review.",
-        "Payment is completed with the delivery handoff.",
+        "Save your order ID for future reference.",
+        "Continue on WhatsApp if the team needs to confirm payment or dispatch details.",
+        "Packing and dispatch updates will follow after confirmation.",
       ],
     },
+    orderId: "Order ID",
+    orderIdCopied: "Order ID copied.",
     chat: "Continue on WhatsApp",
+    cancelOrder: "Cancel order",
     shop: "Continue Shopping",
     home: "Back to Home",
+    orderSummary: "Order Summary",
+    emptyItems: "Your ordered items will appear here.",
+    subtotal: "Subtotal",
+    couponDiscount: "Coupon discount",
+    shipping: "Shipping",
+    total: "Total",
   },
   te: {
     eyebrow: "ఆర్డర్ నిర్ధారించబడింది",
-    title: "మీ ఆర్డర్ నమోదు అయింది. తరువాతి దశకు సిద్ధంగా ఉంది",
+    title: "మీ ఆర్డర్ నమోదు అయింది. తదుపరి దశకు సిద్ధంగా ఉంది",
     intro:
-      "ఆర్డర్ విజయవంతంగా నమోదైంది. ఇప్పుడు కస్టమర్ వాట్సాప్‌లో కొనసాగవచ్చు, ఆర్డర్ IDని భద్రపరచుకోవచ్చు, తరువాతి డెలివరీ లేదా చెల్లింపు అప్‌డేట్ కోసం వేచి ఉండవచ్చు.",
+      "మీ ఆర్డర్ విజయవంతంగా నమోదు అయింది. ఆర్డర్ ఐడిని భద్రపరచుకోండి, అవసరమైతే వాట్సాప్‌లో కొనసాగండి, తదుపరి చెల్లింపు లేదా పంపిణీ సమాచారం కోసం వేచి ఉండండి.",
     deliveryTitle: "డెలివరీ చిరునామా",
     paymentTitle: "చెల్లింపు సమాచారం",
     cancellationTitle: "రద్దు గడువు",
-    cancellationBody: "కొనుగోలు చేసిన 6 గంటలలోపు మాత్రమే ఈ ఆర్డర్‌ను రద్దు చేయవచ్చు. ఆ తర్వాత ప్యాకింగ్ మరియు డెలివరీ కోసం ఆర్డర్ లాక్ అవుతుంది.",
-    reminderTitle: "ముఖ్యమైన గుర్తింపు",
+    cancellationBody:
+      "కొనుగోలు చేసిన 6 గంటలలోపు మాత్రమే ఈ ఆర్డర్‌ను రద్దు చేయవచ్చు. ఆ తర్వాత ప్యాకింగ్ మరియు పంపిణీకి ఆర్డర్ సిద్ధం అవుతుంది.",
+    reminderTitle: "ముఖ్యమైన గుర్తుంచుకోవాల్సిన విషయం",
     reminderBody:
-      "తర్వాత రద్దు చేయాలంటే Order ID మరియు checkout phone number రెండూ అవసరం. Order IDను ఇప్పుడే కాపీ చేసి ఫోన్ నంబర్‌తో సేవ్ చేసుకోండి.",
-    refundNoteTitle: "ప్రీపెయిడ్ ఆర్డర్ల రీఫండ్ గమనిక",
+      "తర్వాత సహాయం అవసరమైతే ఆర్డర్ ఐడి మరియు చెకౌట్ ఫోన్ నంబర్ రెండూ దగ్గర ఉంచుకోండి. ఆర్డర్ ఐడిని ఇప్పుడు కాపీ చేసి భద్రపరచండి.",
+    refundNoteTitle: "ముందస్తు చెల్లింపు ఆర్డర్ల రిఫండ్ గమనిక",
     refundNoteBody:
-      "చెల్లింపు చేసిన ఆర్డర్ రద్దైతే రీఫండ్ వెంటనే ప్రారంభమవుతుంది. Razorpay/payment charges పాలసీ ప్రకారం వర్తించవచ్చు; మిగిలిన అర్హమైన మొత్తం సాధారణంగా 1 working day లో జమ అవుతుంది (bank timelines మారవచ్చు).",
+      "ముందస్తు చెల్లింపు చేసిన ఆర్డర్ రద్దయితే రిఫండ్ వెంటనే ప్రారంభమవుతుంది. గేట్‌వే విధానం ప్రకారం చార్జీలు వర్తించవచ్చు. మిగిలిన అర్హమైన మొత్తం సాధారణంగా 1 పని దినంలో జమ అవుతుంది.",
     paymentMessages: {
-      upi: "UPI/కార్డ్ ఎంపిక చేయబడింది. చెల్లింపు నిర్ధారణ కోసం టీమ్‌తో వాట్సాప్‌లో కొనసాగండి.",
-      bank: "ఇప్పుడు టీమ్ మీతో నేరుగా మాట్లాడి manual payment confirmation లేదా transfer guidance ఇవ్వగలదు.",
-      cod: "క్యాష్ ఆన్ డెలివరీ ఎంపిక చేయబడింది. ఆర్డర్ చేరినప్పుడు చెల్లింపు పూర్తవుతుంది.",
+      upi: "UPI లేదా కార్డ్ చెల్లింపు ఎంపిక చేయబడింది. చెల్లింపు నిర్ధారణ లేదా వివరాల కోసం అవసరమైతే వాట్సాప్‌లో కొనసాగండి.",
     },
-    nextStepsTitle: "తరువాత ఏమవుతుంది",
+    nextStepsTitle: "తర్వాత ఏమవుతుంది",
     nextSteps: {
       upi: [
-        "ఆర్డర్ IDను సేవ్ చేసి వాట్సాప్‌లో కొనసాగండి.",
-        "టీమ్ UPI/కార్డ్ చెల్లింపు నిర్ధారణ దశలను పంచుకుంటుంది.",
-        "నిర్ధారణ తర్వాత ప్యాకింగ్ మరియు పంపిణీ మొదలవుతుంది.",
-      ],
-      bank: [
-        "ఆర్డర్ IDను సేవ్ చేసి వాట్సాప్‌లో కొనసాగండి.",
-        "టీమ్ ఆర్డర్ చూసి చెల్లింపు లేదా transfer guidance ఇస్తుంది.",
-        "నిర్ధారణ తర్వాత ప్యాకింగ్ మరియు పంపిణీ మొదలవుతుంది.",
-      ],
-      cod: [
-        "ఆర్డర్ IDను సేవ్ చేసుకోండి. అవసరమైతే వాట్సాప్‌లో మాట్లాడండి.",
-        "టీమ్ సమీక్షించిన తర్వాత ప్యాకింగ్ మరియు పంపిణీ జరుగుతుంది.",
-        "డెలివరీ సమయంలో చెల్లింపు పూర్తవుతుంది.",
+        "మీ ఆర్డర్ ఐడిని భద్రపరచుకోండి.",
+        "టీమ్ చెల్లింపు లేదా పంపిణీ వివరాలు నిర్ధారించాల్సి ఉంటే వాట్సాప్‌లో కొనసాగండి.",
+        "నిర్ధారణ తర్వాత ప్యాకింగ్ మరియు పంపిణీ సమాచారం వస్తుంది.",
       ],
     },
+    orderId: "ఆర్డర్ ఐడి",
+    orderIdCopied: "ఆర్డర్ ఐడి కాపీ అయింది.",
     chat: "వాట్సాప్‌లో కొనసాగండి",
+    cancelOrder: "ఆర్డర్ రద్దు చేయండి",
     shop: "ఇంకా కొనుగోలు చేయండి",
     home: "హోమ్‌కు తిరుగు",
+    orderSummary: "ఆర్డర్ సారాంశం",
+    emptyItems: "మీ ఆర్డర్ చేసిన ఉత్పత్తులు ఇక్కడ కనిపిస్తాయి.",
+    subtotal: "ఉప మొత్తం",
+    couponDiscount: "కూపన్ తగ్గింపు",
+    shipping: "షిప్పింగ్",
+    total: "మొత్తం",
   },
 } as const;
 
@@ -128,6 +124,7 @@ const OrderSuccessPage = () => {
   const location = useLocation();
   const { language } = useLanguage();
   const t = successCopy[language];
+  const isTelugu = language === "te";
   const [orderData, setOrderData] = useState<OrderSuccessState | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -174,8 +171,8 @@ const OrderSuccessPage = () => {
   return (
     <main className="overflow-hidden bg-[var(--color-bg-primary)]">
       <Seo
-        title="SP Traditional Pickles | Order Confirmed"
-        description="Your SP Traditional Pickles order has been confirmed."
+        title={isTelugu ? "ఎస్‌పి ట్రెడిషనల్ పికిల్స్ | ఆర్డర్ నిర్ధారించబడింది" : "SP Traditional Pickles | Order Confirmed"}
+        description={isTelugu ? "మీ ఎస్‌పి ట్రెడిషనల్ పికిల్స్ ఆర్డర్ నిర్ధారించబడింది." : "Your SP Traditional Pickles order has been confirmed."}
         noIndex
       />
 
@@ -191,11 +188,7 @@ const OrderSuccessPage = () => {
             <h1 className="mt-5 font-heading text-4xl font-semibold text-theme-heading md:text-5xl xl:text-6xl">
               {t.title}
             </h1>
-            <p
-              className={`mt-5 max-w-4xl text-base leading-8 text-theme-body md:text-lg ${
-                language === "te" ? "font-telugu" : ""
-              }`}
-            >
+            <p className={`mt-5 max-w-4xl text-base leading-8 text-theme-body md:text-lg ${isTelugu ? "font-telugu" : ""}`}>
               {t.intro}
             </p>
           </div>
@@ -205,39 +198,32 @@ const OrderSuccessPage = () => {
       <section className={`${pageWrap} grid gap-8 py-10 lg:grid-cols-[1.08fr_0.92fr]`}>
         <div className="space-y-8">
           <div className="section-shell px-7 py-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#956d00]">
-              {language === "te" ? "ఆర్డర్ ID" : "Order ID"}
+            <p className={`text-sm font-semibold uppercase tracking-[0.22em] text-[#956d00] ${isTelugu ? "font-telugu" : ""}`}>
+              {t.orderId}
             </p>
             <div className="mt-4 flex items-center gap-3">
               <div className="flex-1">
-                <p className="font-heading text-3xl font-bold break-all text-theme-heading">
-                  {orderData.orderId}
-                </p>
-                {copied ? (
-                  <p className="mt-2 text-sm font-medium text-[#2f7a43]">
-                    {language === "te" ? "ఆర్డర్ ID కాపీ అయింది." : "Order ID copied."}
-                  </p>
-                ) : null}
+                <p className="break-all font-heading text-3xl font-bold text-theme-heading">{orderData.orderId}</p>
+                {copied ? <p className={`mt-2 text-sm font-medium text-[#2f7a43] ${isTelugu ? "font-telugu" : ""}`}>{t.orderIdCopied}</p> : null}
               </div>
               <button
                 onClick={handleCopyOrderId}
                 className="rounded-xl border border-[#d8e5d8] bg-white p-3 text-theme-body transition hover:bg-[#edf5ee]"
+                aria-label={t.orderId}
               >
                 <Copy className="h-5 w-5" />
               </button>
             </div>
 
             <div className="mt-5 rounded-2xl border border-[#e7cf91] bg-[#fff9eb] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a651a]">{t.reminderTitle}</p>
-              <p className={`mt-2 text-sm leading-7 text-theme-body ${language === "te" ? "font-telugu" : ""}`}>
-                {t.reminderBody}
-              </p>
+              <p className={`text-xs font-semibold uppercase tracking-[0.2em] text-[#8a651a] ${isTelugu ? "font-telugu" : ""}`}>{t.reminderTitle}</p>
+              <p className={`mt-2 text-sm leading-7 text-theme-body ${isTelugu ? "font-telugu" : ""}`}>{t.reminderBody}</p>
             </div>
           </div>
 
           <div className="section-shell px-7 py-8">
             <h2 className="font-heading text-2xl font-semibold text-theme-heading">{t.deliveryTitle}</h2>
-            <div className="mt-6 space-y-3 text-theme-body">
+            <div className={`mt-6 space-y-3 text-theme-body ${isTelugu ? "font-telugu" : ""}`}>
               <p className="font-semibold text-theme-heading">{orderData.checkoutData.name}</p>
               <p>{orderData.checkoutData.address}</p>
               <p>
@@ -252,11 +238,7 @@ const OrderSuccessPage = () => {
 
           <div className="section-shell px-7 py-8">
             <h2 className="font-heading text-2xl font-semibold text-theme-heading">{t.paymentTitle}</h2>
-            <p
-              className={`mt-4 text-base leading-8 text-theme-body ${
-                language === "te" ? "font-telugu" : ""
-              }`}
-            >
+            <p className={`mt-4 text-base leading-8 text-theme-body ${isTelugu ? "font-telugu" : ""}`}>
               {t.paymentMessages[orderData.paymentMethod]}
             </p>
           </div>
@@ -268,14 +250,10 @@ const OrderSuccessPage = () => {
               </span>
               <div>
                 <h2 className="font-heading text-2xl font-semibold text-theme-heading">{t.cancellationTitle}</h2>
-                <p className={`mt-3 text-sm leading-7 text-theme-body ${language === "te" ? "font-telugu" : ""}`}>
-                  {t.cancellationBody}
-                </p>
+                <p className={`mt-3 text-sm leading-7 text-theme-body ${isTelugu ? "font-telugu" : ""}`}>{t.cancellationBody}</p>
                 <div className="mt-4 rounded-xl border border-[#f0dfb1] bg-white/70 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a651a]">{t.refundNoteTitle}</p>
-                  <p className={`mt-2 text-sm leading-7 text-theme-body ${language === "te" ? "font-telugu" : ""}`}>
-                    {t.refundNoteBody}
-                  </p>
+                  <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-[#8a651a] ${isTelugu ? "font-telugu" : ""}`}>{t.refundNoteTitle}</p>
+                  <p className={`mt-2 text-sm leading-7 text-theme-body ${isTelugu ? "font-telugu" : ""}`}>{t.refundNoteBody}</p>
                 </div>
               </div>
             </div>
@@ -289,13 +267,7 @@ const OrderSuccessPage = () => {
                   <div className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#edf5ee] text-sm font-bold text-[#2f7a43]">
                     {index + 1}
                   </div>
-                  <p
-                    className={`pt-1 text-sm leading-7 text-theme-body ${
-                      language === "te" ? "font-telugu" : ""
-                    }`}
-                  >
-                    {step}
-                  </p>
+                  <p className={`pt-1 text-sm leading-7 text-theme-body ${isTelugu ? "font-telugu" : ""}`}>{step}</p>
                 </li>
               ))}
             </ol>
@@ -314,7 +286,7 @@ const OrderSuccessPage = () => {
               className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#e7cf91] bg-[#fffaf0] px-8 py-4 font-semibold text-[#8a651a] transition hover:bg-[#fff4db] sm:w-auto"
             >
               <ShieldAlert className="h-5 w-5" />
-              {language === "te" ? "ఆర్డర్ రద్దు చేయండి" : "Cancel order"}
+              {t.cancelOrder}
             </button>
             <button
               onClick={() => navigate("/products")}
@@ -334,9 +306,7 @@ const OrderSuccessPage = () => {
         </div>
 
         <aside className="section-shell h-fit px-7 py-8 lg:sticky lg:top-36">
-          <h2 className="font-heading text-3xl font-semibold text-theme-heading">
-            {language === "te" ? "ఆర్డర్ సారాంశం" : "Order Summary"}
-          </h2>
+          <h2 className="font-heading text-3xl font-semibold text-theme-heading">{t.orderSummary}</h2>
 
           <div className="mt-8 max-h-96 space-y-4 overflow-y-auto border-b border-[#d8e5d8] pb-8">
             {orderData.items.length > 0 ? (
@@ -344,40 +314,36 @@ const OrderSuccessPage = () => {
                 <div key={item.key} className="flex justify-between gap-4 text-sm">
                   <div className="min-w-0">
                     <p className="font-semibold text-theme-heading">{item.name}</p>
-                    <p className="mt-1 text-theme-body">
+                    <p className={`mt-1 text-theme-body ${isTelugu ? "font-telugu" : ""}`}>
                       {item.weight} x {item.quantity}
                     </p>
                   </div>
-                  <p className="price-figure font-semibold text-theme-heading">
-                    {formatCurrency(item.totalPrice)}
-                  </p>
+                  <p className="price-figure font-semibold text-theme-heading">{formatCurrency(item.totalPrice)}</p>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-theme-body">
-                {language === "te" ? "ఆర్డర్ చేసిన ఐటమ్స్ ఇక్కడ కనిపిస్తాయి." : "Your ordered items will appear here."}
-              </p>
+              <p className={`text-sm text-theme-body ${isTelugu ? "font-telugu" : ""}`}>{t.emptyItems}</p>
             )}
           </div>
 
           <div className="mt-8 space-y-3">
             <div className="flex justify-between text-sm text-theme-body">
-              <span>{language === "te" ? "ఉప మొత్తం" : "Subtotal"}</span>
+              <span className={isTelugu ? "font-telugu" : ""}>{t.subtotal}</span>
               <span className="price-figure">{formatCurrency(orderData.checkoutData.subtotal)}</span>
             </div>
             {discountAmount > 0 ? (
               <div className="flex justify-between text-sm text-[#1f6a3b]">
-                <span>{language === "te" ? "కూపన్ తగ్గింపు" : "Coupon discount"}</span>
+                <span className={isTelugu ? "font-telugu" : ""}>{t.couponDiscount}</span>
                 <span className="price-figure">- {formatCurrency(discountAmount)}</span>
               </div>
             ) : null}
             <div className="flex justify-between text-sm text-theme-body">
-              <span>{language === "te" ? "షిప్పింగ్" : "Shipping"}</span>
+              <span className={isTelugu ? "font-telugu" : ""}>{t.shipping}</span>
               <span className="price-figure">{formatCurrency(orderData.checkoutData.shipping)}</span>
             </div>
             <div className="border-t border-[#d8e5d8] pt-3">
               <div className="flex justify-between font-heading text-2xl font-bold text-theme-heading">
-                <span>{language === "te" ? "మొత్తం" : "Total"}</span>
+                <span className={isTelugu ? "font-telugu" : ""}>{t.total}</span>
                 <span className="price-figure text-[#2f7a43]">{formatCurrency(total)}</span>
               </div>
             </div>

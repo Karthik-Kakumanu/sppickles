@@ -14,50 +14,69 @@ const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 const cartCopy = {
   en: {
     eyebrow: "Cart",
-    title: "A cleaner cart that still encourages customers to add more",
-    intro:
-      "The cart should not feel like the end of the journey. It should reassure the customer, show the selected products clearly, and still encourage a few more additions before checkout.",
     clear: "Clear Cart",
     selectedWeight: "Selected weight",
     quantity: "Quantity",
     lineTotal: "Line Total",
     orderSummary: "Order Summary",
-    shipping: "Shipping added in checkout after pincode confirmation",
+    shipping: "Shipping will be added in checkout after pincode confirmation.",
     continueToCheckout: "Continue to Checkout",
     continueShopping: "Continue Shopping",
     emptyTitle: "Your cart is still waiting",
     emptyDescription:
-      "Browse the store collections and add your preferred pickles, podulu, and fryums to start the order.",
+      "Browse the store collections and add your favourite pickles, podulu, and fryums to start your order.",
     suggestionsEyebrow: "Add more before checkout",
     suggestionsTitle: "Customers usually add one more favourite from here",
+    browseProducts: "Browse Products",
+    backToHome: "Back to Home",
+    decreaseQuantity: "Decrease quantity",
+    increaseQuantity: "Increase quantity",
+    remove: "Remove",
+    each: "each",
+    items: (count: number) => `Items (${count} ${count === 1 ? "unit" : "units"})`,
+    subtotal: "Subtotal",
   },
   te: {
     eyebrow: "కార్ట్",
-    title: "ఇంకా కొన్ని ఉత్పత్తులు జోడించాలని ప్రోత్సహించే శుభ్రమైన కార్ట్",
-    intro:
-      "కార్ట్ అనేది ప్రయాణం ముగిసే స్థలం కాకూడదు. కస్టమర్ ఎంచుకున్న వాటిని స్పష్టంగా చూపిస్తూ, చెక్‌అవుట్‌కు వెళ్లే ముందు ఇంకొంచెం కొనాలనిపించేలా ఉండాలి.",
     clear: "కార్ట్ ఖాళీ చేయండి",
     selectedWeight: "ఎంచుకున్న బరువు",
     quantity: "పరిమాణం",
-    lineTotal: "లైన్ మొత్తం",
+    lineTotal: "మొత్తం ధర",
     orderSummary: "ఆర్డర్ సారాంశం",
-    shipping: "పిన్ కోడ్ నిర్ధారణ తర్వాత చెక్‌అవుట్‌లో షిప్పింగ్ జత అవుతుంది",
-    continueToCheckout: "చెక్‌అవుట్‌కి వెళ్లండి",
+    shipping: "పిన్ కోడ్ నిర్ధారణ తర్వాత చెకౌట్‌లో షిప్పింగ్ జత అవుతుంది.",
+    continueToCheckout: "చెకౌట్‌కు వెళ్లండి",
     continueShopping: "ఇంకా కొనుగోలు చేయండి",
-    emptyTitle: "మీ కార్ట్ ఇంకా ఎదురు చూస్తోంది",
+    emptyTitle: "మీ కార్ట్ ఇంకా ఖాళీగా ఉంది",
     emptyDescription:
-      "స్టోర్ కలెక్షన్లు చూసి మీకు నచ్చిన పచ్చళ్ళు, పొడులు, ఫ్రైయమ్స్ జత చేయండి.",
-    suggestionsEyebrow: "చెక్‌అవుట్‌కు ముందు ఇంకొంచెం జోడించండి",
-    suggestionsTitle: "చాలా మంది ఇక్కడి నుంచి ఇంకో ప్రియమైన ఐటమ్ జత చేస్తారు",
+      "మీ ఆర్డర్ ప్రారంభించడానికి పచ్చళ్ళు, పొడులు, ఫ్రైయమ్స్ జత చేయండి.",
+    suggestionsEyebrow: "చెకౌట్‌కు ముందు ఇంకొంచెం జత చేయండి",
+    suggestionsTitle: "చాలామంది ఇక్కడి నుంచి ఇంకో ఇష్టమైన ఉత్పత్తిని జత చేస్తారు",
+    browseProducts: "ఉత్పత్తులు చూడండి",
+    backToHome: "హోమ్‌కు తిరుగు",
+    decreaseQuantity: "పరిమాణాన్ని తగ్గించండి",
+    increaseQuantity: "పరిమాణాన్ని పెంచండి",
+    remove: "తొలగించండి",
+    each: "ప్రతి ఒక్కటి",
+    items: (count: number) => `ఐటమ్స్ (${count})`,
+    subtotal: "ఉప మొత్తం",
   },
 } as const;
 
 type QuantityEditorProps = {
   value: number;
   onChange: (value: number) => void;
+  decreaseLabel: string;
+  quantityLabel: string;
+  increaseLabel: string;
 };
 
-const QuantityEditor = ({ value, onChange }: QuantityEditorProps) => {
+const QuantityEditor = ({
+  value,
+  onChange,
+  decreaseLabel,
+  quantityLabel,
+  increaseLabel,
+}: QuantityEditorProps) => {
   const [draft, setDraft] = useState(String(value));
 
   useEffect(() => {
@@ -77,7 +96,7 @@ const QuantityEditor = ({ value, onChange }: QuantityEditorProps) => {
         type="button"
         onClick={() => onChange(Math.max(1, value - 1))}
         className="flex h-11 w-11 items-center justify-center text-theme-body transition hover:bg-[#edf5ee] hover:text-theme-heading active:scale-95"
-        aria-label="Decrease quantity"
+        aria-label={decreaseLabel}
       >
         <Minus className="h-4 w-4" />
       </button>
@@ -103,13 +122,13 @@ const QuantityEditor = ({ value, onChange }: QuantityEditorProps) => {
           }
         }}
         className="h-11 w-14 border-x border-[#e3ebe0] bg-transparent text-center text-sm font-semibold text-theme-heading outline-none [appearance:textfield] focus:bg-[#f8fbf8] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        aria-label="Quantity"
+        aria-label={quantityLabel}
       />
       <button
         type="button"
         onClick={() => onChange(value + 1)}
         className="flex h-11 w-11 items-center justify-center text-theme-body transition hover:bg-[#edf5ee] hover:text-theme-heading active:scale-95"
-        aria-label="Increase quantity"
+        aria-label={increaseLabel}
       >
         <Plus className="h-4 w-4" />
       </button>
@@ -130,6 +149,7 @@ const CartPage = () => {
   } = useStore();
   const { language } = useLanguage();
   const t = cartCopy[language];
+  const isTelugu = language === "te";
 
   const recommendations = bestSellers
     .filter((product) => !cart.some((line) => line.productId === product.id))
@@ -138,39 +158,36 @@ const CartPage = () => {
   return (
     <main className="overflow-hidden bg-[var(--color-bg-primary)]">
       <Seo
-        title="SP Traditional Pickles | Cart"
-        description="Review your cart and continue to checkout for SP Traditional Pickles."
+        title={isTelugu ? "ఎస్‌పి ట్రెడిషనల్ పికిల్స్ | కార్ట్" : "SP Traditional Pickles | Cart"}
+        description={
+          isTelugu
+            ? "మీ ఆర్డర్‌ను పరిశీలించి చెకౌట్‌కు వెళ్లండి."
+            : "Review your cart and continue to checkout for SP Traditional Pickles."
+        }
         noIndex
       />
 
-      {/* ── Top bar ── */}
       <section className="border-b border-[#d8e5d8] bg-[linear-gradient(180deg,#fffefa_0%,#f8faf6_100%)]">
         <div className={`${pageWrap} flex items-center justify-between gap-3 py-4 sm:py-5`}>
           <span className="inline-flex rounded-full bg-[#fff3c9] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#956d00] sm:px-4 sm:py-1.5 sm:text-xs">
             {t.eyebrow}
           </span>
 
-          {cart.length > 0 && (
+          {cart.length > 0 ? (
             <button
               type="button"
               onClick={clearCart}
-              className="inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-4 py-2 text-xs font-semibold text-theme-body shadow-sm transition-all duration-200 hover:bg-[#edf5ee] hover:shadow-md active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm"
+              className={`inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-4 py-2 text-xs font-semibold text-theme-body shadow-sm transition-all duration-200 hover:bg-[#edf5ee] hover:shadow-md active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm ${isTelugu ? "font-telugu" : ""}`}
             >
               {t.clear}
             </button>
-          )}
+          ) : null}
         </div>
       </section>
 
       <section className={`${pageWrap} py-5 md:py-8`}>
-
-        {/* ══════════════════════════════════════
-            EMPTY STATE
-        ══════════════════════════════════════ */}
         {cart.length === 0 ? (
           <div className="section-shell px-6 py-14 text-center sm:px-8 sm:py-16">
-
-            {/* Icon with subtle halo */}
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#edf5ee] ring-8 ring-[#edf5ee]/40 sm:h-20 sm:w-20">
               <ShoppingBag className="h-7 w-7 text-[#2f7a43] sm:h-9 sm:w-9" />
             </div>
@@ -179,53 +196,30 @@ const CartPage = () => {
               {t.emptyTitle}
             </h2>
 
-            <p
-              className={`mx-auto mt-3 max-w-sm text-sm leading-7 text-theme-body sm:max-w-xl sm:text-base sm:leading-8 ${
-                language === "te" ? "font-telugu" : ""
-              }`}
-            >
+            <p className={`mx-auto mt-3 max-w-sm text-sm leading-7 text-theme-body sm:max-w-xl sm:text-base sm:leading-8 ${isTelugu ? "font-telugu" : ""}`}>
               {t.emptyDescription}
             </p>
 
-            {/*
-              FIX ✅ — Button text visibility
-              ──────────────────────────────────────────────────────────────────
-              Root cause: `!text-white` can be defeated by higher-specificity
-              global CSS (e.g. `a { color: var(--color-link) }`).
-              Fix: removed the `!` bang, added `text-white` without the bang,
-              AND added an inline `style={{ color:"#ffffff" }}` as a
-              belt-and-suspenders fallback.  The inline style wins the cascade
-              over any stylesheet rule, so the label is ALWAYS visible on the
-              green pill.
-            */}
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
               <Link
                 to="/products"
                 className="inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-7 py-3.5 text-sm font-semibold !text-white shadow-[0_16px_36px_rgba(47,122,67,0.25)] transition-all duration-200 hover:bg-[#28683a] hover:shadow-[0_20px_44px_rgba(47,122,67,0.32)] active:scale-[0.97] sm:w-auto"
                 style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
               >
-                <span style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}>
-                  {language === "te" ? "ఉత్పత్తులు చూడండి" : "Browse Products"}
-                </span>
+                <span style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}>{t.browseProducts}</span>
               </Link>
 
               <Link
                 to="/"
-                className="inline-flex w-full items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-7 py-3.5 text-sm font-semibold text-theme-heading transition-all duration-200 hover:bg-[#edf5ee] active:scale-[0.97] sm:w-auto"
+                className={`inline-flex w-full items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-7 py-3.5 text-sm font-semibold text-theme-heading transition-all duration-200 hover:bg-[#edf5ee] active:scale-[0.97] sm:w-auto ${isTelugu ? "font-telugu" : ""}`}
               >
-                {language === "te" ? "హోమ్‌కు తిరుగు" : "Back to Home"}
+                {t.backToHome}
               </Link>
             </div>
           </div>
-
         ) : (
           <>
-            {/* ══════════════════════════════════════
-                FILLED CART
-            ══════════════════════════════════════ */}
             <div className="grid gap-4 lg:grid-cols-[1.18fr_0.82fr]">
-
-              {/* Line items */}
               <div className="space-y-3 sm:space-y-4">
                 {cart.map((line) => (
                   <article
@@ -233,44 +227,36 @@ const CartPage = () => {
                     className="section-shell group overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
                   >
                     <div className="flex items-start gap-3 p-3.5 sm:gap-4 sm:p-5">
-
-                      {/*
-                        FIX ✅ — Mobile image size
-                        ──────────────────────────────────────────────────────
-                        On mobile the image is now only 52 px (h-13 w-13) —
-                        very small, purely decorative thumbnail.
-                        It scales up to 88 px on sm and 104 px on lg.
-                        `shrink-0` prevents it from being squeezed by flex.
-                      */}
                       <div className="h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl border border-[#e1eadf] bg-[#f5faf6] shadow-[0_6px_18px_rgba(30,79,46,0.08)] sm:h-[88px] sm:w-[88px] lg:h-[104px] lg:w-[104px]">
                         <img
                           src={line.product.image}
-	                          alt={getDynamicProductName(line.product, language)}
+                          alt={getDynamicProductName(line.product, language)}
                           className="h-full w-full object-cover"
                         />
                       </div>
 
-                      {/* Details */}
                       <div className="flex min-w-0 flex-1 flex-col gap-2.5 sm:gap-3">
                         <div className="space-y-0.5 sm:space-y-1">
                           <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-[#956d00] sm:text-[10px]">
                             {line.product.category}
                           </p>
                           <h2 className="max-w-[16rem] font-heading text-[0.98rem] font-semibold leading-tight text-theme-heading sm:max-w-none sm:text-[1.25rem]">
-	                            {getDynamicProductName(line.product, language)}
+                            {getDynamicProductName(line.product, language)}
                           </h2>
                           <div className="flex items-center gap-2">
-                            <span className={`text-[10px] leading-5 text-theme-body sm:text-sm sm:leading-6 ${language === "te" ? "font-telugu" : ""}`}>{t.selectedWeight}:</span>
+                            <span className={`text-[10px] leading-5 text-theme-body sm:text-sm sm:leading-6 ${isTelugu ? "font-telugu" : ""}`}>
+                              {t.selectedWeight}:
+                            </span>
                             <div className="flex gap-1">
-                              {weightOptions.map(opt => (
+                              {weightOptions.map((opt) => (
                                 <button
                                   key={opt.label}
                                   type="button"
-                                  className={`px-2.5 py-1 rounded-lg border text-xs sm:text-sm transition-all
-                                    ${line.weight === opt.label
-                                      ? 'bg-[#2f7a43] text-white border-[#2f7a43] shadow'
-                                      : 'bg-white text-theme-heading border-[#e3ebe0] hover:bg-[#edf5ee]'}
-                                  `}
+                                  className={`rounded-lg border px-2.5 py-1 text-xs transition-all sm:text-sm ${
+                                    line.weight === opt.label
+                                      ? "border-[#2f7a43] bg-[#2f7a43] text-white shadow"
+                                      : "border-[#e3ebe0] bg-white text-theme-heading hover:bg-[#edf5ee]"
+                                  }`}
                                   onClick={() => updateCartLineWeight(line.key, opt.label)}
                                   aria-pressed={line.weight === opt.label}
                                 >
@@ -290,6 +276,9 @@ const CartPage = () => {
                               <QuantityEditor
                                 value={line.quantity}
                                 onChange={(nextValue) => updateCartLineQuantity(line.key, nextValue)}
+                                decreaseLabel={t.decreaseQuantity}
+                                quantityLabel={t.quantity}
+                                increaseLabel={t.increaseQuantity}
                               />
                             </div>
                           </div>
@@ -301,14 +290,13 @@ const CartPage = () => {
                             <p className="price-figure mt-1 text-[1rem] font-extrabold text-[#2f7a43] sm:text-[1.35rem]">
                               {formatCurrency(line.totalPrice)}
                             </p>
-                            <p className="price-figure mt-0.5 text-[10px] text-theme-body sm:text-xs">
-                              {formatCurrency(line.price)} each
+                            <p className={`price-figure mt-0.5 text-[10px] text-theme-body sm:text-xs ${isTelugu ? "font-telugu" : ""}`}>
+                              {formatCurrency(line.price)} {t.each}
                             </p>
                           </div>
                         </div>
                       </div>
 
-                      {/* Remove */}
                       <div className="shrink-0 pt-0.5">
                         <button
                           type="button"
@@ -316,9 +304,7 @@ const CartPage = () => {
                           className="inline-flex items-center justify-center rounded-full border border-[#d8e5d8] bg-white p-2 text-theme-body transition-all duration-200 hover:border-[#d9644c] hover:text-[#d9644c] active:scale-90 sm:gap-1.5 sm:px-4 sm:py-2 sm:text-sm"
                         >
                           <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          <span className="hidden sm:inline">
-                            {language === "te" ? "తొలగించండి" : "Remove"}
-                          </span>
+                          <span className={`hidden sm:inline ${isTelugu ? "font-telugu" : ""}`}>{t.remove}</span>
                         </button>
                       </div>
                     </div>
@@ -326,31 +312,24 @@ const CartPage = () => {
                 ))}
               </div>
 
-              {/* ── Order summary ── */}
-              <aside className="section-shell h-fit px-4 py-5 lg:sticky lg:top-36 sm:px-6 sm:py-7">
+              <aside className="section-shell h-fit px-4 py-5 sm:px-6 sm:py-7 lg:sticky lg:top-36">
                 <h2 className="font-heading text-[1.25rem] font-semibold text-theme-heading sm:text-2xl md:text-3xl">
                   {t.orderSummary}
                 </h2>
 
                 <div className="mt-4 space-y-3 border-b border-[#d8e5d8] pb-4 sm:mt-6 sm:space-y-4 sm:pb-6">
                   <div className="flex items-center justify-between gap-4 text-sm">
-                    <span className="text-theme-body">
-                      {language === "te"
-                        ? `ఐటమ్స్ (${cartCount})`
-                        : `Items (${cartCount} ${cartCount === 1 ? "unit" : "units"})`}
-                    </span>
-                    <span className="price-figure font-semibold text-theme-heading">
-                      {formatCurrency(subtotal)}
-                    </span>
+                    <span className={`text-theme-body ${isTelugu ? "font-telugu" : ""}`}>{t.items(cartCount)}</span>
+                    <span className="price-figure font-semibold text-theme-heading">{formatCurrency(subtotal)}</span>
                   </div>
-                  <div className="rounded-xl border border-[#d8e5d8] bg-[#f8fbf8] px-4 py-3 text-xs leading-6 text-theme-body sm:rounded-2xl sm:px-5 sm:py-4 sm:text-sm sm:leading-7">
+                  <div className={`rounded-xl border border-[#d8e5d8] bg-[#f8fbf8] px-4 py-3 text-xs leading-6 text-theme-body sm:rounded-2xl sm:px-5 sm:py-4 sm:text-sm sm:leading-7 ${isTelugu ? "font-telugu" : ""}`}>
                     {t.shipping}
                   </div>
                 </div>
 
                 <div className="mt-4 flex items-center justify-between rounded-xl bg-[#edf5ee] px-4 py-3 sm:mt-5 sm:rounded-2xl sm:px-5 sm:py-4">
-                  <span className="text-sm font-semibold text-theme-heading sm:text-base">
-                    {language === "te" ? "ఉప మొత్తం" : "Subtotal"}
+                  <span className={`text-sm font-semibold text-theme-heading sm:text-base ${isTelugu ? "font-telugu" : ""}`}>
+                    {t.subtotal}
                   </span>
                   <span className="price-figure text-lg font-extrabold text-[#2f7a43] sm:text-2xl">
                     {formatCurrency(subtotal)}
@@ -358,19 +337,16 @@ const CartPage = () => {
                 </div>
 
                 <div className="mt-5 flex flex-col gap-2.5 sm:mt-6 sm:gap-3">
-                  {/* FIX ✅ — same belt-and-suspenders colour fix as above */}
                   <Link
                     to="/checkout"
                     className="inline-flex w-full items-center justify-center rounded-full bg-[#2f7a43] px-5 py-3.5 text-sm font-semibold !text-white shadow-[0_16px_36px_rgba(47,122,67,0.22)] transition-all duration-200 hover:bg-[#28683a] hover:shadow-[0_20px_44px_rgba(47,122,67,0.30)] active:scale-[0.97] sm:px-6 sm:py-4"
                     style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
                   >
-                    <span style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}>
-                      {t.continueToCheckout}
-                    </span>
+                    <span style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}>{t.continueToCheckout}</span>
                   </Link>
                   <Link
                     to="/products"
-                    className="inline-flex w-full items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-5 py-3 text-sm font-semibold text-theme-heading transition-all duration-200 hover:bg-[#edf5ee] active:scale-[0.97] sm:px-6 sm:py-3.5"
+                    className={`inline-flex w-full items-center justify-center rounded-full border border-[#d8e5d8] bg-white px-5 py-3 text-sm font-semibold text-theme-heading transition-all duration-200 hover:bg-[#edf5ee] active:scale-[0.97] sm:px-6 sm:py-3.5 ${isTelugu ? "font-telugu" : ""}`}
                   >
                     {t.continueShopping}
                   </Link>
@@ -378,8 +354,7 @@ const CartPage = () => {
               </aside>
             </div>
 
-            {/* ── Recommendations ── */}
-            {recommendations.length > 0 && (
+            {recommendations.length > 0 ? (
               <div className="mt-12 sm:mt-14">
                 <div className="max-w-4xl">
                   <span className="inline-flex rounded-full bg-[#fff3c9] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#956d00]">
@@ -401,7 +376,7 @@ const CartPage = () => {
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
           </>
         )}
       </section>

@@ -1,14 +1,29 @@
 import { motion } from "framer-motion";
 import { brand } from "@/data/site";
 import WhatsAppLogo from "@/components/WhatsAppLogo";
+import { useLanguage } from "@/components/LanguageProvider";
+
+const floatingCopy = {
+  en: {
+    aria: `Chat on WhatsApp ${brand.whatsappDisplay}`,
+    title: "WhatsApp Orders",
+  },
+  te: {
+    aria: `${brand.whatsappDisplay} వాట్సాప్‌లో చాట్ చేయండి`,
+    title: "వాట్సాప్ ఆర్డర్లు",
+  },
+} as const;
 
 const FloatingWhatsappButton = () => {
+  const { language } = useLanguage();
+  const t = floatingCopy[language];
+
   return (
     <motion.a
       href={brand.whatsappUrl}
       target="_blank"
       rel="noreferrer"
-      aria-label={`Chat on WhatsApp ${brand.whatsappDisplay}`}
+      aria-label={t.aria}
       initial={{ opacity: 0, y: 18, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: 0.35, duration: 0.35 }}
@@ -21,8 +36,8 @@ const FloatingWhatsappButton = () => {
           <WhatsAppLogo className="h-[22px] w-[22px]" />
         </div>
         <div className="hidden text-left md:block">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2f7a43]">
-            WhatsApp Orders
+          <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2f7a43] ${language === "te" ? "font-telugu" : ""}`}>
+            {t.title}
           </p>
           <p className="text-sm font-bold text-theme-heading">{brand.whatsappDisplay}</p>
         </div>
