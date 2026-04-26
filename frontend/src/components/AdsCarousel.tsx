@@ -123,6 +123,20 @@ const AdsCarousel = () => {
   };
 
   const mediaAspectRatio = adAspectRatio ? String(adAspectRatio) : "16 / 9";
+  const ui =
+    language === "te"
+      ? {
+          promotion: "ప్రచారం",
+          previousAd: "ముందరి ప్రకటన",
+          nextAd: "తదుపరి ప్రకటన",
+          goToAd: (index: number) => `${index}వ ప్రకటనకు వెళ్లండి`,
+        }
+      : {
+          promotion: "Promotion",
+          previousAd: "Previous ad",
+          nextAd: "Next ad",
+          goToAd: (index: number) => `Go to ad ${index}`,
+        };
 
   return (
     <div className="relative w-full overflow-hidden rounded-[1.25rem] border border-[#d8e5d8] bg-white shadow-[0_12px_28px_rgba(18,54,34,0.08)] sm:rounded-[1.5rem]">
@@ -153,7 +167,7 @@ const AdsCarousel = () => {
             <button
               onClick={goToPrevious}
               className="absolute left-2 top-1/2 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#2f7a43] shadow-md backdrop-blur transition hover:bg-white sm:left-4 sm:h-12 sm:w-12"
-              aria-label="Previous ad"
+              aria-label={ui.previousAd}
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -161,7 +175,7 @@ const AdsCarousel = () => {
             <button
               onClick={goToNext}
               className="absolute right-2 top-1/2 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#2f7a43] shadow-md backdrop-blur transition hover:bg-white sm:right-4 sm:h-12 sm:w-12"
-              aria-label="Next ad"
+              aria-label={ui.nextAd}
             >
               <ChevronRight className="h-5 w-5" />
             </button>
@@ -171,12 +185,12 @@ const AdsCarousel = () => {
 
       <div className="border-t border-[#d8e5d8] bg-white px-5 py-4 sm:px-6">
         <div className="max-w-2xl">
-          <p className="text-[10px] font-black uppercase text-[#2f7a43]">Promotion</p>
-          <h2 className="mt-1.5 text-xl font-bold text-theme-heading sm:text-2xl">
+          <p className={`text-[10px] font-black uppercase text-[#2f7a43] ${language === "te" ? "font-telugu tracking-[0.08em] normal-case" : ""}`}>{ui.promotion}</p>
+          <h2 className={`mt-1.5 text-xl font-bold text-theme-heading sm:text-2xl ${language === "te" ? "font-telugu leading-[1.5] pt-1" : "leading-tight"}`}>
             {translateDynamicText(currentAd.title, language)}
           </h2>
           {currentAd.description ? (
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-body">
+            <p className={`mt-2 max-w-xl text-sm text-theme-body ${language === "te" ? "font-telugu leading-[1.95]" : "leading-relaxed"}`}>
               {translateDynamicText(currentAd.description, language)}
             </p>
           ) : null}
@@ -207,7 +221,7 @@ const AdsCarousel = () => {
                 className={`h-2 rounded-full transition ${
                   index === currentIndex ? "w-8 bg-[#2f7a43]" : "w-2 bg-[#b8c9ba] hover:bg-[#7fa487]"
                 }`}
-                aria-label={`Go to ad ${index + 1}`}
+                aria-label={ui.goToAd(index + 1)}
               />
             ))}
           </div>

@@ -172,7 +172,7 @@ export const content = {
       nav: {
         "/": "హోమ్",
         "/products": "ఉత్పత్తులు",
-        "/about": "గురించి",
+        "/about": "మా గురించి",
         "/contact": "సంప్రదించండి",
       },
       cart: "కార్ట్",

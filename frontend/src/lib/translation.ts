@@ -141,7 +141,9 @@ export const translateDynamicText = (value: unknown, language: LanguageCode) => 
     return exact;
   }
 
-  return replaceKnownPhrases(text).replace(/[A-Za-z]+(?:'[A-Za-z]+)?/g, (word) => {
+  return replaceKnownPhrases(text)
+    .replace(/\bvegan\b/gi, "వేగన్")
+    .replace(/[A-Za-z]+(?:'[A-Za-z]+)?/g, (word) => {
     const translated = wordTranslations[word.toLowerCase()];
     return translated ?? word;
   });
