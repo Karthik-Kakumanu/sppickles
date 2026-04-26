@@ -451,65 +451,98 @@ const inferRazorpayModeFromKey = (keyId) => {
   return "unknown";
 };
 
-const resolveActiveRazorpayCredentials = () => {
-  if (RAZORPAY_MODE === "live") {
-    return {
-      keyId: RAZORPAY_LIVE_KEY_ID || RAZORPAY_KEY_ID,
-      keySecret: RAZORPAY_LIVE_KEY_SECRET || RAZORPAY_KEY_SECRET,
-    };
-  }
+const pickCompleteRazorpayCredentialPair = (...candidates) => {
+  for (const candidate of candidates) {
+    const keyId = String(candidate?.keyId ?? "").trim();
+    const keySecret = String(candidate?.keySecret ?? "").trim();
 
-  if (RAZORPAY_MODE === "test") {
-    return {
-      keyId: RAZORPAY_TEST_KEY_ID || RAZORPAY_KEY_ID,
-      keySecret: RAZORPAY_TEST_KEY_SECRET || RAZORPAY_KEY_SECRET,
-    };
-  }
-
-  if (NODE_ENV === "production" && RAZORPAY_LIVE_KEY_ID && RAZORPAY_LIVE_KEY_SECRET) {
-    return {
-      keyId: RAZORPAY_LIVE_KEY_ID,
-      keySecret: RAZORPAY_LIVE_KEY_SECRET,
-    };
-  }
-
-  if (NODE_ENV !== "production" && RAZORPAY_TEST_KEY_ID && RAZORPAY_TEST_KEY_SECRET) {
-    return {
-      keyId: RAZORPAY_TEST_KEY_ID,
-      keySecret: RAZORPAY_TEST_KEY_SECRET,
-    };
+    if (keyId && keySecret) {
+      return {
+        keyId,
+        keySecret,
+        source: candidate?.source ?? "unknown",
+      };
+    }
   }
 
   return {
-    keyId: RAZORPAY_KEY_ID || RAZORPAY_LIVE_KEY_ID || RAZORPAY_TEST_KEY_ID,
-    keySecret: RAZORPAY_KEY_SECRET || RAZORPAY_LIVE_KEY_SECRET || RAZORPAY_TEST_KEY_SECRET,
+    keyId: "",
+    keySecret: "",
+    source: "unconfigured",
   };
+};
+
+const resolveActiveRazorpayCredentials = () => {
+  if (RAZORPAY_MODE === "live") {
+    return pickCompleteRazorpayCredentialPair(
+      {
+        keyId: RAZORPAY_LIVE_KEY_ID,
+        keySecret: RAZORPAY_LIVE_KEY_SECRET,
+        source: "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET",
+      },
+      {
+        keyId: RAZORPAY_KEY_ID,
+        keySecret: RAZORPAY_KEY_SECRET,
+        source: "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET",
+      },
+    );
+  }
+
+  if (RAZORPAY_MODE === "test") {
+    return pickCompleteRazorpayCredentialPair(
+      {
+        keyId: RAZORPAY_TEST_KEY_ID,
+        keySecret: RAZORPAY_TEST_KEY_SECRET,
+        source: "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET",
+      },
+      {
+        keyId: RAZORPAY_KEY_ID,
+        keySecret: RAZORPAY_KEY_SECRET,
+        source: "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET",
+      },
+    );
+  }
+
+  if (NODE_ENV === "production" && RAZORPAY_LIVE_KEY_ID && RAZORPAY_LIVE_KEY_SECRET) {
+    return pickCompleteRazorpayCredentialPair({
+      keyId: RAZORPAY_LIVE_KEY_ID,
+      keySecret: RAZORPAY_LIVE_KEY_SECRET,
+      source: "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET",
+    });
+  }
+
+  if (NODE_ENV !== "production" && RAZORPAY_TEST_KEY_ID && RAZORPAY_TEST_KEY_SECRET) {
+    return pickCompleteRazorpayCredentialPair({
+      keyId: RAZORPAY_TEST_KEY_ID,
+      keySecret: RAZORPAY_TEST_KEY_SECRET,
+      source: "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET",
+    });
+  }
+
+  return pickCompleteRazorpayCredentialPair(
+    {
+      keyId: RAZORPAY_KEY_ID,
+      keySecret: RAZORPAY_KEY_SECRET,
+      source: "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET",
+    },
+    {
+      keyId: RAZORPAY_LIVE_KEY_ID,
+      keySecret: RAZORPAY_LIVE_KEY_SECRET,
+      source: "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET",
+    },
+    {
+      keyId: RAZORPAY_TEST_KEY_ID,
+      keySecret: RAZORPAY_TEST_KEY_SECRET,
+      source: "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET",
+    },
+  );
 };
 
 const activeRazorpayCredentials = resolveActiveRazorpayCredentials();
 const ACTIVE_RAZORPAY_KEY_ID = activeRazorpayCredentials.keyId;
 const ACTIVE_RAZORPAY_KEY_SECRET = activeRazorpayCredentials.keySecret;
 const ACTIVE_RAZORPAY_MODE = inferRazorpayModeFromKey(ACTIVE_RAZORPAY_KEY_ID);
-const ACTIVE_RAZORPAY_KEY_SOURCE =
-  RAZORPAY_MODE === "live"
-    ? RAZORPAY_LIVE_KEY_ID
-      ? "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET"
-      : "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET"
-    : RAZORPAY_MODE === "test"
-      ? RAZORPAY_TEST_KEY_ID
-        ? "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET"
-        : "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET"
-      : NODE_ENV === "production" && RAZORPAY_LIVE_KEY_ID && RAZORPAY_LIVE_KEY_SECRET
-        ? "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET"
-        : NODE_ENV !== "production" && RAZORPAY_TEST_KEY_ID && RAZORPAY_TEST_KEY_SECRET
-          ? "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET"
-          : RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET
-            ? "RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET"
-            : RAZORPAY_LIVE_KEY_ID && RAZORPAY_LIVE_KEY_SECRET
-              ? "RAZORPAY_LIVE_KEY_ID/RAZORPAY_LIVE_KEY_SECRET"
-              : RAZORPAY_TEST_KEY_ID && RAZORPAY_TEST_KEY_SECRET
-                ? "RAZORPAY_TEST_KEY_ID/RAZORPAY_TEST_KEY_SECRET"
-                : "unconfigured";
+const ACTIVE_RAZORPAY_KEY_SOURCE = activeRazorpayCredentials.source;
 
 const razorpayClient =
   ACTIVE_RAZORPAY_KEY_ID && ACTIVE_RAZORPAY_KEY_SECRET
