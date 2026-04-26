@@ -12,6 +12,26 @@ import { content as translations } from "@/content/translations";
 
 const pageWrap = "w-full px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10";
 
+const BrandPromiseBadge = ({ language }: { language: "en" | "te" }) => {
+  const isTelugu = language === "te";
+
+  return (
+    <div
+      className={`mt-1.5 inline-flex items-center gap-2 rounded-full border border-[#e4c96f] bg-[linear-gradient(135deg,#fff8dc_0%,#fff1ba_45%,#f8fff1_100%)] px-3 py-1 shadow-[0_10px_26px_rgba(169,127,20,0.16)] ring-1 ring-[#fff5d2] ${
+        isTelugu ? "font-telugu" : ""
+      }`}
+    >
+      <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c68e10] opacity-60" />
+        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[linear-gradient(135deg,#d9a11f_0%,#2f7a43_100%)]" />
+      </span>
+      <span className="bg-[linear-gradient(120deg,#9a6a00_0%,#c08a12_35%,#1f6a39_100%)] bg-clip-text text-[0.7rem] font-black uppercase tracking-[0.22em] text-transparent sm:text-[0.74rem]">
+        {isTelugu ? "శుద్ధ బ్రాహ్మణ శైలి" : "Pure Brahmin Style"}
+      </span>
+    </div>
+  );
+};
+
 const SiteLayout = () => {
   const { language, setLanguage } = useLanguage();
   const t = translations[language];
@@ -41,12 +61,13 @@ const SiteLayout = () => {
                 className="h-[2.8rem] w-[2.8rem] rounded-[0.9rem] object-cover md:h-[3.1rem] md:w-[3.1rem]"
               />
 
-              <div>
-                <p className="font-heading text-[1.1rem] font-bold leading-none tracking-[-0.02em] text-[#1a3a26] sm:text-[1.2rem] md:text-[1.35rem]">
-                  {brand.name}
-                </p>
-              </div>
-            </Link>
+	              <div>
+	                <p className="font-heading text-[1.1rem] font-bold leading-none tracking-[-0.02em] text-[#1a3a26] sm:text-[1.2rem] md:text-[1.35rem]">
+	                  {brand.name}
+	                </p>
+                  <BrandPromiseBadge language={language} />
+	              </div>
+	            </Link>
 
             <div className="ml-auto hidden flex-1 items-center justify-end gap-2.5 md:flex">
               <nav className="hidden items-center gap-1 rounded-full border border-[#e8ede8] bg-white px-2 py-2 md:flex">
