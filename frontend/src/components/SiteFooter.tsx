@@ -26,6 +26,9 @@ const footerUi = {
     pixelkodeWhatsapp: "PixelKode WhatsApp",
     pixelkodeInstagram: "PixelKode Instagram",
     addressLabel: "Store address",
+    aboutTitle: "About Us",
+    aboutText:
+      "A family-run Andhra food brand focused on premium presentation, careful packing, and traditional vegetarian flavours for India and overseas customers. Established in 2016, we bring authentic taste to your table.",
   },
   te: {
     trustedTitle: "మమ్మల్ని నమ్మే కారణాలు",
@@ -45,6 +48,9 @@ const footerUi = {
     pixelkodeWhatsapp: "పిక్సెల్‌కోడ్ వాట్సాప్",
     pixelkodeInstagram: "పిక్సెల్‌కోడ్ ఇన్‌స్టాగ్రామ్",
     addressLabel: "దుకాణ చిరునామా",
+    aboutTitle: "మా గురించి",
+    aboutText:
+      "సాంప్రదాయ శాకాహార రుచులను అందంగా ప్యాక్ చేసి భారతదేశం మరియు విదేశాల్లో ఉన్న కుటుంబాలకు చేరవేసే కుటుంబ ఆధారిత ఆంధ్ర ఆహార బ్రాండ్ మేము. 2016 నుండి నిజమైన ఇంటి రుచిని మీ ముందుకు తీసుకువస్తున్నాము.",
   },
 } as const;
 
@@ -144,10 +150,7 @@ const SiteFooter = () => {
                   <span className="font-medium">{brand.whatsappDisplay}</span>
                 </div>
               </a>
-              <a
-                href={`mailto:${brand.supportEmail}`}
-                className="flex items-start gap-2 transition hover:text-[#2f7a43]"
-              >
+              <a href={`mailto:${brand.supportEmail}`} className="flex items-start gap-2 transition hover:text-[#2f7a43]">
                 <Mail className="mt-1 h-4 w-4 flex-shrink-0 text-[#2f7a43]" />
                 <span className="font-medium">{brand.supportEmail}</span>
               </a>
@@ -167,12 +170,10 @@ const SiteFooter = () => {
 
         <div className="mb-12 grid gap-8 md:grid-cols-2">
           <div className="rounded-xl border border-gray-200 bg-white p-6">
-            <h4 className="mb-3 font-heading text-lg font-semibold text-theme-heading">{t.footer.about}</h4>
-            <p className={`text-sm leading-6 text-theme-body ${isTelugu ? "font-telugu" : ""}`}>
-              {isTelugu
-                ? "సాంప్రదాయ శాకాహార రుచులను అందంగా ప్యాక్ చేసి భారతదేశం మరియు విదేశాల్లో ఉన్న కుటుంబాలకు చేరవేసే కుటుంబ ఆధారిత ఆంధ్ర ఆహార బ్రాండ్‌ మేము."
-                : t.footer.aboutText}
-            </p>
+            <h4 className={`mb-3 font-heading text-lg font-semibold text-theme-heading ${isTelugu ? "font-telugu" : ""}`}>
+              {ui.aboutTitle}
+            </h4>
+            <p className={`text-sm leading-6 text-theme-body ${isTelugu ? "font-telugu" : ""}`}>{ui.aboutText}</p>
           </div>
 
           <div className="rounded-xl border border-gray-200 bg-white p-6">
