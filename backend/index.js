@@ -2703,6 +2703,33 @@ const getEligibleCategoryKey = (category, subcategory) => {
   return "pickles";
 };
 
+const isFirstUseOnlyCouponCode = (couponCode) => String(couponCode ?? "").trim().toUpperCase().startsWith("FIRST");
+
+const assertFirstUseCouponEligibility = async (couponCode, customerPhone) => {
+  if (!isFirstUseOnlyCouponCode(couponCode) || !customerPhone) {
+    return;
+  }
+
+  const priorUsageResult = await pool.query(
+    `
+      select 1
+      from orders
+      where customer_phone = $1
+        and coupon_code like 'FIRST%'
+        and status <> 'cancelled'
+      limit 1
+    `,
+    [String(customerPhone).trim()],
+  );
+
+  if (priorUsageResult.rowCount > 0) {
+    throw {
+      statusCode: 400,
+      message: "Sorry, you have already used a first-time coupon. FIRST coupons can only be used once per customer.",
+    };
+  }
+};
+
 const resolveCouponDiscount = async (payload, subtotal) => {
   const couponCode = payload.couponCode;
 
@@ -2732,6 +2759,8 @@ const resolveCouponDiscount = async (payload, subtotal) => {
   if (!coupon.isActive || !isWithinScheduleWindow(coupon.startsAt, coupon.endsAt)) {
     throw { statusCode: 400, message: "Coupon is not active right now." };
   }
+
+  await assertFirstUseCouponEligibility(coupon.code, payload.customer?.phone);
 
   const productIds = [...new Set(payload.items.map((item) => item.productId))];
   const productResult = productIds.length
