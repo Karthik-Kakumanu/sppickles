@@ -24,6 +24,12 @@ import {
   useUpdateAdMutation,
   useDeleteAdMutation,
 } from "@/lib/api";
+import {
+  getTodayDateInput,
+  isPastDateInput,
+  toDateInput,
+  toLocalDayBoundaryIsoOrNull,
+} from "@/lib/adminSchedule";
 
 interface AdForm {
   title: string;
@@ -51,40 +57,6 @@ const fieldClass =
 const mediaFrameClass =
   "flex min-h-[11rem] max-h-[26rem] items-center justify-center overflow-hidden rounded-lg border border-[#e6efe7] bg-[#f8fcf9] p-2 sm:p-3";
 const MAX_AD_MEDIA_FILE_SIZE_BYTES = 35 * 1024 * 1024;
-
-const toDateInput = (value: string | null) => {
-  if (!value) return "";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  const pad = (part: number) => String(part).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-};
-
-const toIsoDateBoundaryOrNull = (value: string, boundary: "start" | "end") => {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-
-  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
-
-  if (dateOnlyMatch) {
-    const year = Number(dateOnlyMatch[1]);
-    const monthIndex = Number(dateOnlyMatch[2]) - 1;
-    const day = Number(dateOnlyMatch[3]);
-
-    const date =
-      boundary === "start"
-        ? new Date(year, monthIndex, day, 0, 0, 0, 0)
-        : new Date(year, monthIndex, day, 23, 59, 59, 999);
-
-    return date.toISOString();
-  }
-
-  const date = new Date(trimmed);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toISOString();
-};
 
 const formFromAd = (ad: AdminAd): AdForm => ({
   title: ad.title,
@@ -137,6 +109,7 @@ const AdminAdsPage = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<AdForm>(emptyForm());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const todayDateInput = getTodayDateInput();
 
   const summary = useMemo(() => {
     let live = 0;
@@ -200,8 +173,8 @@ const AdminAdsPage = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const startsAt = toIsoDateBoundaryOrNull(form.startsAt, "start");
-    const endsAt = toIsoDateBoundaryOrNull(form.endsAt, "end");
+    const startsAt = toLocalDayBoundaryIsoOrNull(form.startsAt, "start");
+    const endsAt = toLocalDayBoundaryIsoOrNull(form.endsAt, "end");
 
     if (!editingId && ads.length >= MAX_ADMIN_ADS) {
       toast({
@@ -216,6 +189,15 @@ const AdminAdsPage = () => {
       toast({
         title: "Dates required",
         description: "Start date and end date are mandatory for every ad.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isPastDateInput(form.startsAt, todayDateInput) || isPastDateInput(form.endsAt, todayDateInput)) {
+      toast({
+        title: "Past dates blocked",
+        description: "Choose today or a future date for ad scheduling.",
         variant: "destructive",
       });
       return;
@@ -452,25 +434,26 @@ const AdminAdsPage = () => {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="space-y-1.5 text-sm font-medium text-theme-body">
                     Starts on
-                    <input
-                      type="date"
-	                      value={form.startsAt}
-	                      onChange={(event) => setForm((current) => ({ ...current, startsAt: event.target.value }))}
-	                      required
-	                      className={fieldClass}
-	                    />
+	                    <input
+	                      type="date"
+		                      value={form.startsAt}
+		                      onChange={(event) => setForm((current) => ({ ...current, startsAt: event.target.value }))}
+                          min={todayDateInput}
+		                      required
+		                      className={fieldClass}
+		                    />
 	                  </label>
 
                   <label className="space-y-1.5 text-sm font-medium text-theme-body">
                     Ends on
-                    <input
-	                      type="date"
-	                      value={form.endsAt}
-	                      onChange={(event) => setForm((current) => ({ ...current, endsAt: event.target.value }))}
-	                      min={form.startsAt || undefined}
-	                      required
-	                      className={fieldClass}
-	                    />
+	                    <input
+		                      type="date"
+		                      value={form.endsAt}
+		                      onChange={(event) => setForm((current) => ({ ...current, endsAt: event.target.value }))}
+		                      min={form.startsAt || todayDateInput}
+		                      required
+		                      className={fieldClass}
+		                    />
                   </label>
                 </div>
 

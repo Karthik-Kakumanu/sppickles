@@ -102,6 +102,31 @@ const valueCards = [
   },
 ] as const;
 
+const highlightPhrase = (text: string, language: "en" | "te") => {
+  if (language !== "en") {
+    return text;
+  }
+
+  const phrase = "Brahmin-style";
+  const parts = text.split(phrase);
+
+  if (parts.length === 1) {
+    return text;
+  }
+
+  return parts.flatMap((part, index) => [
+    part,
+    index < parts.length - 1 ? (
+      <span
+        key={`${phrase}-${index}`}
+        className="mx-1 inline-flex rounded-full border border-[#f1d67b] bg-[linear-gradient(180deg,#fff5cf_0%,#ffe39b_100%)] px-2.5 py-1 align-middle text-sm font-semibold tracking-[0.01em] text-[#7a5700] shadow-[0_8px_18px_rgba(226,185,59,0.2)] sm:text-base"
+      >
+        {phrase}
+      </span>
+    ) : null,
+  ]);
+};
+
 const AboutPage = () => {
   const { language } = useLanguage();
   const t = aboutCopy[language];
@@ -122,8 +147,19 @@ const AboutPage = () => {
             <h1 className="mt-5 font-heading text-4xl font-semibold text-theme-heading md:text-5xl xl:text-6xl">
               {t.title}
             </h1>
+            <div className="mt-5 inline-flex max-w-2xl items-center rounded-[1.5rem] border border-[#e8ddb6] bg-[linear-gradient(135deg,rgba(255,243,201,0.95),rgba(255,255,255,0.94))] px-5 py-3 shadow-[0_18px_36px_rgba(226,185,59,0.12)]">
+              <p
+                className={`text-sm font-semibold uppercase tracking-[0.18em] text-[#8a690b] sm:text-[0.95rem] ${
+                  language === "te" ? "font-telugu" : ""
+                }`}
+              >
+                {language === "te"
+                  ? "సాత్విక సంప్రదాయం. ఇంటి శ్రద్ధ. నమ్మకంగా చేరే రుచి."
+                  : "Satvik tradition. Homemade care. A brand story that feels trustworthy at first read."}
+              </p>
+            </div>
             <p
-              className={`mt-5 max-w-3xl text-base leading-8 text-theme-body md:text-lg ${
+              className={`mt-6 max-w-3xl text-balance text-base leading-8 text-theme-body md:text-lg md:leading-9 ${
                 language === "te" ? "font-telugu" : ""
               }`}
             >
@@ -152,11 +188,11 @@ const AboutPage = () => {
                   {section.title}
                 </h2>
                 <p
-                  className={`mt-4 text-base leading-8 text-theme-body ${
+                  className={`mt-4 text-balance text-base leading-8 text-theme-body md:text-[1.05rem] md:leading-9 ${
                     language === "te" ? "font-telugu" : ""
                   }`}
                 >
-                  {section.body}
+                  {highlightPhrase(section.body, language)}
                 </p>
               </div>
             ))}
@@ -168,7 +204,7 @@ const AboutPage = () => {
                 {t.operationsTitle}
               </h2>
               <p
-                className={`mt-4 text-base leading-8 text-theme-body ${
+                className={`mt-4 text-balance text-base leading-8 text-theme-body md:text-[1.05rem] md:leading-9 ${
                   language === "te" ? "font-telugu" : ""
                 }`}
               >
@@ -181,7 +217,7 @@ const AboutPage = () => {
                 {t.valuesTitle}
               </h2>
               <p
-                className={`mt-4 text-base leading-8 text-theme-body ${
+                className={`mt-4 text-balance text-base leading-8 text-theme-body md:text-[1.05rem] md:leading-9 ${
                   language === "te" ? "font-telugu" : ""
                 }`}
               >

@@ -17,6 +17,12 @@ import {
   useProductsQuery,
   useUpdateCouponMutation,
 } from "@/lib/api";
+import {
+  getTodayDateInput,
+  isPastDateInput,
+  toDateInput,
+  toLocalDayBoundaryIsoOrNull,
+} from "@/lib/adminSchedule";
 import { formatCurrency } from "@/lib/pricing";
 
 type CouponFormState = {
@@ -56,40 +62,6 @@ const categoryOptions: Array<{ value: CouponCategoryScope; label: string }> = [
   { value: "powders", label: "Powders" },
   { value: "fryums", label: "Fryums" },
 ];
-
-const toDateInput = (value: string | null) => {
-  if (!value) return "";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  const pad = (part: number) => String(part).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-};
-
-const toIsoDateBoundaryOrNull = (value: string, boundary: "start" | "end") => {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-
-  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
-
-  if (dateOnlyMatch) {
-    const year = Number(dateOnlyMatch[1]);
-    const monthIndex = Number(dateOnlyMatch[2]) - 1;
-    const day = Number(dateOnlyMatch[3]);
-
-    const date =
-      boundary === "start"
-        ? new Date(year, monthIndex, day, 0, 0, 0, 0)
-        : new Date(year, monthIndex, day, 23, 59, 59, 999);
-
-    return date.toISOString();
-  }
-
-  const date = new Date(trimmed);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toISOString();
-};
 
 const toNumberOrNull = (value: string) => {
   const trimmed = value.trim();
@@ -196,6 +168,7 @@ const AdminCouponsPage = () => {
   const [filter, setFilter] = useState<CouponFilter>("all");
   const [form, setForm] = useState<CouponFormState>(emptyForm());
   const [cardsVisible, setCardsVisible] = useState(false);
+  const todayDateInput = getTodayDateInput();
 
   const isSaving =
     createCouponMutation.isPending ||
@@ -278,8 +251,8 @@ const AdminCouponsPage = () => {
 
     const parsedMinOrderAmount = toNumberOrNull(form.minOrderAmount);
     const parsedDiscountValue = Number(form.discountValue);
-    const startsAt = toIsoDateBoundaryOrNull(form.startsAt, "start");
-    const endsAt = toIsoDateBoundaryOrNull(form.endsAt, "end");
+    const startsAt = toLocalDayBoundaryIsoOrNull(form.startsAt, "start");
+    const endsAt = toLocalDayBoundaryIsoOrNull(form.endsAt, "end");
 
     if (!Number.isFinite(parsedDiscountValue) || parsedDiscountValue <= 0) {
       toast({
@@ -303,6 +276,15 @@ const AdminCouponsPage = () => {
       toast({
         title: "Dates required",
         description: "Start date and end date are mandatory for every coupon.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isPastDateInput(form.startsAt, todayDateInput) || isPastDateInput(form.endsAt, todayDateInput)) {
+      toast({
+        title: "Past dates blocked",
+        description: "Choose today or a future date for coupon scheduling.",
         variant: "destructive",
       });
       return;
@@ -625,6 +607,7 @@ const AdminCouponsPage = () => {
                       type="date"
                       value={form.startsAt}
                       onChange={(event) => setForm((current) => ({ ...current, startsAt: event.target.value }))}
+                      min={todayDateInput}
                       required
                       className={fieldClass}
                     />
@@ -636,7 +619,7 @@ const AdminCouponsPage = () => {
                       type="date"
                       value={form.endsAt}
                       onChange={(event) => setForm((current) => ({ ...current, endsAt: event.target.value }))}
-                      min={form.startsAt || undefined}
+                      min={form.startsAt || todayDateInput}
                       required
                       className={fieldClass}
                     />
