@@ -300,6 +300,11 @@ type AdminAnalytics = {
     createdAt: string;
     customerName: string;
     customerPhone: string;
+    customerAddress: string;
+    customerCity: string;
+    customerState: string;
+    customerCountry: string;
+    customerPincode: string;
     paymentStatus: string;
     itemCount: number;
   }>;

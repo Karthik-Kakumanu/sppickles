@@ -25,6 +25,26 @@ const barHeights = [32, 48, 64, 52, 74, 58, 88];
 const formatShortDate = (value: string) =>
   new Date(value).toLocaleDateString("en-IN", { month: "short", day: "numeric" });
 
+const formatRecentOrderAddress = (order: {
+  customerAddress: string;
+  customerCity: string;
+  customerState: string;
+  customerCountry: string;
+  customerPincode: string;
+}) => {
+  const parts = [
+    order.customerAddress,
+    order.customerCity,
+    order.customerState,
+    order.customerPincode,
+    order.customerCountry,
+  ]
+    .map((part) => String(part ?? "").trim())
+    .filter(Boolean);
+
+  return parts.length > 0 ? parts.join(", ") : "Address not provided";
+};
+
 const AdminDashboardPage = () => {
   const { isAdminReady, isAdminAuthenticated, adminEmail } = useStore();
   const { data: analytics, isLoading, isRefetching, refetch } = useAdminAnalyticsQuery();
@@ -382,6 +402,10 @@ const AdminDashboardPage = () => {
                           </p>
                           <h3 className="mt-1 text-lg font-semibold text-theme-heading">{order.customerName}</h3>
                           <p className="text-sm text-theme-body">{order.id}</p>
+                          <div className="mt-2 rounded-xl border border-[#ead9a2] bg-[#fff9ec] px-3 py-2">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8a651a]">Delivery address</p>
+                            <p className="mt-1 text-sm font-medium text-theme-heading">{formatRecentOrderAddress(order)}</p>
+                          </div>
                         </div>
                         <p className="text-right text-sm font-semibold text-theme-heading">
                           {formatCurrency(order.total)}

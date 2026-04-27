@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   FileSpreadsheet,
   Loader2,
+  MapPin,
   PlusCircle,
   RefreshCw,
   Search,
@@ -68,6 +69,20 @@ const STATUS_META: Record<
 
 const formatDateTime = (value: string) =>
   new Date(value).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+
+const formatDeliveryAddress = (order: OrderRecord) => {
+  const parts = [
+    order.customer.address,
+    order.customer.city,
+    order.customer.state,
+    order.customer.pincode,
+    order.customer.country,
+  ]
+    .map((part) => String(part ?? "").trim())
+    .filter(Boolean);
+
+  return parts.length > 0 ? parts.join(", ") : "Address not provided";
+};
 
 const resolveCapturedAmount = (order: OrderRecord) => {
   const status = String(order.paymentStatus ?? "").toLowerCase();
@@ -746,15 +761,17 @@ const AdminOrdersPage = () => {
                           </div>
 
                           <textarea
-                            required
                             rows={2}
                             value={manualOrder.customerAddress}
                             onChange={(event) =>
                               setManualOrder((current) => ({ ...current, customerAddress: event.target.value }))
                             }
-                            placeholder="Full address"
+                            placeholder="Delivery address (optional)"
                             className="theme-input mt-3 w-full rounded-xl border px-3 py-2 text-sm"
                           />
+                          <p className="mt-2 text-xs text-theme-body-soft">
+                            Delivery address is optional for manual orders, but adding it makes dispatch easier.
+                          </p>
 
                           <div className="mt-3 grid gap-3 md:grid-cols-2">
                             <input
@@ -1148,6 +1165,16 @@ const AdminOrdersPage = () => {
                           <p className="text-theme-body-soft">{formatDateTime(order.createdAt)}</p>
                         </div>
 
+                        <div className="mt-3 rounded-xl border border-[#ead9a2] bg-[#fff9ec] px-3 py-3">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="mt-0.5 h-4 w-4 text-[#8a651a]" />
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a651a]">Delivery address</p>
+                              <p className="mt-1 text-sm font-medium text-theme-heading">{formatDeliveryAddress(order)}</p>
+                            </div>
+                          </div>
+                        </div>
+
                         <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[#eaf1ea] bg-[#f8fbf8] px-3 py-2">
                           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-body-soft">Total</span>
                           <span className="text-sm font-semibold text-theme-heading">{formatCurrency(order.total)}</span>
@@ -1288,6 +1315,10 @@ const AdminOrdersPage = () => {
                               <td className="px-6 py-4">
                                 <div className="font-semibold text-theme-heading">{order.customer.name}</div>
                                 <div className="text-xs text-theme-body-soft">{order.customer.phone}</div>
+                                <div className="mt-2 rounded-xl border border-[#ead9a2] bg-[#fff9ec] px-3 py-2 text-xs font-medium text-theme-heading">
+                                  <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#8a651a]">Delivery address</span>
+                                  <span className="mt-1 block">{formatDeliveryAddress(order)}</span>
+                                </div>
                               </td>
                               <td className="px-6 py-4">
                                 <div className="font-semibold text-theme-heading">{formatCurrency(order.total)}</div>
@@ -1346,6 +1377,10 @@ const AdminOrdersPage = () => {
                               <tr>
                                 <td colSpan={6} className="bg-[#fbfdfb] px-6 py-5">
                                   <div className="mb-4 grid gap-3 sm:grid-cols-3">
+                                    <div className="rounded-2xl border border-[#ead9a2] bg-[#fff9ec] p-4 sm:col-span-3">
+                                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8a651a]">Delivery address</p>
+                                      <p className="mt-1 text-base font-semibold text-theme-heading">{formatDeliveryAddress(order)}</p>
+                                    </div>
                                     <div className="rounded-2xl border border-[#e4eee4] bg-white p-4">
                                       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-theme-body-soft">Captured amount</p>
                                       <p className="mt-1 text-base font-semibold text-theme-heading">{formatCurrency(capturedAmount)}</p>

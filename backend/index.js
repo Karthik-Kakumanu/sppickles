@@ -2264,6 +2264,11 @@ const getAdminAnalytics = async () => {
         created_at,
         customer_name,
         customer_phone,
+        customer_address,
+        customer_city,
+        customer_state,
+        customer_country,
+        customer_pincode,
         payment_status,
         payment_captured_at
       from orders
@@ -2360,6 +2365,11 @@ const getAdminAnalytics = async () => {
       createdAt: row.created_at,
       customerName: row.customer_name,
       customerPhone: row.customer_phone,
+      customerAddress: row.customer_address,
+      customerCity: row.customer_city,
+      customerState: row.customer_state,
+      customerCountry: row.customer_country,
+      customerPincode: row.customer_pincode,
       paymentStatus: row.payment_status,
       itemCount: Number(itemCountsByOrder.get(String(row.id ?? "")) ?? 0),
     })),
@@ -2507,7 +2517,7 @@ const cleanupLegacyStockAliases = async (canonicalProductId) => {
   );
 };
 
-const normalizeOrderPayload = (body) => {
+const normalizeOrderPayload = (body, { requireAddress = true } = {}) => {
   if (!isPlainObject(body)) {
     throw { statusCode: 400, message: "Order payload must be a JSON object." };
   }
@@ -2533,7 +2543,7 @@ const normalizeOrderPayload = (body) => {
     throw { statusCode: 400, message: "Phone must be exactly 10 digits." };
   }
 
-  if (address.length < 5) {
+  if (requireAddress && address.length < 5) {
     throw { statusCode: 400, message: "Address must be at least 5 characters." };
   }
 
@@ -3178,7 +3188,7 @@ const createManualOrder = async (body) => {
   const payload = normalizeOrderPayload({
     ...body,
     paymentMethod: "upi",
-  });
+  }, { requireAddress: false });
 
   return createOrderFromPayload(payload, {
     razorpayOrderId: null,
