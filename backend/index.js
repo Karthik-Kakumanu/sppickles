@@ -2102,8 +2102,8 @@ const getStorefrontAds = async () => {
       from ads
       where
         is_active = true
-        and (starts_at is null or starts_at <= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'))
-        and (ends_at is null or ends_at >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'))
+        and (starts_at is null or starts_at <= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'))
+        and (ends_at is null or ends_at >= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'))
       order by display_order asc, updated_at desc, created_at desc
     `,
   );
