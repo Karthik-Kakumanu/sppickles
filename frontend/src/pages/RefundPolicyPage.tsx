@@ -7,44 +7,70 @@ const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 const refundCopy = {
   en: {
     title: "Refund Policy",
-    description: "Refund policy for SP Traditional Pickles. This store follows a strict no-refund policy.",
-    updated: "Last updated: April 6, 2026",
-    alertTitle: "No Refund Policy",
+    description:
+      "Refund policy for SP Traditional Pickles for website orders cancelled within the allowed time window.",
+    updated: "Last updated: April 29, 2026",
+    alertTitle: "Refunds for website orders",
     alertBody:
-      "All purchases made on this website are final. We do not provide refunds once an order is placed and confirmed.",
+      "Refunds are issued only for orders placed through this website and cancelled within 6 hours of the order being placed.",
     sections: [
       {
-        title: "1. Why refunds are not offered",
-        body: "Our products are perishable food items and are prepared in limited batches. For safety, quality, and hygiene reasons, refunds are not supported.",
+        title: "1. Refund eligibility",
+        body:
+          "If an order placed on this website is cancelled within 6 hours from the time of purchase, it becomes eligible for refund processing. After 6 hours, the order may move into preparation, packing, or dispatch and will not be treated as eligible under this refund policy.",
       },
       {
-        title: "2. Damaged or wrong items",
-        body: "If you receive a damaged package or incorrect item, contact us within 24 hours of delivery with photos and order details. We will review and provide a suitable resolution at our discretion.",
+        title: "2. Refund destination",
+        body:
+          "The refund amount will be sent back to the same bank account, card, UPI, or original payment source used while making the payment. We do not manually redirect refunds to a different account.",
+      },
+      {
+        title: "3. Razorpay processing time",
+        body:
+          "Once the refund is initiated through Razorpay, it may take about 1 to 3 working days for the amount to reflect back in the original payment source, depending on banking timelines and payment method processing.",
+      },
+      {
+        title: "4. Razorpay charges and commission",
+        body:
+          "Razorpay may issue the refund after deducting applicable commission or gateway charges, or it may process the full amount depending on its payment and settlement rules. Any such deduction, if applied by Razorpay, is outside our direct control.",
       },
     ],
-    contactTitle: "3. Contact",
-    contactLead: "For order support, contact",
+    contactTitle: "5. Contact",
+    contactLead: "For refund or cancellation support, contact",
     whatsappJoiner: "or WhatsApp",
   },
   te: {
     title: "రిఫండ్ విధానం",
-    description: "ఎస్‌పి ట్రెడిషనల్ పికిల్స్ రిఫండ్ విధానం. ఈ స్టోర్ కఠినమైన నో-రిఫండ్ విధానాన్ని అనుసరిస్తుంది.",
-    updated: "చివరిసారిగా నవీకరించిన తేదీ: 6 ఏప్రిల్ 2026",
-    alertTitle: "రిఫండ్ లేదు",
+    description:
+      "ఈ వెబ్‌సైట్‌లో పెట్టిన ఆర్డర్‌ను అనుమతించిన గడువులో రద్దు చేసినప్పుడు వర్తించే రిఫండ్ విధానం.",
+    updated: "చివరిసారిగా నవీకరించిన తేదీ: 29 ఏప్రిల్ 2026",
+    alertTitle: "వెబ్‌సైట్ ఆర్డర్‌లకు మాత్రమే రిఫండ్",
     alertBody:
-      "ఈ వెబ్‌సైట్‌లో చేసిన అన్ని కొనుగోళ్లు తుది నిర్ణయంగా పరిగణించబడతాయి. ఒకసారి ఆర్డర్ పెట్టి నిర్ధారించిన తర్వాత రిఫండ్ ఇవ్వబడదు.",
+      "ఈ వెబ్‌సైట్ ద్వారా చేసిన ఆర్డర్‌ను ఆర్డర్ పెట్టిన 6 గంటలలోపు రద్దు చేస్తే మాత్రమే రిఫండ్ ఇవ్వబడుతుంది.",
     sections: [
       {
-        title: "1. రిఫండ్ ఎందుకు ఇవ్వము",
-        body: "మా ఉత్పత్తులు త్వరగా ఉపయోగించాల్సిన ఆహార పదార్థాలు మరియు పరిమిత బ్యాచ్‌లలో తయారవుతాయి. భద్రత, నాణ్యత, పరిశుభ్రత కారణాల వల్ల రిఫండ్ అందించము.",
+        title: "1. రిఫండ్‌కు అర్హత",
+        body:
+          "ఈ వెబ్‌సైట్‌లో పెట్టిన ఆర్డర్‌ను కొనుగోలు చేసిన సమయం నుంచి 6 గంటలలోపు రద్దు చేస్తే, అది రిఫండ్ ప్రాసెస్‌కు అర్హంగా పరిగణించబడుతుంది. 6 గంటలు దాటిన తర్వాత ఆర్డర్ తయారీ, ప్యాకింగ్, లేదా పంపిణీ దశలోకి వెళ్లే అవకాశం ఉండడంతో, అలాంటి ఆర్డర్‌కు ఈ విధానం ప్రకారం రిఫండ్ వర్తించదు.",
       },
       {
-        title: "2. దెబ్బతిన్న లేదా తప్పు ఉత్పత్తులు",
-        body: "మీకు దెబ్బతిన్న ప్యాకెట్ లేదా తప్పు ఉత్పత్తి అందితే, 24 గంటలలోపు ఫోటోలు మరియు ఆర్డర్ వివరాలతో మమ్మల్ని సంప్రదించండి. పరిశీలించి తగిన పరిష్కారం అందిస్తాము.",
+        title: "2. రిఫండ్ వెళ్లే ఖాతా",
+        body:
+          "రిఫండ్ మొత్తం చెల్లింపు చేసిన అదే బ్యాంక్ ఖాతా, కార్డ్, UPI, లేదా అసలు చెల్లింపు మార్గానికే తిరిగి పంపబడుతుంది. వేరే ఖాతాకు మాన్యువల్‌గా రిఫండ్ మార్చి పంపించడం చేయము.",
+      },
+      {
+        title: "3. Razorpay ప్రాసెసింగ్ సమయం",
+        body:
+          "Razorpay ద్వారా రిఫండ్ ప్రారంభించిన తర్వాత, బ్యాంక్ మరియు చెల్లింపు విధానం ప్రకారం ఆ మొత్తం అసలు చెల్లింపు మార్గంలో కనిపించడానికి సాధారణంగా 1 నుంచి 3 పని దినాలు పట్టవచ్చు.",
+      },
+      {
+        title: "4. Razorpay కమిషన్ లేదా ఛార్జీలు",
+        body:
+          "Razorpay తన నియమాల ప్రకారం కమిషన్ లేదా పేమెంట్ గేట్‌వే ఛార్జీలను తగ్గించి రిఫండ్ చేయవచ్చు, లేదా పూర్తి మొత్తాన్ని కూడా రిఫండ్ చేయవచ్చు. అలాంటి తగ్గింపులు ఉంటే అవి Razorpay విధానాల ప్రకారమే ఉంటాయి; అవి మా ప్రత్యక్ష నియంత్రణలో ఉండవు.",
       },
     ],
-    contactTitle: "3. సంప్రదింపు",
-    contactLead: "ఆర్డర్ సహాయం కోసం",
+    contactTitle: "5. సంప్రదింపు",
+    contactLead: "రిఫండ్ లేదా రద్దు సహాయం కోసం",
     whatsappJoiner: "లేదా వాట్సాప్",
   },
 } as const;
@@ -60,7 +86,7 @@ const RefundPolicyPage = () => {
         title={`${t.title} | SP Traditional Pickles`}
         description={t.description}
         canonicalPath="/refund"
-        keywords={["refund policy", "no refund", "SP Traditional Pickles refund"]}
+        keywords={["refund policy", "website refund", "Razorpay refund", "SP Traditional Pickles refund"]}
       />
 
       <section className={pageWrap}>
