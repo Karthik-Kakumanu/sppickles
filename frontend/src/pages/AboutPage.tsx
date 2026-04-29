@@ -2,80 +2,80 @@ import { HeartHandshake, Leaf, PackageCheck, Sparkles } from "lucide-react";
 import Seo from "@/components/Seo";
 import { useLanguage } from "@/components/LanguageProvider";
 import { brand } from "@/data/site";
-import storyKitchen from "@/assets/story-kitchen.jpg";
+import aboutImage from "../../images/about.jpg";
 
 const pageWrap = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14";
 
 const aboutCopy = {
   en: {
     eyebrow: "About the brand",
-    title: "A fuller story for customers who want to know the people, the process, and the promise",
-    intro:
-      "The about page is no longer a short placeholder. It now gives the store a stronger sense of depth, helping customers understand what kind of kitchen, ingredients, and values stand behind the order flow.",
+    title: "A Brahmin-style kitchen story built on satvik taste, care, and trust",
     sections: [
       {
-        title: "Rooted in a household food culture",
+        title: "Rooted in Brahmin household food culture",
         body:
-          "SP Traditional Pickles is positioned around the feeling of pantry food made with discipline, familiarity, and home-style care. The intention is not to feel like a large anonymous ecommerce brand. It is to feel like a trusted Andhra kitchen that has learned how to present itself well online.",
+          "SP Traditional Pickles carries the feeling of an Andhra Brahmin home kitchen where food is prepared with cleanliness, discipline, and affection. Our pickles, podis, and fryums are meant to bring back the taste of food made at home, not the feel of factory-made products.",
       },
       {
-        title: "Prepared with traditional attention",
+        title: "Prepared in a satvik, traditional way",
         body:
-          "The product story focuses on handmade preparation, handpicked ingredients, vegetarian discipline, and flavours that feel familiar to customers who grew up with Brahmin-style or satvik kitchen traditions.",
+          "We focus on pure vegetarian preparation, carefully chosen ingredients, and small-batch work that stays close to traditional Brahmin-style cooking. Every recipe is made to feel balanced, homely, and familiar at the dining table.",
       },
       {
-        title: "Built for repeat trust",
+        title: "Made to earn family trust",
         body:
-          "The website explains the process, the categories, the contact details, and the support style clearly because trust is not built only by photos. It is built when customers feel the brand is careful, transparent, and reachable.",
+          "Taste matters, but so do the people and values behind it. That is why we speak clearly about our preparation style, packing care, and direct customer support. Trust is built when food feels honest, dependable, and close to home.",
       },
     ],
     commitments: [
-      "Pure vegetarian preparation with household discipline.",
-      "No onion and no garlic options where the product line allows it.",
-      "No preservatives and no palm oil claims presented clearly.",
-      "Secure packing with a focus on leakage control and cleaner delivery handling.",
+      "Pure vegetarian preparation in the spirit of a Brahmin home kitchen.",
+      "No onion and no garlic options wherever the recipe allows.",
+      "Traditional taste handled with care, not rushed factory-style processing.",
+      "Clean packing with attention to freshness, neatness, and safe delivery.",
     ],
-    operationsTitle: "How the store presents its work",
+    operationsTitle: "How we prepare and serve",
     operationsBody:
-      "The website now speaks about preparation, packing, direct support, India delivery, USA enquiries, and overseas conversations in a more mature way. This makes the brand feel ready for both household buyers and larger family or gifting orders.",
-    valuesTitle: "Why this detail matters",
+      "From selecting ingredients to making each batch and packing every order, our work follows a simple promise: food should feel worthy of a family kitchen. We guide customers directly, keep communication personal, and make ordering feel warm and straightforward.",
+    valuesTitle: "Why families connect with us",
     valuesBody:
-      "When customers read an about page, they are usually deciding whether the brand feels trustworthy enough to spend money with. More detail here increases confidence before they reach the cart and payment stages.",
+      "People choose this brand not only for spice and flavour, but for the satvik care behind it. When the preparation feels sincere and the taste feels familiar, customers are happy to bring it back to their meals again and again.",
+    promiseTitle: "The commitments we keep visible",
+    badge: "Satvik tradition. Homemade care. Brahmin-style taste you can trust.",
   },
   te: {
     eyebrow: "బ్రాండ్ గురించి",
-    title: "మనుషులు, ప్రక్రియ, నమ్మకం అన్నీ తెలిసేలా మరింత వివరమైన గురించి పేజీ",
-    intro:
-      "ఈ గురించి పేజీ ఇప్పుడు చిన్న ప్లేస్‌హోల్డర్ కాదు. బ్రాండ్ వెనుక ఉన్న వంటగది, పదార్థాలు, విలువలు అన్నీ కస్టమర్‌కు స్పష్టంగా తెలిసేలా రూపొందించబడింది.",
+    title: "సాత్విక రుచి, బ్రాహ్మణ సంప్రదాయం, ఇంటి శ్రద్ధతో నిలిచిన మా కథ",
     sections: [
       {
-        title: "ఇంటి ఆహార సంస్కృతిలోనే మా మూలాలు",
+        title: "బ్రాహ్మణ ఇంటి వంట సంప్రదాయమే మా మూలం",
         body:
-          "SP Traditional Pickles అనేది ఇంటి పాంట్రీలో ఉండే ఆహారం లాంటి అనుభూతిని ఇవ్వాలి అనే ఆలోచనతో రూపొందించబడింది. ఇది పెద్ద గుర్తు తెలియని ఈకామర్స్ బ్రాండ్‌లా కాకుండా, ఆంధ్రా ఇంటివంట వంటగది ఆన్‌లైన్‌కి వచ్చినట్లుగా అనిపించాలి.",
+          "SP Traditional Pickles అంటే ఆంధ్ర బ్రాహ్మణ ఇంటి వంటగదిలో ఉండే శుభ్రత, శ్రద్ధ, రుచి గుర్తుకు వచ్చేలా ఉండాలి అనే భావనతో ప్రారంభమైనది. మా పచ్చళ్ళు, పొడులు, వడియాలు ఫ్యాక్టరీ తయారీలా కాకుండా ఇంట్లో ప్రేమగా చేసిన రుచిని గుర్తు చేయాలి అనేదే మా ఉద్దేశ్యం.",
       },
       {
-        title: "సంప్రదాయమైన శ్రద్ధతో తయారీ",
+        title: "సాంప్రదాయ పద్ధతిలో సాత్విక తయారీ",
         body:
-          "మా ఉత్పత్తి కథలో చేతిపని, ఎంచుకున్న పదార్థాలు, శాకాహార నియమాలు, బ్రాహ్మణ/సాత్విక వంటగది సంప్రదాయాలను గుర్తు చేసే రుచులపై దృష్టి ఉంటుంది.",
+          "మేము శుద్ధ శాకాహార విధానాన్ని పాటిస్తూ, ఎన్నుకున్న పదార్థాలతో చిన్న చిన్న బ్యాచ్‌లలో తయారీ చేస్తాము. బ్రాహ్మణ శైలిలో ఉండే మితమైన మసాలా, సమతుల్యమైన రుచి, ఇంటి వంటలో ఉండే ఆత్మీయత మా ప్రతి ఉత్పత్తిలో కనిపించాలి అనేది మా ప్రయత్నం.",
       },
       {
-        title: "మళ్ళీ మళ్ళీ కొనాలనిపించే నమ్మకం",
+        title: "మళ్లీ మళ్లీ కొనాలనిపించే నమ్మకం",
         body:
-          "ఫోటోలు మాత్రమే కాదు, ప్రక్రియ, కేటగిరీలు, కాంటాక్ట్ వివరాలు, సపోర్ట్ తీరు అన్నీ స్పష్టంగా చూపించినప్పుడు మాత్రమే కస్టమర్‌కు బ్రాండ్ మీద విశ్వాసం పెరుగుతుంది.",
+          "రుచి మాత్రమే కాదు, ఆ రుచి వెనుక ఉన్న మనుషులు, వారి నిబద్ధత, వారి శ్రద్ధ కూడా ముఖ్యం. అందుకే మా తయారీ విధానం, ప్యాకింగ్, కస్టమర్‌తో మాట్లాడే తీరు అన్నీ నిజాయితీగా, దగ్గరదనంతో ఉండేలా చూసుకుంటాము.",
       },
     ],
     commitments: [
-      "ఇంటి నియమాలతో శుద్ధ శాకాహార తయారీ.",
-      "అవకాశమున్న చోట ఉల్లిపాయ, వెల్లుల్లి లేని ఎంపికలు.",
-      "ప్రిజర్వేటివ్‌లు లేవు, పామ్ ఆయిల్ లేదు అనే విషయాలను స్పష్టంగా చెప్తాం.",
-      "లీకేజీ తగ్గేలా సురక్షితమైన ప్యాకింగ్‌పై ఎక్కువ శ్రద్ధ.",
+      "బ్రాహ్మణ ఇంటి వంటశైలిని గుర్తు చేసే శుద్ధ శాకాహార తయారీ.",
+      "సాధ్యమైన చోట ఉల్లి, వెల్లుల్లి లేకుండా ఉండే ఎంపికలు.",
+      "అతి ప్రాసెసింగ్ కాకుండా ఇంటి రుచిని కాపాడే విధానం.",
+      "శుభ్రంగా, బాగా మూసివేసిన ప్యాకింగ్‌తో సురక్షిత డెలివరీపై శ్రద్ధ.",
     ],
-    operationsTitle: "మా పని వెబ్‌సైట్‌లో ఎలా కనిపిస్తుంది",
+    operationsTitle: "మా పని చేసే విధానం",
     operationsBody:
-      "తయారీ, ప్యాకింగ్, డైరెక్ట్ సపోర్ట్, భారత్ డెలివరీ, USA enquiry, విదేశీ ఆర్డర్లు అన్నీ ఇప్పుడు మరింత మెచ్యూర్‌గా వెబ్‌సైట్‌లో చూపబడతాయి. దీంతో ఇంటి ఆర్డర్లకే కాదు, పెద్ద కుటుంబ లేదా గిఫ్టింగ్ ఆర్డర్లకూ బ్రాండ్ సిద్ధంగా ఉందని తెలుస్తుంది.",
-    valuesTitle: "ఈ వివరాలు ఎందుకు ముఖ్యము",
+      "పదార్థాల ఎంపిక నుంచి ప్రతి బ్యాచ్ తయారీ వరకు, ఆ తర్వాత ప్యాకింగ్ చేసి కస్టమర్‌కు చేరే దాకా మేము ఇంటి వంటలో ఉండే శ్రద్ధను పాటిస్తాము. ఆర్డర్ తీసుకునే విధానమూ, కస్టమర్‌తో మాట్లాడే తీరుగానీ సూటిగా, ఆప్యాయంగా ఉంటాయి.",
+    valuesTitle: "కుటుంబాలు మాతో ఎందుకు కలిసిపోతాయి",
     valuesBody:
-      "కస్టమర్ గురించి పేజీ చదివితే, అతడు ప్రధానంగా బ్రాండ్ నిజంగా నమ్మదగినదేనా అని నిర్ణయించుకుంటున్నాడు. అందుకే ఈ పేజీలో ఎక్కువ వివరణ ఉండటం కార్ట్, చెల్లింపు దశలకు ముందే నమ్మకాన్ని పెంచుతుంది.",
+      "మా దగ్గర రుచి మాత్రమే కాదు, దాని వెనుక ఉన్న సంప్రదాయం కూడా ముఖ్యం. సాత్వికత, శుభ్రత, కుటుంబానికి పెట్టే బాధ్యత ఇవన్నీ కలిసినప్పుడు మాత్రమే ఆహారం మనసుకు నచ్చుతుంది. అదే అనుభూతిని ప్రతి ఆర్డర్‌లో ఇవ్వాలనుకుంటాము.",
+    promiseTitle: "మా బ్రాండ్ హామీలు",
+    badge: "సాత్విక సంప్రదాయం. ఇంటి వంట శ్రద్ధ. నమ్మకంగా చేరే రుచి.",
   },
 } as const;
 
@@ -92,12 +92,12 @@ const valueCards = [
   },
   {
     title: "Homemade care",
-    titleTe: "ఇంటివంట శ్రద్ధ",
+    titleTe: "ఇంటి వంట శ్రద్ధ",
     icon: HeartHandshake,
   },
   {
     title: "Secure packing",
-    titleTe: "సురక్షితమైన ప్యాకింగ్",
+    titleTe: "సురక్షిత ప్యాకింగ్",
     icon: PackageCheck,
   },
 ] as const;
@@ -153,28 +153,24 @@ const AboutPage = () => {
                   language === "te" ? "font-telugu" : ""
                 }`}
               >
-                {language === "te"
-                  ? "సాత్విక సంప్రదాయం. ఇంటి శ్రద్ధ. నమ్మకంగా చేరే రుచి."
-                  : "Satvik tradition. Homemade care. A brand story that feels trustworthy at first read."}
+                {t.badge}
               </p>
             </div>
-            <p
-              className={`mt-6 max-w-3xl text-balance text-base leading-8 text-theme-body md:text-lg md:leading-9 ${
-                language === "te" ? "font-telugu" : ""
-              }`}
-            >
-              {t.intro}
-            </p>
           </div>
 
-          <div className="section-shell overflow-hidden p-3">
-            <img
-              src={storyKitchen}
-              alt={brand.name}
-              loading="lazy"
-              decoding="async"
-              className="h-[420px] w-full rounded-[1.7rem] object-cover"
-            />
+          <div className="section-shell overflow-hidden p-4 sm:p-5">
+            <div className="relative mx-auto max-w-[32rem]">
+              <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_top,rgba(226,185,59,0.22),transparent_42%),linear-gradient(180deg,rgba(245,250,244,0.88),rgba(255,249,237,0.92))]" />
+              <div className="relative overflow-hidden rounded-[1.8rem] border border-white/70 bg-[linear-gradient(180deg,#f8f4ec_0%,#f5efe1_100%)] p-3 shadow-[0_24px_50px_rgba(54,89,49,0.14)]">
+                <img
+                  src={aboutImage}
+                  alt={brand.name}
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-[3/4] w-full rounded-[1.45rem] object-cover object-center shadow-[0_16px_40px_rgba(33,58,39,0.12)]"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -200,7 +196,7 @@ const AboutPage = () => {
 
           <div className="space-y-8">
             <div className="section-shell px-7 py-8">
-              <h2 className="font-heading text-3xl font-semibold text-theme-heading">
+              <h2 className={`font-heading text-3xl font-semibold text-theme-heading ${language === "te" ? "font-telugu" : ""}`}>
                 {t.operationsTitle}
               </h2>
               <p
@@ -213,7 +209,7 @@ const AboutPage = () => {
             </div>
 
             <div className="section-shell px-7 py-8">
-              <h2 className="font-heading text-3xl font-semibold text-theme-heading">
+              <h2 className={`font-heading text-3xl font-semibold text-theme-heading ${language === "te" ? "font-telugu" : ""}`}>
                 {t.valuesTitle}
               </h2>
               <p
@@ -251,8 +247,8 @@ const AboutPage = () => {
 
       <section className={`${pageWrap} py-14`}>
         <div className="section-shell px-7 py-8">
-          <h2 className="font-heading text-3xl font-semibold text-theme-heading md:text-4xl">
-            {language === "te" ? "మా బ్రాండ్ హామీలు" : "The commitments we keep visible"}
+          <h2 className={`font-heading text-3xl font-semibold text-theme-heading md:text-4xl ${language === "te" ? "font-telugu" : ""}`}>
+            {t.promiseTitle}
           </h2>
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             {t.commitments.map((commitment) => (
