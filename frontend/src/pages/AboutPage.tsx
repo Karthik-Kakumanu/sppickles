@@ -29,7 +29,7 @@ const aboutCopy = {
     ],
     commitments: [
       "Pure vegetarian preparation in the spirit of a Brahmin home kitchen.",
-      "No onion and no garlic options wherever the recipe allows.",
+      "No onion or garlic is used in our brand's preparation.",
       "Traditional taste handled with care, not rushed factory-style processing.",
       "Clean packing with attention to freshness, neatness, and safe delivery.",
     ],
@@ -64,7 +64,7 @@ const aboutCopy = {
     ],
     commitments: [
       "బ్రాహ్మణ ఇంటి వంటశైలిని గుర్తు చేసే శుద్ధ శాకాహార తయారీ.",
-      "సాధ్యమైన చోట ఉల్లి, వెల్లుల్లి లేకుండా ఉండే ఎంపికలు.",
+      "మా తయారీలో ఉల్లి, వెల్లుల్లి అసలు ఉపయోగించము.",
       "అతి ప్రాసెసింగ్ కాకుండా ఇంటి రుచిని కాపాడే విధానం.",
       "శుభ్రంగా, బాగా మూసివేసిన ప్యాకింగ్‌తో సురక్షిత డెలివరీపై శ్రద్ధ.",
     ],
