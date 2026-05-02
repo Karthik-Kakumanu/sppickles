@@ -193,13 +193,13 @@ const ProductsPage = ({ initialFilter = "all" }: ProductsPageProps) => {
     "salted-pickles": {
       title: t.products.saltedPickles,
       description: isTe
-        ? "సాధారణ భోజనాలకు సరిపోయే ఉప్పు పచ్చళ్ళు మాత్రమే ఇక్కడ చూపబడతాయి."
+        ? "మన ఇళ్లలో తయారుచేసుకునే రుచిని గుర్తు చేసే ఉప్పు పచ్చళ్ళు ఇక్కడ ఉన్నాయి. ఈ సీజన్‌కు తగిన పదార్థాలతో నిల్వ ఉండే విధంగా వీటిని సిద్ధం చేస్తాము."
         : "Only the salted pickle range is shown here for customers who want that exact style.",
     },
     "tempered-pickles": {
       title: t.products.temperedPickles,
       description: isTe
-        ? "తాలింపు, మసాలా రుచులు ఎక్కువగా ఉండే పచ్చళ్ళు ఇక్కడ చూపబడతాయి."
+        ? "ఆవాలు, మెంతులు, పాల ఇంగువతో తాలింపు పెట్టిన పచ్చళ్ళు."
         : "This view focuses on the tempered pickle range with deeper masala-led flavour.",
     },
     powders: {

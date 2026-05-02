@@ -1437,7 +1437,7 @@ const MarketplaceHome = ({
               />
               <BilingualText
                 as="p"
-                te="బ్రాహ్మణ మహిళలతో తయారుచేయబడిన పచ్చళ్ళు, పొడులు, అప్పడాలు, ఒడియాలు అన్ని క్వాలిటీ పదార్థాలతో చేస్తాము."
+                te="సాంప్రదాయ పద్ధతిలో తయారుచేయబడే మా పచ్చళ్ళు, పొడులు, ఫ్రైమ్స్, వడియాలు అన్నీ స్వచ్ఛమైన మరియు నాణ్యమైన పదార్థాలతో సిద్ధం చేయబడతాయి. ఆవపిండి, మెంతిపిండి, మంచి ఇంగువ, గుంటూరు కారం వంటి ఎంపిక చేసిన పదార్థాలతో ప్రతిరోజూ పరిశుభ్రంగా తయారు చేస్తాము. ఇంటి రుచిని అందించే మా ఉత్పత్తులు చేతితో ప్రేమగా తయారుచేయబడతాయి."
                 en="All our pickles, podi, appadalu, and odiyalu are prepared by Brahmin women with quality ingredients, without colours or preservatives."
                 className="mt-3 text-ivory/85 md:mt-4"
                 teluguClassName="text-sm leading-6 md:text-base md:leading-7"

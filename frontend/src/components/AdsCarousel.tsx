@@ -4,36 +4,10 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { useAdsQuery } from "@/lib/api";
 import { translateDynamicText } from "@/lib/translation";
 
-const getImageAspectRatio = (src: string, onRatio: (ratio: number) => void) => {
-  const image = new window.Image();
-
-  image.onload = () => {
-    if (image.naturalWidth > 0 && image.naturalHeight > 0) {
-      onRatio(image.naturalWidth / image.naturalHeight);
-    }
-  };
-
-  image.src = src;
-};
-
-const getVideoAspectRatio = (src: string, onRatio: (ratio: number) => void) => {
-  const video = document.createElement("video");
-
-  video.onloadedmetadata = () => {
-    if (video.videoWidth > 0 && video.videoHeight > 0) {
-      onRatio(video.videoWidth / video.videoHeight);
-    }
-  };
-
-  video.src = src;
-};
-
 const AdsCarousel = () => {
-  const [adAspectRatio, setAdAspectRatio] = useState<number | null>(null);
   const { data: ads = [], isLoading, refetch } = useAdsQuery();
   const { language } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [autoPlayActive, setAutoPlayActive] = useState(true);
   const activeAds = useMemo(() => ads.filter((ad) => ad.isActive), [ads]);
   const currentAd = activeAds[currentIndex] ?? activeAds[0] ?? null;
 
@@ -71,34 +45,8 @@ const AdsCarousel = () => {
   }, [refetch]);
 
   useEffect(() => {
-    if (!autoPlayActive || activeAds.length === 0) return;
-
-    const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % activeAds.length);
-    }, 5000);
-
-    return () => clearInterval(timer);
-  }, [activeAds.length, autoPlayActive]);
-
-  useEffect(() => {
     setCurrentIndex((current) => (activeAds.length > 0 ? Math.min(current, activeAds.length - 1) : 0));
   }, [activeAds.length]);
-
-  useEffect(() => {
-    if (!currentAd) {
-      setAdAspectRatio(null);
-      return;
-    }
-
-    setAdAspectRatio(null);
-
-    if (currentAd.mediaType === "image") {
-      getImageAspectRatio(currentAd.mediaUrl, setAdAspectRatio);
-      return;
-    }
-
-    getVideoAspectRatio(currentAd.mediaUrl, setAdAspectRatio);
-  }, [currentAd]);
 
   if (isLoading) {
     return (
@@ -111,18 +59,12 @@ const AdsCarousel = () => {
   }
 
   const goToPrevious = () => {
-    setAutoPlayActive(false);
     setCurrentIndex((prevIndex) => (prevIndex - 1 + activeAds.length) % activeAds.length);
-    setTimeout(() => setAutoPlayActive(true), 5000);
   };
 
   const goToNext = () => {
-    setAutoPlayActive(false);
     setCurrentIndex((prevIndex) => (prevIndex + 1) % activeAds.length);
-    setTimeout(() => setAutoPlayActive(true), 5000);
   };
-
-  const mediaAspectRatio = adAspectRatio ? String(adAspectRatio) : "16 / 9";
   const ui =
     language === "te"
       ? {
@@ -140,7 +82,7 @@ const AdsCarousel = () => {
 
   return (
     <div className="relative w-full overflow-hidden rounded-[1.25rem] border border-[#d8e5d8] bg-white shadow-[0_12px_28px_rgba(18,54,34,0.08)] sm:rounded-[1.5rem]">
-      <div className="relative w-full overflow-hidden bg-[#f8faf6]" style={{ aspectRatio: mediaAspectRatio }}>
+      <div className="relative aspect-video w-full overflow-hidden bg-[#f8faf6]">
         <div className="absolute inset-4 sm:inset-6">
           {currentAd.mediaType === "image" ? (
             <img
@@ -214,9 +156,7 @@ const AdsCarousel = () => {
               <button
                 key={`dot-${ad.id}`}
                 onClick={() => {
-                  setAutoPlayActive(false);
                   setCurrentIndex(index);
-                  setTimeout(() => setAutoPlayActive(true), 5000);
                 }}
                 className={`h-2 rounded-full transition ${
                   index === currentIndex ? "w-8 bg-[#2f7a43]" : "w-2 bg-[#b8c9ba] hover:bg-[#7fa487]"

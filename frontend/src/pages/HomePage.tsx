@@ -9,6 +9,7 @@ import { useStore } from "@/components/StoreProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { brand, homeCategoryCards } from "@/data/site";
 import WhatsAppLogo from "@/components/WhatsAppLogo";
+import { useAdsQuery } from "@/lib/api";
 
 const pageWrap = "w-full px-5 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 max-w-[1920px] mx-auto";
 
@@ -185,9 +186,11 @@ const buildStableShuffleRank = (id: string, seed: number) => {
 const HomePage = () => {
   const { products, bestSellers } = useStore();
   const { language } = useLanguage();
+  const { data: ads = [] } = useAdsQuery();
   const t = homeCopy[language];
   const isTe = language === "te";
   const shuffleSeedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
+  const hasActiveAds = ads.some((ad) => ad.isActive);
 
   const visibleHomeCategories = homeCategoryCards.slice(0, 4);
 
@@ -310,18 +313,15 @@ const HomePage = () => {
 
               {/* Info panel */}
               <div className="mt-4 rounded-[1.25rem] border border-[#d8e5d8]/40 bg-[#f8faf6] p-5">
-                <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#956d00]">
-                  {isTe ? "బ్రాండ్ సంప్రదాయం" : "Brahmin-style preparation"}
-                </p>
                 <p className={`mt-2 text-sm leading-relaxed text-theme-body/80 ${isTe ? "font-telugu" : ""}`}>
                   {isTe
-                    ? "శుద్ధ శాకాహార వంటగదిలో శుభ్రత, జాగ్రత్త తాలింపు, నాణ్యమైన పదార్థాలతో ప్రతి బ్యాచ్ తయారవుతుంది."
+                    ? "సాంప్రదాయ పద్ధతిలో తయారుచేయబడే మా పచ్చళ్ళు, పొడులు, ఫ్రైమ్స్, వడియాలు అన్నీ స్వచ్ఛమైన మరియు నాణ్యమైన పదార్థాలతో సిద్ధం చేయబడతాయి."
                     : "Each batch is prepared in a clean pure-veg kitchen with careful tempering and quality ingredients."}
                 </p>
                 <ul className="mt-4 space-y-2.5">
                   {[
-                    isTe ? "ఉప్పు, తాలింపు, పొడి, ఫ్రైయమ్స్ అన్ని శుద్ధ శాకాహార పద్ధతిలో" : "Salted pickles, tempered pickles, podulu, and fryums made the same way",
-                    isTe ? "ఇంటి రుచిని ఉంచే చిన్న బ్యాచ్ తయారీ" : "Small-batch preparation that keeps the homestyle taste intact",
+                    isTe ? "ఆవపిండి, మెంతిపిండి, మంచి ఇంగువ, గుంటూరు కారం వంటి ఎంపిక చేసిన పదార్థాలతో ప్రతిరోజూ పరిశుభ్రంగా తయారు చేస్తాము" : "Salted pickles, tempered pickles, podulu, and fryums made the same way",
+                    isTe ? "ఇంటి రుచిని అందించే మా ఉత్పత్తులు చేతితో ప్రేమగా తయారుచేయబడతాయి" : "Small-batch preparation that keeps the homestyle taste intact",
                   ].map((point) => (
                     <li key={point} className="flex items-start gap-3">
                       <span className="mt-[0.4rem] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-south-green/70" />
@@ -338,11 +338,13 @@ const HomePage = () => {
       {/* ══════════════════════════════════════
           ADS CAROUSEL
       ══════════════════════════════════════ */}
-      <section className={`${pageWrap} py-6 md:py-8`}>
-        <div className="mx-auto max-w-4xl">
-          <AdsCarousel />
-        </div>
-      </section>
+      {hasActiveAds ? (
+        <section className={`${pageWrap} py-6 md:py-8`}>
+          <div className="mx-auto max-w-4xl">
+            <AdsCarousel />
+          </div>
+        </section>
+      ) : null}
 
       {/* ══════════════════════════════════════
           QUICK LINKS: COUPONS + ADS
@@ -357,7 +359,7 @@ const HomePage = () => {
               </SectionHeading>
               <p className={`mt-2 max-w-xl text-sm leading-6 text-theme-body ${isTe ? "font-telugu" : ""}`}>
                 {isTe
-                  ? "కూపన్లు మరియు యాక్టివ్ యాడ్స్‌ను ఒకే చోట త్వరగా చూడండి."
+                  ? "కూపన్లు మరియు యాక్టివ్ యాడ్స్‌ను ఇక్కడ చూడండి."
                   : "Fresh coupons and active promotions are one tap away."}
               </p>
             </div>
